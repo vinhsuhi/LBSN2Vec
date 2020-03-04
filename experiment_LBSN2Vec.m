@@ -23,8 +23,9 @@ num_node_total = max(selected_checkins(:));
 % 2. prepare checkins per user (fast)
 user_checkins = cell(length(selected_users_IDs),1);
 temp_checkins = sortrows(selected_checkins,1);
-[u,m,n] = unique(temp_checkins(:,1));
-counters = [m(2:end);size(temp_checkins,1)+1] - m;
+[u,m,n] = unique(temp_checkins(:,1)); % u from 1 to 4024, len = 3785, m is index, n is where
+% counters = [m(2:end);size(temp_checkins,1)+1] - m;
+counters = m(1:end) - [0; m(1:length(m) - 1)];
 user_checkins(u) = mat2cell(temp_checkins,counters,4);
 user_checkins = cellfun(@transpose,user_checkins,'UniformOutput',false);
 user_checkins = cellfun(@int64,user_checkins,'UniformOutput',false);
@@ -43,7 +44,8 @@ num_walk = 10;
 len_walk = 80;
 [indy,indx] = find(network');
 [temp,m,n] = unique(indx);
-node_list_len(temp) = [m(2:end);length(indx)+1] - m; % sum(counts)
+% node_list_len(temp) = [m(2:end);length(indx)+1] - m; % sum(counts)
+node_list_len(temp) = m(1:end) - [0; m(1:length(m) - 1)];
 node_list(temp) = mat2cell(indy,node_list_len(temp));
 
 % find(node_list_len==0) % should be empty, otherwise there exists isolated nodes !!!
