@@ -1,4 +1,5 @@
 %% load prepared dataset
+pkg load statistics
 load('dataset_connected_NYC.mat');
 % data format:
 % selected_checkins (4 columns): user_index, time (hour in a week), venue_index, venue_category_index
@@ -42,6 +43,7 @@ node_list = cell(num_node,1);
 node_list_len = zeros(num_node,1);
 num_walk = 10;
 len_walk = 80;
+
 [indy,indx] = find(network');
 [temp,m,n] = unique(indx);
 % node_list_len(temp) = [m(2:end);length(indx)+1] - m; % sum(counts)
@@ -63,6 +65,7 @@ for ww=1:num_walk
         end
         walks(ii+(ww-1)*num_node,:) = seq;
     end
+
 end
 
 % 4. prepare negative sample table in advance (fast)
@@ -80,18 +83,13 @@ for ii=1:length(neg_sam_table_mobility_norm)
     neg_sam_table_mobility_norm{ii} = int64(repelem(tab_degree(:,1),round(100000* freq/sum(freq)))); % unigram with 0.75 power
 end
 
-% clean a bit the variables
-clearvars -except friendship_new friendship_old selected_checkins selected_users_IDs selected_venue...
-    num_node_total offset1 offset2 offset3...
-    walks user_checkins user_checkins_counter neg_sam_table_social neg_sam_table_mobility_norm;
-
 
 
 
 %% LBSN2vec
 dim_emb = 128;
 num_epoch = 1;
-num_threads =  4;
+num_threads =  1;
 K_neg = 10;
 win_size = 10;
 learning_rate = 0.001;

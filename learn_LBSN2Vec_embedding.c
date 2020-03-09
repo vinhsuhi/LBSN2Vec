@@ -329,7 +329,7 @@ void normalize_embeddings(){
 }
 
 
-void learn(void *id)
+void * learn(void *id)
 {
     long long word, target_e, a_checkin_ind, a_checkin_loc;
     double *best_fit = (double *)mxMalloc(dim_emb*sizeof(double)); //a node embedding
