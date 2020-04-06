@@ -2,6 +2,7 @@ from scipy.io import loadmat
 import pdb
 import numpy as np
 import random
+from tqdm import tqdm
 
 mat = loadmat('dataset_connected_NYC.mat')
 print(mat.keys())
@@ -71,22 +72,21 @@ for ww in tqdm(range(num_walk)):
             seq[jj+1] = node_list[seq[jj]][rand_ind]
         walks[ii + ww*num_node, :] = seq
 
-# Tested here pdb.set_trace()
-
-
+# Tested here 
 _, r =  network.nonzero()
 # tab_degree = 
 # 4. prepare negative sample table in advance (fast)
 unique, counts = np.unique(r, return_counts=True)
-freq = (counts/len(r)) ** 0.75
-neg_sam_table_social = np.repeat(unique, np.round(100000*freq/sum(freq))).astype(np.int64)
+freq = (100*counts/counts.sum()) ** 0.75
+neg_sam_table_social = np.repeat(unique, np.round(1000000*freq/sum(freq)).astype(np.int64))
 
 # checkins
-neg_sam_table_mobility_norm = np.zeros((4,1))
+neg_sam_table_mobility_norm = np.zeros((4), dtype=np.object) # cell(4,1)
 for ii in range(len(neg_sam_table_mobility_norm)):
     unique, counts = np.unique(temp_checkins[:,ii], return_counts=True)
-    freq = (counts/len(temp_checkins)) ** 0.75
-    neg_sam_table_mobility_norm[ii] = np.repeat(unique, np.round(100000*freq/sum(freq))).astype(np.int64)
+    freq = (100*counts/counts.sum()) ** 0.75
+    neg_sam_table_mobility_norm[ii] = np.repeat(unique, np.round(100000*freq/sum(freq)).astype(np.int64))
+
 
 # LBSN2vec
 dim_emb = 128
@@ -96,10 +96,9 @@ K_neg = 10
 win_size = 10
 learning_rate = 0.001
 
-embs_ini = (np.random.rand(size=(num_node_total, dim_emb)) -0.5)/dim_emb
-embs_len = np.sqrt(np.sum(embs_ini**2, axis=1))
+embs_ini = (np.random.uniform(size=(num_node_total, dim_emb)) -0.5)/dim_emb
+embs_len = np.sqrt(np.sum(embs_ini**2, axis=1)).reshape(-1,1)
 embs_ini = embs_ini / (np.tile(embs_len, (1, dim_emb)))
-
 mobility_ratio = 0.2
 
 # tic;
