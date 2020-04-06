@@ -2,7 +2,8 @@ from scipy.io import loadmat
 from utils import random_walk, create_social_graph, get_neg_sample, load_data
 from tqdm import tqdm
 import numpy as np
-import math
+import 
+import random
 
 RAND_MULTIPLIER = 25214903917
 RAND_INCREMENT = 11
@@ -248,8 +249,55 @@ def learn_a_hyperedge(edge, edge_len, best_fit, counter):
                     loc_neg = (target_neg-1)*dim_emb
                     learn_a_pair_loc_pr_cosine(0, loc_neg, best_fit, counter)
 
-def merge_hyperedges(edge_merged, edge_merged_len, a_edge, a_edge_len):
+# mexFunction
+def api(walk, user_checkins, user_checkins_count, embs_ini, learning_rate,
+    num_neg, neg_sam_table_social, win_size, neg_sam_table_mobility_norm,
+    num_epoch, num_threads, mobility_ratio):
+    num_w, num_wl = walk.shape
+    num_u = user_checkins.shape[0]
+
+    emb_n = embs_ini
+    num_n, dim_emb = embs_ini.shape
+
+    starting_alpha = learning_rate
     
+    table_size_social = neg_sam_table_social.shape[0]
+
+    neg_sam_table_mobility = neg_sam_table_mobility_norm
+    table_num_mobility = neg_sam_table_mobility.shape[0]
+    if table_num_mobility != 4:
+        raise Exception("four negative sample tables are required in neg_sam_table_mobility")
+    
+    temp = neg_sam_table_mobility[0]
+    neg_sam_table_mobility1 = temp
+    table_size_mobility1 = temp.shape[0]
+    temp = neg_sam_table_mobility[1]
+    neg_sam_table_mobility2 = temp
+    table_size_mobility2 = temp.shape[0]
+    temp = neg_sam_table_mobility[2]
+    neg_sam_table_mobility3 = temp
+    table_size_mobility3 = temp.shape[0]
+    temp = neg_sam_table_mobility[3]
+    neg_sam_table_mobility4 = temp
+    table_size_mobility4 = temp.shape[0]
+
+    # num_epoch = 
+    print("walk size = %d %d\n", num_w,num_wl)
+    print("user checkins, user count = %d\n", num_u)
+    print("num of nodes: %lld; embedding dimension: %lld\n",num_n,dim_emb)
+    print("learning rate: %f\n",starting_alpha)
+    print("negative sample number: %f\n",num_neg)
+    print("social neg table size: %lld\n",table_size_social)
+    print("mobility neg table num: %lld\n",table_num_mobility)
+    print("mobility neg table sizes: %lld,%lld,%lld,%lld\n",table_size_mobility1,table_size_mobility2,table_size_mobility3,table_size_mobility4)
+    print("num_epoch: %lld\n",num_epoch)
+    print("num_threads: %lld\n",num_threads)
+
+    a = 0
+    # call learn multithread
+
+
+
 
 if __name__ == "__main__":
     NUMWALK = 1
