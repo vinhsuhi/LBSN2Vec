@@ -231,7 +231,7 @@ def learn_a_hyperedge(edge, edge_len, best_fit, counter):
                     target_neg = get_a_neg_sample( neg_sam_table_mobility3, table_size_mobility3)
                 elif i == 3:
                     target_neg = get_a_neg_sample( neg_sam_table_mobility4, table_size_mobility4)
-                if target_neg != node:
+                if target_neg != node: 
                     learn_a_pair_loc_pr_cosine(0, target_neg, best_fit, counter)
 
 
@@ -404,7 +404,7 @@ if __name__ == "__main__":
 
     node_list = np.zeros((num_node), dtype=np.object)
     node_list_len = np.zeros((num_node), dtype=np.int32)
-    num_walk = 2
+    num_walk = 20
     len_walk = 80
 
     indx, indy = network.nonzero()
@@ -453,15 +453,26 @@ if __name__ == "__main__":
     embs_ini = embs_ini / (np.tile(embs_len, (1, dim_emb)))
     mobility_ratio = 0.2
 
-    # for i,x in enumerate(user_checkins):
-    #     try:
-    #         if x == 0:
-    #             user_checkins[i] = np.zeros()
-    #     except:
-    #         continue
+    print("Embs init shape: ", embs_ini.shape)
+    print("user_checkins_counter shape: ", user_checkins_counter.shape)
+    print("user_checkins shape: ", user_checkins.shape)
+    print("neg_sam_table_social shape: ", neg_sam_table_social.shape)
+    print("neg_sam_table_mobility_norm shape: ", neg_sam_table_mobility_norm.shape)
+
     api(walks, user_checkins, user_checkins_counter, embs_ini, learning_rate,
         num_neg, neg_sam_table_social, win_size, neg_sam_table_mobility_norm, num_epoch,
         num_threads, mobility_ratio)
+    
+    embs = embs_n;
+    embs_len = np.sqrt(np.sum(embs**2, axis=1))
+    embs = embs / embs_len
+
+    embs_user = embs[:offset1]
+    embs_time = embs[offset1:offset2]
+    embs_venue = embs[offset2:offset3]
+    embs_cate = embs[offset3:]
+
+    
 
 
     # NUMWALK = 1
