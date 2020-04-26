@@ -41,6 +41,25 @@ def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10):
     print(f"Accuracy@{k}: {f1:.3f}")
 
 
+def location_prediction(test_checkin, user_embs, time_embs, poi_embs, k=10):
+    """
+    test_checkin: np array shape Nx3, containing a user, time slot and a POI
+    """
+    user_embs = user_embs / np.linalg.norm(user_embs, axis=1, keepdims=True)
+    time_embs = user_embs / np.linalg.norm(time_embs, axis=1, keepdims=True)
+    poi_embs = user_embs / np.linalg.norm(poi_embs, axis=1, keepdims=True)
+    correct = 0
+    for user, timeslot, poi in test_checkin:
+        user_emb = user_embs[user]
+        time_emb = time_embs[timeslot]
+        scores = np.sum(user_emb*poi_embs, axis=1) + np.sum(time_emb*poi_embs, axis=1)
+        pred_pois = np.argsort(-scores)[:k]
+        if poi in pred_pois:
+            correct += 1
+    acc = correct/ len(test_checkin)
+    print(f"Accuracy@{k}: {acc:.3f}")
+        
+
 def loadtxt(path, separator):
     data = []
     with open(path, 'r', encoding='utf-8') as file:
