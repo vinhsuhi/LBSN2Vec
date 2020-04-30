@@ -85,7 +85,7 @@ def learn_an_edge(word, target_e):
 
 
 def learn_an_edge_with_BFT(word, target_e, best_fit):
-    best_fit = emb_n[word] + emb_n[target_e]
+    best_fit[:] = emb_n[word] + emb_n[target_e]
     best_fit /= np.linalg.norm(best_fit)
     
     learn_a_pair_loc_pr_cosine(1, word, best_fit)
@@ -103,7 +103,7 @@ def learn_an_edge_with_BFT(word, target_e, best_fit):
                 learn_a_pair_loc_pr_cosine(0, target_n, best_fit)
 
 def learn_a_hyperedge(edge, best_fit):
-    best_fit = np.sum(
+    best_fit[:] = np.sum(
         emb_n[edge] / np.linalg.norm(emb_n[edge], axis=1).reshape(-1,1), 
         axis=0)
     best_fit /= np.linalg.norm(best_fit)
@@ -343,13 +343,16 @@ if __name__ == "__main__":
     api(walks, user_checkins, user_checkins_counter, embs_ini, learning_rate,
         num_neg, neg_sam_table_social, win_size, neg_sam_table_mobility_norm, num_epoch,
         num_threads, mobility_ratio)
-    
-    embs = embs_n;
+    import pdb; pdb.set_trace()
+    embs = embs_ini
     embs_len = np.sqrt(np.sum(embs**2, axis=1))
-    embs = embs / embs_len
+    embs = embs / embs_len.reshape(-1,1)
 
-    embs_user = embs[:offset1]
-    embs_time = embs[offset1:offset2]
-    embs_venue = embs[offset2:offset3]
-    embs_cate = embs[offset3:]
+    embs_user = embs[:offset1+1]
+    embs_time = embs[offset1+1:offset2+1]
+    embs_venue = embs[offset2+1:offset3+1]
+    embs_cate = embs[offset3+1:]
 
+    # evaluate
+    friendship_new = mat["friendship_new"] - 1
+    friendship_linkprediction(embs_user, friendship_old, friendship_new)
