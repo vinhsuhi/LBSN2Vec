@@ -103,6 +103,7 @@ def learn_an_edge_with_BFT(word, target_e, best_fit):
                 learn_a_pair_loc_pr_cosine(0, target_n, best_fit)
 
 def learn_a_hyperedge(edge, best_fit):
+    # proposition
     best_fit[:] = np.sum(
         emb_n[edge] / np.linalg.norm(emb_n[edge], axis=1).reshape(-1,1), 
         axis=0)
@@ -210,6 +211,7 @@ def api(walk, user_checkins, user_checkins_count, embs_ini, learning_rate,
 
             for i in range(num_wl):
                 word = walk[w, i]
+                # iterate over 2k contexts for each user node 
                 for j in range(1, win_size+1):
                     if (get_a_social_decision()==1):
                         if (i-j>=0):
@@ -223,6 +225,7 @@ def api(walk, user_checkins, user_checkins_count, embs_ini, learning_rate,
                                 learn_an_edge_with_BFT(word, target_e, best_fit)
 
                 if ((user_checkins_count[word]>0) ):
+                    # sample 2k checkins
                     for m in range(min(win_size*2, user_checkins_count[word])):
                         if (get_a_mobility_decision()==1):
                             a_user_checkins = user_checkins[word]
