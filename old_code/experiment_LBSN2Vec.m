@@ -42,7 +42,7 @@ network = network+network';
 node_list = cell(num_node,1);
 node_list_len = zeros(num_node,1);
 % num_walk = 10;
-num_walk = 2;
+num_walk = 10;
 len_walk = 80;
 
 [indy,indx] = find(network');

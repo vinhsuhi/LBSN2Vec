@@ -15,4 +15,4 @@ https://sites.google.com/site/yangdingqi/home/foursquare-dataset
 Please cite our paper if you use this code or dataset.
 
 
-Run experiment.py - need test
+python main.py

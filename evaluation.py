@@ -1,64 +1,96 @@
 import scipy.io
 from scipy.io import loadmat
 import numpy as np 
+from tqdm import tqdm
 from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 
 def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10):
-    """
-    embs_user: np array shape NxD
-    """
-    embs_user = embs_user / np.linalg.norm(embs_user, axis=1, keepdims=True)
+    friendship_old_dict = {(x[0], x[1]): True for x in friendship_old}
+    friendship_new_dict = {(x[0], x[1]): True for x in friendship_new if (x[0], x[1]) not in friendship_old_dict and (x[1], x[0]) not in friendship_old_dict}
     scores = embs_user.dot(embs_user.T)
-    # not evaluate friendship old
-    mask_friendship_old = np.zeros_like(scores, dtype=np.bool)
-    mask_friendship_old[friendship_old[:,0], friendship_old[:,1]] = True
-    mask_friendship_old = mask_friendship_old + mask_friendship_old.T
-    scores *= ~mask_friendship_old
-    # lower diagonal matrix
-    scores = np.tril(scores, k=-1)
+    scores = np.tril(scores, k=-1)# lower diagonal matrix
+    # scores[scores < 0.5] = 0
+    # scores[not_trained_user_ids, :] = 0
+    # scores[:, not_trained_user_ids] = 0
+    scores[friendship_old[:,0], friendship_old[:,1]] = 0 # evaluate only new friendship
+    scores[friendship_old[:,1], friendship_old[:,0]] = 0
     # rank scores
     inds = np.argwhere(scores > 0)
     rank_list = np.zeros((inds.shape[0], 3))
     rank_list[:, :2] = inds
     rank_list[:,2] = scores[inds[:,0], inds[:, 1]]
     rank_list = rank_list[np.argsort(-rank_list[:, 2])]
-    # select topK 
-    rank_list = rank_list[:k]
-    selected_links = np.zeros_like(scores, dtype=np.bool)
-    selected_links[rank_list[:,0].astype(np.int), rank_list[:,1].astype(np.int)] = True
-    selected_links = selected_links + selected_links.T
-    mask_friendship_new = np.zeros_like(scores, dtype=np.bool)
-    mask_friendship_new[friendship_new[:,0], friendship_new[:,1]] = 1
-    mask_friendship_new = mask_friendship_new + mask_friendship_new.T
 
-    precision = precision_score(mask_friendship_new, selected_links, average='micro')
-    recall = recall_score(mask_friendship_new, selected_links, average='micro')
-    f1 = f1_score(mask_friendship_new, selected_links, average='micro')
-    accuracy = accuracy_score(mask_friendship_new, selected_links)
+    n_relevants = 0
+    for src, trg, score in rank_list[:k]:
+        if (src, trg) in friendship_new_dict or (trg, src) in friendship_new_dict:
+            n_relevants += 1
+    precision = n_relevants/k
+    recall = n_relevants/len(friendship_new_dict)
+    # f1 = 2*precision*recall/(precision+recall)
     print(f"Precision@{k}: {precision:.3f}")
     print(f"Recall@{k}: {recall:.3f}")
-    print(f"F1@{k}: {f1:.3f}")
-    print(f"Accuracy@{k}: {f1:.3f}")
+    # print(f"F1@{k}: {np.mean(f1s):.3f}")
 
+def friendship_linkprediction_with_sample(embs_user, friendship_old, friendship_new, k=10):
+    friendship_old_dict = {(x[0], x[1]): True for x in friendship_old}
+    friendship_new_dict = {(x[0], x[1]): True for x in friendship_new if (x[0], x[1]) not in friendship_old_dict 
+                            and (x[1], x[0]) not in friendship_old_dict
+                                #and x[0] in trained_user_ids and x[1] in trained_user_ids
+                        }
+    scores = embs_user.dot(embs_user.T)
+    scores = np.tril(scores, k=-1)# lower diagonal matrix
+    # scores[scores < 0.5] = 0
+    # scores[not_trained_user_ids, :] = 0
+    # scores[:, not_trained_user_ids] = 0
+    scores[friendship_old[:,0], friendship_old[:,1]] = 0 # evaluate only new friendship
+    scores[friendship_old[:,1], friendship_old[:,0]] = 0
+    # rank scores
+    inds = np.argwhere(scores > 0)
+    rank_list = np.zeros((inds.shape[0], 3))
+    rank_list[:, :2] = inds
+    rank_list[:,2] = scores[inds[:,0], inds[:, 1]]
+    rank_list = rank_list[np.argsort(-rank_list[:, 2])]
 
-def location_prediction(test_checkin, user_embs, time_embs, poi_embs, k=10):
+    precisions = []
+    recalls = []
+    f1s = []
+
+    for i in range(10):
+        # select 1%
+        n_select = int(len(rank_list)*0.01)
+        selected_rank_list = rank_list[np.random.choice(len(rank_list), n_select)]
+        # select topk
+        selected_rank_list = selected_rank_list[:k]
+
+        n_relevants = 0
+        for src, trg, score in selected_rank_list:
+            if (src, trg) in friendship_new_dict or (trg, src) in friendship_new_dict:
+                n_relevants += 1
+        precision = n_relevants/k
+        recall = n_relevants/len(friendship_new_dict)
+    #     f1 = 2*precision*recall/(precision+recall)
+        precisions.append(precision)
+        recalls.append(recall)
+    #     f1s.append(f1)
+    print(f"Precision@{k}: {np.mean(precisions):.3f}")
+    print(f"Recall@{k}: {np.mean(recall):.3f}")
+    # print(f"F1@{k}: {np.mean(f1s):.3f}")
+
+def location_prediction(test_checkin, embs, poi_embs, k=10):
     """
     test_checkin: np array shape Nx3, containing a user, time slot and a POI
     """
-    user_embs = user_embs / np.linalg.norm(user_embs, axis=1, keepdims=True)
-    time_embs = user_embs / np.linalg.norm(time_embs, axis=1, keepdims=True)
-    poi_embs = user_embs / np.linalg.norm(poi_embs, axis=1, keepdims=True)
     correct = 0
-    for user, timeslot, poi in test_checkin:
-        user_emb = user_embs[user]
-        time_emb = time_embs[timeslot]
+    for user, timeslot, poi in tqdm(test_checkin):
+        user_emb = embs[user]
+        time_emb = embs[timeslot]
         scores = np.sum(user_emb*poi_embs, axis=1) + np.sum(time_emb*poi_embs, axis=1)
         pred_pois = np.argsort(-scores)[:k]
         if poi in pred_pois:
             correct += 1
     acc = correct/ len(test_checkin)
     print(f"Accuracy@{k}: {acc:.3f}")
-        
 
 def loadtxt(path, separator):
     data = []
