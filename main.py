@@ -226,7 +226,7 @@ embs_time = embs[offset1:offset2]
 embs_venue = embs[offset2:offset3]
 embs_cate = embs[offset3:]
 
-import pdb; pdb.set_trace()
+# import pdb; pdb.set_trace()
 val_checkins[:,0] -= 1
 val_checkins[:,1] -= (offset1+1)
 val_checkins[:,2] -= (offset2+1)
