@@ -43,11 +43,11 @@ def parse_args():
 def deepwalk_walk_wrapper(class_instance, walk_length, start_node):
     class_instance.deepwalk_walk(walk_length, start_node)
 
-def deepwalk_walk(params, args):
+def deepwalk_walk(params):
     '''
     Simulate a random walk starting from start node.
     '''
-    # args.walk_length = args["args.walk_length"]
+    walk_length = params["walk_length"]
     neibs = params["neibs"]
     nodes = params["nodes"]
     # if args["iter"] % 5 == 0:
@@ -59,7 +59,7 @@ def deepwalk_walk(params, args):
         if len(neibs[node]) == 0:
             walks.append(walk)
             continue
-        while len(walk) < args.walk_length:
+        while len(walk) < walk_length:
             cur = int(walk[-1])
             cur_nbrs = neibs[cur]
             if len(cur_nbrs) == 0: break
@@ -96,7 +96,7 @@ class BasicWalker:
             _ns = nodes.copy()
             np.random.shuffle(_ns)
             nodess.append(_ns)
-        params = list(map(lambda x: {'args.walk_length': walk_length, 'neibs': self.neibs, 'iter': x, 'nodes': nodess[x]},
+        params = list(map(lambda x: {'walk_length': walk_length, 'neibs': self.neibs, 'iter': x, 'nodes': nodess[x]},
             list(range(1, num_walks+1))))
         walks = pool.map(deepwalk_walk, params)
         pool.close()
@@ -264,7 +264,7 @@ if __name__ == "__main__":
     val_checkins[:,1] -= (offset1+1)
     val_checkins[:,2] -= (offset2+1)
 
-    if arsg.mode == 'friend':
+    if args.mode == 'friend':
         friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10)
     else:
         location_prediction(val_checkins[:,:3], embs, embs_venue, k=10)
