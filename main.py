@@ -247,7 +247,7 @@ if __name__ == "__main__":
     embs_ini = initialize_emb(args, n_nodes_total)
     save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples)
 
-    learn.apiFunction("temp/processed", args.learning_rate, args.K_neg, args.win_size, args.num_epoch, args.workers, args.mobility_ratio)
+    learn.apiFunction("temp/processed", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
     embs_file = "temp/processed/embs.txt"
     embs = read_embs(embs_file)
 
