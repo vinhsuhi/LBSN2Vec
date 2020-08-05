@@ -136,6 +136,10 @@ sorted_checkins = selected_checkins[np.argsort(selected_checkins[:,1])]
 train_checkins = sorted_checkins[:n_train]
 val_checkins = sorted_checkins[n_train:]
 
+print("1")
+import pdb
+pdb.set_trace()
+
 print("Build user checkins dictionary...")
 train_user_checkins = {}
 for user_id in range(1, n_users+1): 
@@ -147,6 +151,10 @@ for user_id in range(1, n_users+1):
     inds_checkins = np.argwhere(val_checkins[:,0] == user_id).flatten()
     checkins = val_checkins[inds_checkins]
     val_user_checkins[user_id] = checkins
+
+print("2")
+import pdb
+pdb.set_trace()
 
 print("Performing random walks on hypergraph...")
 # graph: undirected, edges = friendship_old
@@ -226,9 +234,18 @@ embs_time = embs[offset1:offset2]
 embs_venue = embs[offset2:offset3]
 embs_cate = embs[offset3:]
 
+print("3")
+import pdb
+pdb.set_trace()
+
 # import pdb; pdb.set_trace()
 val_checkins[:,0] -= 1
 val_checkins[:,1] -= (offset1+1)
 val_checkins[:,2] -= (offset2+1)
+
+print("4")
+import pdb
+pdb.set_trace()
+
 location_prediction(val_checkins[:,:3], embs, embs_venue, k=10)
 friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10)
