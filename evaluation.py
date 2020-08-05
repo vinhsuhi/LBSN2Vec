@@ -77,6 +77,7 @@ def friendship_linkprediction_with_sample(embs_user, friendship_old, friendship_
     print(f"Recall@{k}: {np.mean(recall):.3f}")
     # print(f"F1@{k}: {np.mean(f1s):.3f}")
 
+
 def location_prediction(test_checkin, embs, poi_embs, k=10):
     """
     test_checkin: np array shape Nx3, containing a user, time slot and a POI
@@ -89,8 +90,13 @@ def location_prediction(test_checkin, embs, poi_embs, k=10):
         pred_pois = np.argsort(-scores)[:k]
         if poi in pred_pois:
             correct += 1
-    acc = correct/ len(test_checkin)
+    try:
+        acc = correct/ len(test_checkin)
+    except:
+        import pdb
+        pdb.set_trace()
     print(f"Accuracy@{k}: {acc:.3f}")
+
 
 def loadtxt(path, separator):
     data = []
@@ -99,6 +105,7 @@ def loadtxt(path, separator):
             data_line = line.split(separator)
             data.append([float(ele) for ele in data_line])
     return np.array(data)
+
 
 if __name__ == "__main__":
     embs_user = np.random.uniform(size=(4, 5))
