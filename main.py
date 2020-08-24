@@ -120,6 +120,8 @@ def read_embs(embs_file):
 
 def load_data(args):
     mat = loadmat('dataset/dataset_connected_NYC.mat')
+    import pdb
+    pdb.set_trace()
     selected_checkins = mat['selected_checkins'] 
     friendship_old = mat["friendship_old"] # edge index from 0
     friendship_new = mat["friendship_new"] 
