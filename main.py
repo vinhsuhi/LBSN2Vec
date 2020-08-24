@@ -35,6 +35,7 @@ def parse_args():
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--dim_emb', type=int, default=128)
     parser.add_argument('--mode', type=str, default='friend', help="friend or POI")
+    parser.add_argument('--hong', type=bool, action='store_true')
     args = parser.parse_args()
     return args
 
@@ -119,12 +120,16 @@ def read_embs(embs_file):
 
 
 def load_data(args):
-    mat = loadmat('dataset/dataset_connected_NYC.mat')
-    import pdb
-    pdb.set_trace()
-    selected_checkins = mat['selected_checkins'] 
-    friendship_old = mat["friendship_old"] # edge index from 0
-    friendship_new = mat["friendship_new"] 
+
+    if not args.hong:
+        mat = loadmat('dataset/dataset_connected_NYC.mat')
+        selected_checkins = mat['selected_checkins'] 
+        friendship_old = mat["friendship_old"] # edge index from 0
+        friendship_new = mat["friendship_new"] 
+    else:
+        selected_checkins = np.load('CA Dataset/selected_checkins.npy')
+        friendship_old = np.load('CA Dataset/old_friendship.npy')
+        friendship_new = np.load('CA Dataset/new_friendship.npy')
 
     offset1 = max(selected_checkins[:,0])
     _, n = np.unique(selected_checkins[:,1], return_inverse=True) # 
@@ -137,7 +142,7 @@ def load_data(args):
     selected_checkins[:,3] = n + offset3 + 1
     n_nodes_total = np.max(selected_checkins)
 
-    n_users = selected_checkins[:,0].max()
+    n_users = selected_checkins[:,0].max() # user
     print(f"""Number of users: {n_users}
         Number of nodes total: {n_nodes_total}""")
 
