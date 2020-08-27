@@ -35,7 +35,7 @@ def parse_args():
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--dim_emb', type=int, default=128)
     parser.add_argument('--mode', type=str, default='friend', help="friend or POI")
-    parser.add_argument('--hong', type=bool, action='store_true')
+    parser.add_argument('--hong', action='store_true')
     args = parser.parse_args()
     return args
 
