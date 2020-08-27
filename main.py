@@ -127,9 +127,9 @@ def load_data(args):
         friendship_old = mat["friendship_old"] # edge index from 0
         friendship_new = mat["friendship_new"] 
     else:
-        selected_checkins = np.load('CA Dataset/selected_checkins.npy')
-        friendship_old = np.load('CA Dataset/old_friendship.npy')
-        friendship_new = np.load('CA Dataset/new_friendship.npy')
+        selected_checkins = np.load('CA Dataset/selected_checkins_new.npy')
+        friendship_old = np.load('CA Dataset/old_friendship_new.npy')
+        friendship_new = np.load('CA Dataset/new_friendship_new.npy')
 
     offset1 = max(selected_checkins[:,0])
     _, n = np.unique(selected_checkins[:,1], return_inverse=True) # 
