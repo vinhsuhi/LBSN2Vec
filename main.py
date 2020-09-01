@@ -121,22 +121,22 @@ def load_ego(path1, path2):
     edges = []
     with open(path1, 'r', encoding='utf-8') as file:
         for line in file:
-            data_line = line.strip().split(',')
-            edges.append([int(ele) for ele in data_line[:2]])
+            data_line = line.strip().split()
+            edges.append([int(ele) + 1 for ele in data_line[:2]])
     edges = np.array(edges)
 
     maps = dict()
     with open(path2, 'r', encoding='utf-8') as file:
         for line in file:
             data_line = line.strip().split(',')
-            maps[int(data_line[0])] = data_line[1]
+            maps[int(data_line[0]) + 1] = int(data_line[1])
 
     return edges, maps
 
 
 def load_data(args):
 
-    if not args.input_type == "mat":
+    if args.input_type == "mat":
         mat = loadmat('dataset/dataset_connected_NYC.mat')
         selected_checkins = mat['selected_checkins'] 
         friendship_old = mat["friendship_old"] # edge index from 0
@@ -146,12 +146,13 @@ def load_data(args):
         friendship_old = np.load('CA Dataset/old_friendship_new.npy')
         friendship_new = np.load('CA Dataset/new_friendship_new.npy')
     elif args.input_type == "special":
+        print("lol")
         mat = loadmat('dataset/dataset_connected_NYC.mat')
         edges, maps = load_ego('Suhi_output/edgelist_NYC', 'Suhi_output/ego_net_NYC.txt')
         friendship_old = edges 
         friendship_n = mat["friendship_new"] 
         new_maps = dict()
-        for key, value in range(len(maps)):
+        for key, value in maps.items():
             if value not in new_maps:
                 new_maps[value] = set([key])
             else:
@@ -174,7 +175,8 @@ def load_data(args):
             frnni = [list(new_maps[friendship_ni[0]])[0], list(new_maps[friendship_ni[1]])[0]]
             friendship_new.append(frnni)
         friendship_new = np.array(friendship_new)
-        exit()
+        import pdb
+        pdb.set_trace()
 
     offset1 = max(selected_checkins[:,0])
     _, n = np.unique(selected_checkins[:,1], return_inverse=True) # 
