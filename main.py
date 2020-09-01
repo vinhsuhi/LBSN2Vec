@@ -1,4 +1,3 @@
-from scipy.io import loadmat
 import pdb
 import numpy as np
 import random
@@ -35,7 +34,7 @@ def parse_args():
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--dim_emb', type=int, default=128)
     parser.add_argument('--mode', type=str, default='friend', help="friend or POI")
-    parser.add_argument('--hong', action='store_true')
+    parser.add_argument('--input_type', type=str, default="hong") 
     args = parser.parse_args()
     return args
 
@@ -118,18 +117,64 @@ def read_embs(embs_file):
     embs = np.array(embs)
     return embs
 
+def load_ego(path1, path2):
+    edges = []
+    with open(path1, 'r', encoding='utf-8') as file:
+        for line in file:
+            data_line = line.strip().split(',')
+            edges.append([int(ele) for ele in data_line[:2]])
+    edges = np.array(edges)
+
+    maps = dict()
+    with open(path2, 'r', encoding='utf-8') as file:
+        for line in file:
+            data_line = line.strip().split(',')
+            maps[int(data_line[0])] = data_line[1]
+
+    return edges, maps
+
 
 def load_data(args):
 
-    if not args.hong:
+    if not args.input_type == "mat":
         mat = loadmat('dataset/dataset_connected_NYC.mat')
         selected_checkins = mat['selected_checkins'] 
         friendship_old = mat["friendship_old"] # edge index from 0
         friendship_new = mat["friendship_new"] 
-    else:
+    elif args.input_type == "npy":
         selected_checkins = np.load('CA Dataset/selected_checkins_new.npy')
         friendship_old = np.load('CA Dataset/old_friendship_new.npy')
         friendship_new = np.load('CA Dataset/new_friendship_new.npy')
+    elif args.input_type == "special":
+        mat = loadmat('dataset/dataset_connected_NYC.mat')
+        edges, maps = load_ego('Suhi_output/edgelist_NYC', 'Suhi_output/ego_net_NYC.txt')
+        friendship_old = edges 
+        friendship_n = mat["friendship_new"] 
+        new_maps = dict()
+        for key, value in range(len(maps)):
+            if value not in new_maps:
+                new_maps[value] = set([key])
+            else:
+                new_maps[value].add(key)
+        
+        def create_new_checkins(old_checkins, new_maps):
+            new_checkins = []
+            for i in range(len(old_checkins)):
+                checkins_i = old_checkins[i]
+                user = old_checkins[i][0]
+                for ele in new_maps[user]:
+                    new_checkins.append([ele, checkins_i[1], checkins_i[2], checkins_i[3]])
+            new_checkins = np.array(new_checkins)
+            return new_checkins
+                
+        selected_checkins = create_new_checkins(mat['selected_checkins'], new_maps)
+        friendship_new = []
+        for i in range(len(friendship_n)):
+            friendship_ni = friendship_n[i]
+            frnni = [list(new_maps[friendship_ni[0]])[0], list(new_maps[friendship_ni[1]])[0]]
+            friendship_new.append(frnni)
+        friendship_new = np.array(friendship_new)
+        exit()
 
     offset1 = max(selected_checkins[:,0])
     _, n = np.unique(selected_checkins[:,1], return_inverse=True) # 
