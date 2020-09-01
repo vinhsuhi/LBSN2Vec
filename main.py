@@ -175,8 +175,7 @@ def load_data(args):
             frnni = [list(new_maps[friendship_ni[0]])[0], list(new_maps[friendship_ni[1]])[0]]
             friendship_new.append(frnni)
         friendship_new = np.array(friendship_new)
-        import pdb
-        pdb.set_trace()
+
 
     offset1 = max(selected_checkins[:,0])
     _, n = np.unique(selected_checkins[:,1], return_inverse=True) # 
