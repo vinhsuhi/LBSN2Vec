@@ -202,6 +202,9 @@ def load_data(args):
     train_checkins = sorted_checkins[:n_train]
     val_checkins = sorted_checkins[n_train:]
 
+    import pdb 
+    pdb.set_trace()
+
     print("Build user checkins dictionary...")
     train_user_checkins = {}
     for user_id in range(1, n_users+1): 
