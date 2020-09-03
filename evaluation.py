@@ -4,7 +4,71 @@ import numpy as np
 from tqdm import tqdm
 from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 
-def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=None):
+
+def normalize_embedding(emb):
+    normalize_factor = np.sqrt((emb ** 2).sum(axis=1))
+    return emb / normalize_factor.reshape(-1, 1)
+
+
+def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=None, maps=None):
+    normalized_embs_user = normalize_embedding(embs_user)
+    simi_matrix = normalized_embs_user.dot(normalized_embs_user.T)
+    for i in range(len(simi_matrix)):
+        simi_matrix[i, i] = -2
+    for i in range(len(friendship_old)):
+        friendship_i = friendship_old[i]
+        simi_matrix[friendship_i[0], friendship_i[1]] = -2
+        simi_matrix[friendship_i[1], friendship_i[0]] = -2
+    arg_sorted_simi = simi_matrix.argsort(axis=1)
+
+    
+    # sorted_simi = np.sort(simi_matrix, axis=1)[-10:]
+    n_relevants = 0
+    for i in tqdm(range(len(friendship_new))):
+        first_node = friendship_new[i][0]
+        second_node = friendship_new[i][1]
+
+        if new_maps is not None:
+            first_group = new_maps[first_node]
+            second_group = new_maps[second_node]
+
+            for ele in first_group:
+                line_ele = arg_sorted_simi[ele]
+                count = 0
+                group = []
+                flag = 0
+                # duyet tu cuoi ve dau (10 groups)
+                for kk in range(1, len(line_ele)):
+                    target_index = line_ele[-kk]
+                    group_target_index = maps[target_index]
+                    if group_target_index not in group:
+                        group.append(group_target_index)
+                        count += 1
+                        if count == k:
+                            break 
+                    if target_index in second_group:
+                        n_relevants += 1
+                        flag = 1
+                        break 
+                if flag == 1:
+                    break
+        
+        else:
+            line_ele = arg_sorted_simi[first_node]
+            if second_node in line_ele[-k:]:
+                n_relevants += 1
+        
+    precision = n_relevants / len(friendship_new)
+    print(f"Precision@{k}: {precision:.3f}")
+
+
+            
+
+
+
+
+
+def friendship_linkprediction2(embs_user, friendship_old, friendship_new, k=10, new_maps=None):
     friendship_old_dict = {(x[0], x[1]): True for x in friendship_old}
     friendship_new_dict = {(x[0], x[1]): True for x in friendship_new if (x[0], x[1]) not in friendship_old_dict and (x[1], x[0]) not in friendship_old_dict}
     scores = embs_user.dot(embs_user.T)

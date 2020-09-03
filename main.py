@@ -135,7 +135,8 @@ def load_ego(path1, path2):
 
 
 def load_data(args):
-
+    maps = None
+    new_maps = None
     if args.input_type == "mat":
         mat = loadmat('dataset/dataset_connected_NYC.mat')
         selected_checkins = mat['selected_checkins'] 
@@ -216,7 +217,7 @@ def load_data(args):
         checkins = val_checkins[inds_checkins]
         val_user_checkins[user_id] = checkins
 
-    return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps
+    return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps
 
 
 def random_walk(friendship_old, n_users, args):
@@ -296,7 +297,7 @@ def save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples)
 
 if __name__ == "__main__":
     args = parse_args()
-    train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps = load_data(args)
+    train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps = load_data(args)
     sentences = random_walk(friendship_old, n_users, args)
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
     embs_ini = initialize_emb(args, n_nodes_total)
@@ -320,6 +321,6 @@ if __name__ == "__main__":
     val_checkins[:,2] -= (offset2+1)
 
     if args.mode == 'friend':
-        friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10)
+        friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10, new_maps=new_maps, maps=maps)
     else:
         location_prediction(val_checkins[:,:3], embs, embs_venue, k=10)
