@@ -35,7 +35,7 @@ def parse_args():
     parser.add_argument('--dim_emb', type=int, default=128)
     parser.add_argument('--mode', type=str, default='friend', help="friend or POI")
     parser.add_argument('--input_type', type=str, default="hong") 
-    parser.add_argument('--load', type=bool, action='store_true') 
+    parser.add_argument('--load', action='store_true') 
     args = parser.parse_args()
     return args
 
