@@ -139,6 +139,8 @@ def location_prediction(test_checkin, embs, poi_embs, k=10):
     """
     test_checkin: np array shape Nx3, containing a user, time slot and a POI
     """
+    embs = normalize_embedding(embs)
+    poi_embs = normalize_embedding(poi_embs)
     correct = 0
     for user, timeslot, poi in tqdm(test_checkin):
         user_emb = embs[user]
