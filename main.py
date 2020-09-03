@@ -169,12 +169,13 @@ def load_data(args):
             return new_checkins
                 
         selected_checkins = create_new_checkins(mat['selected_checkins'], new_maps)
-        friendship_new = []
-        for i in range(len(friendship_n)):
-            friendship_ni = friendship_n[i]
-            frnni = [list(new_maps[friendship_ni[0]])[0], list(new_maps[friendship_ni[1]])[0]]
-            friendship_new.append(frnni)
-        friendship_new = np.array(friendship_new)
+        # friendship_new = []
+        # for i in range(len(friendship_n)):
+        #     friendship_ni = friendship_n[i]
+        #     frnni = [list(new_maps[friendship_ni[0]])[0], list(new_maps[friendship_ni[1]])[0]]
+        #     friendship_new.append(frnni)
+        # friendship_new = np.array(friendship_new)
+        friendship_new = friendship_n
 
 
     offset1 = max(selected_checkins[:,0])
@@ -202,8 +203,6 @@ def load_data(args):
     train_checkins = sorted_checkins[:n_train]
     val_checkins = sorted_checkins[n_train:]
 
-    import pdb 
-    pdb.set_trace()
 
     print("Build user checkins dictionary...")
     train_user_checkins = {}
@@ -217,7 +216,7 @@ def load_data(args):
         checkins = val_checkins[inds_checkins]
         val_user_checkins[user_id] = checkins
 
-    return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3
+    return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps
 
 
 def random_walk(friendship_old, n_users, args):
@@ -297,7 +296,7 @@ def save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples)
 
 if __name__ == "__main__":
     args = parse_args()
-    train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3 = load_data(args)
+    train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps = load_data(args)
     sentences = random_walk(friendship_old, n_users, args)
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
     embs_ini = initialize_emb(args, n_nodes_total)

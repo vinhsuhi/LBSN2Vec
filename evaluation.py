@@ -4,7 +4,7 @@ import numpy as np
 from tqdm import tqdm
 from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 
-def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10):
+def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=None):
     friendship_old_dict = {(x[0], x[1]): True for x in friendship_old}
     friendship_new_dict = {(x[0], x[1]): True for x in friendship_new if (x[0], x[1]) not in friendship_old_dict and (x[1], x[0]) not in friendship_old_dict}
     scores = embs_user.dot(embs_user.T)
@@ -20,7 +20,8 @@ def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10):
     rank_list[:, :2] = inds
     rank_list[:,2] = scores[inds[:,0], inds[:, 1]]
     rank_list = rank_list[np.argsort(-rank_list[:, 2])]
-
+    import pdb 
+    pdb.set_trace()
     n_relevants = 0
     for src, trg, score in rank_list[:k]:
         if (src, trg) in friendship_new_dict or (trg, src) in friendship_new_dict:
