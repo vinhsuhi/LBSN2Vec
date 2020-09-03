@@ -27,16 +27,17 @@ def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, n
         first_node = friendship_new[i][0]
         second_node = friendship_new[i][1]
         if new_maps is not None:
-            first_group = new_maps[first_node]
-            second_group = new_maps[second_node]
-            for ele in first_group:
+            first_group = new_maps[first_node + 1]
+            second_group = new_maps[second_node + 1]
+            for eele in first_group:
+                ele = eele - 1
                 line_ele = arg_sorted_simi[ele]
                 count = 0
                 group = []
                 flag = 0
                 # duyet tu cuoi ve dau (10 groups)
                 for kk in range(1, len(line_ele)):
-                    target_index = line_ele[-kk]
+                    target_index = line_ele[-kk] + 1
                     group_target_index = maps[target_index]
                     if group_target_index not in group:
                         group.append(group_target_index)
