@@ -21,17 +21,14 @@ def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, n
         simi_matrix[friendship_i[1], friendship_i[0]] = -2
     arg_sorted_simi = simi_matrix.argsort(axis=1)
 
-    
     # sorted_simi = np.sort(simi_matrix, axis=1)[-10:]
     n_relevants = 0
     for i in tqdm(range(len(friendship_new))):
         first_node = friendship_new[i][0]
         second_node = friendship_new[i][1]
-
         if new_maps is not None:
             first_group = new_maps[first_node]
             second_group = new_maps[second_node]
-
             for ele in first_group:
                 line_ele = arg_sorted_simi[ele]
                 count = 0
@@ -60,12 +57,6 @@ def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, n
         
     precision = n_relevants / len(friendship_new)
     print(f"Precision@{k}: {precision:.3f}")
-
-
-            
-
-
-
 
 
 def friendship_linkprediction2(embs_user, friendship_old, friendship_new, k=10, new_maps=None):

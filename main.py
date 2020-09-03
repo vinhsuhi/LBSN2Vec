@@ -35,6 +35,7 @@ def parse_args():
     parser.add_argument('--dim_emb', type=int, default=128)
     parser.add_argument('--mode', type=str, default='friend', help="friend or POI")
     parser.add_argument('--input_type', type=str, default="hong") 
+    parser.add_argument('--load', type=bool, action='store_true') 
     args = parser.parse_args()
     return args
 
@@ -298,14 +299,16 @@ def save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples)
 if __name__ == "__main__":
     args = parse_args()
     train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps = load_data(args)
-    sentences = random_walk(friendship_old, n_users, args)
-    neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
-    embs_ini = initialize_emb(args, n_nodes_total)
-    save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples)
+    if not args.load:
+        sentences = random_walk(friendship_old, n_users, args)
+        neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
+        embs_ini = initialize_emb(args, n_nodes_total)
+        save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples)
 
-    learn.apiFunction("temp/processed", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
-    embs_file = "temp/processed/embs.txt"
-    embs = read_embs(embs_file)
+        learn.apiFunction("temp/processed", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
+    else:
+        embs_file = "temp/processed/embs.txt"
+        embs = read_embs(embs_file)
 
 
     # evaluate
