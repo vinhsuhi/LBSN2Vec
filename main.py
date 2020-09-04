@@ -299,12 +299,15 @@ def save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples)
 if __name__ == "__main__":
     args = parse_args()
     train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps = load_data(args)
+    if not os.path.exists('temp/processed/{}_{}'.format(args.dataset_name, args.mode)):
+        os.makedirs('temp/processed/{}_{}'.format(args.dataset_name, args.mode))
+        print("Created folder: {}".format('temp/processed/{}_{}'.format(args.dataset_name, args.mode)))
     if not args.load:
         sentences = random_walk(friendship_old, n_users, args)
         neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
         embs_ini = initialize_emb(args, n_nodes_total)
         save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples)
-
+        
         learn.apiFunction("temp/processed/{}_{}".format(args.dataset_name, args.mode), args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
         embs_file = "temp/processed/{}_{}/embs.txt".format(args.dataset_name, args.mode)
         embs = read_embs(embs_file)
