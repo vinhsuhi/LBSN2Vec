@@ -34,8 +34,9 @@ def parse_args():
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--dim_emb', type=int, default=128)
     parser.add_argument('--mode', type=str, default='friend', help="friend or POI")
-    parser.add_argument('--input_type', type=str, default="hong") 
+    parser.add_argument('--input_type', type=str, default="mat", help="mat or persona") 
     parser.add_argument('--load', action='store_true') 
+    parser.add_argument('--dataset_name', type=str, default='NYC')
     args = parser.parse_args()
     return args
 
@@ -139,18 +140,17 @@ def load_data(args):
     maps = None
     new_maps = None
     if args.input_type == "mat":
-        mat = loadmat('dataset/dataset_connected_NYC.mat')
+        mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
         selected_checkins = mat['selected_checkins'] 
         friendship_old = mat["friendship_old"] # edge index from 0
         friendship_new = mat["friendship_new"] 
-    elif args.input_type == "npy":
-        selected_checkins = np.load('CA Dataset/selected_checkins_new.npy')
-        friendship_old = np.load('CA Dataset/old_friendship_new.npy')
-        friendship_new = np.load('CA Dataset/new_friendship_new.npy')
-    elif args.input_type == "special":
-        print("lol")
-        mat = loadmat('dataset/dataset_connected_NYC.mat')
-        edges, maps = load_ego('Suhi_output/edgelist_NYC', 'Suhi_output/ego_net_NYC.txt')
+    # elif args.input_type == "npy":
+    #     selected_checkins = np.load('CA Dataset/selected_checkins_new.npy')
+    #     friendship_old = np.load('CA Dataset/old_friendship_new.npy')
+    #     friendship_new = np.load('CA Dataset/new_friendship_new.npy')
+    elif args.input_type == "persona":
+        mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
+        edges, maps = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), 'Suhi_output/ego_net_{}.txt'.format(args.dataset_name))
         friendship_old = edges 
         friendship_n = mat["friendship_new"] 
         new_maps = dict()
@@ -305,11 +305,11 @@ if __name__ == "__main__":
         embs_ini = initialize_emb(args, n_nodes_total)
         save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples)
 
-        learn.apiFunction("temp/processed", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
-        embs_file = "temp/processed/embs.txt"
+        learn.apiFunction("temp/processed/{}_{}".format(args.dataset_name, args.mode), args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
+        embs_file = "temp/processed/{}_{}/embs.txt".format(args.dataset_name, args.mode)
         embs = read_embs(embs_file)
     else:
-        embs_file = "temp/processed/embs.txt"
+        embs_file = "temp/processed/{}_{}/embs.txt".format(args.dataset_name, args.mode)
         embs = read_embs(embs_file)
 
 
