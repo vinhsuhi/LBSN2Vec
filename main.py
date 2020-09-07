@@ -248,6 +248,7 @@ def sample_neg(friendship_old, selected_checkins):
 
 
 def initialize_emb(args, n_nodes_total):
+    # TODO: initialize here!
     embs_ini = (np.random.uniform(size=(n_nodes_total, args.dim_emb)) -0.5)/args.dim_emb
     embs_len = np.sqrt(np.sum(embs_ini**2, axis=1)).reshape(-1,1)
     embs_ini = embs_ini / embs_len

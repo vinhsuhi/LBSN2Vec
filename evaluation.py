@@ -21,43 +21,61 @@ def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, n
         simi_matrix[friendship_i[1], friendship_i[0]] = -2
     arg_sorted_simi = simi_matrix.argsort(axis=1)
 
-    # sorted_simi = np.sort(simi_matrix, axis=1)[-10:]
-    n_relevants = 0
-    for i in tqdm(range(len(friendship_new))):
-        first_node = friendship_new[i][0]
-        second_node = friendship_new[i][1]
-        if new_maps is not None:
-            first_group = new_maps[first_node + 1]
-            second_group = new_maps[second_node + 1]
+    friend_dict = dict()
+    for i in range(len(friendship_new)):
+        source, target = friendship_new[i][0], friendship_new[i][1]
+        if source not in friend_dict:
+            friend_dict[source] = set([target])
+        else:
+            friend_dict[source].add(target)
+
+    
+
+
+    def is_match(line_ele, target_gr):
+        group = []
+        count = 0
+        for i in range(1, len(line_ele)):
+            target_index = line_ele[-i] + 1
+            group_target_index = maps[target_index]
+            if group_target_index not in group:
+                group.append(group_target_index)
+                count += 1
+                if count == k + 1:
+                    break
+            if target_index in target_gr:
+                return 1
+        return 0
+
+    precision = []
+    recall = []
+
+    for key, value in friend_dict.items():
+        n_relevants = 0
+        if new_maps is None:
+            line_ele = arg_sorted_simi[key][-k:]
+            for ele in value:
+                if ele in line_ele:
+                    n_relevants += 1
+        else:
+            first_group = new_maps[key + 1]
+            target_groups = [new_maps[ele + 1] for ele in value]
             for eele in first_group:
                 ele = eele - 1
                 line_ele = arg_sorted_simi[ele]
-                count = 0
-                group = []
-                flag = 0
-                # duyet tu cuoi ve dau (10 groups)
-                for kk in range(1, len(line_ele)):
-                    target_index = line_ele[-kk] + 1
-                    group_target_index = maps[target_index]
-                    if group_target_index not in group:
-                        group.append(group_target_index)
-                        count += 1
-                        if count == k:
-                            break 
-                    if target_index in second_group:
+
+                for j in range(len(target_groups)):
+                    if is_match(line_ele, target_groups[j]):
                         n_relevants += 1
-                        flag = 1
-                        break 
-                if flag == 1:
-                    break
-        
-        else:
-            line_ele = arg_sorted_simi[first_node]
-            if second_node in line_ele[-k:]:
-                n_relevants += 1
-        
-    precision = n_relevants / len(friendship_new)
+                        target_groups[j] = []
+
+        precision.append(n_relevants/k)
+        recall.append(n_relevants/len(value))
+    precision = np.mean(precision)
+    recall = np.mean(recall)
+    # sorted_simi = np.sort(simi_matrix, axis=1)[-10:]
     print(f"Precision@{k}: {precision:.3f}")
+    print(f"Recall@{k}: {recall:.3f}")
 
 
 def friendship_linkprediction2(embs_user, friendship_old, friendship_new, k=10, new_maps=None):
