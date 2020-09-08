@@ -83,7 +83,8 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
                     loss1 = embedding_model.edge_loss(edges, neg)
                     loss1.backward()
                     optimizer.step()
-                    print("Loss1: {:.4f}".format(loss1))
+                    if iter % 50 == 0:
+                        print("Loss1: {:.4f}".format(loss1))
                 this_user_checkins = []
                 for w in words:
                     try:
@@ -104,7 +105,8 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
                     neg = torch.LongTensor(neg).cuda()
                     optimizer.zero_grad()
                     loss2 = embedding_model.hyperedge_loss(checkins, neg)
-                    print("loss2: {:.4f}".format(loss2))
+                    if iter % 50 == 0:
+                        print("loss2: {:.4f}".format(loss2))
                     loss2.backward()
                     optimizer.step()
     embeddings = embedding_model.node_embedding(torch.LongTensor(np.arange(n_nodes)).cuda())
@@ -402,10 +404,6 @@ if __name__ == "__main__":
     embs_venue = embs[offset2:offset3]
     embs_cate = embs[offset3:]
 
-
-    
-    import pdb
-    pdb.set_trace()
     if args.mode == 'friend':
         if not args.py:
             friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10, new_maps=new_maps, maps=maps)
