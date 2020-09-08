@@ -381,7 +381,7 @@ if __name__ == "__main__":
             embs = read_embs(embs_file)
         else:
             embs = learn_emb(sentences, n_nodes_total, args.dim_emb, args.num_epochs, args.win_size, \
-                train_checkins, train_user_checkins, alpha=args.alpha, num_neg = args.K_neg)
+                train_checkins, train_user_checkins, alpha=args.mobility_ratio, num_neg = args.K_neg)
     else:
         embs_file = "temp/processed/embs.txt"
         embs = read_embs(embs_file)
