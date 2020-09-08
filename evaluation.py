@@ -29,9 +29,6 @@ def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, n
         else:
             friend_dict[source].add(target)
 
-    
-
-
     def is_match(line_ele, target_gr):
         group = []
         count = 0
