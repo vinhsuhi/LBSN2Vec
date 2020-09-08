@@ -22,11 +22,21 @@ class EmbModel(nn.Module):
         source_embedding = self.forward(edges[:, 0])
         target_embedding = self.forward(edges[:, 1])
         neg_embedding = self.forward(neg)
-        loss, loss0, loss1 = self.link_pred_layer.loss(source_embedding, target_embedding, neg_embedding)
+        loss = self.link_pred_layer.loss(source_embedding, target_embedding, neg_embedding)
         loss = loss/len(edges)
         return loss
 
-    def hyperedge_loss(self, Nodes, negs):
+
+    def hyperedge_loss(self, checkins, neg_checkins):
+        checkin_embs = self.forward(checkins) # 8 x 4 x 128
+        checkin_emb_means = torch.mean(checkin_embs, axis=1) # 8 x 128
+        neg_embs = self.forward(neg_checkins)
+        loss = 0
+        for i in range(checkins.shape[1]):
+            loss += self.link_pred_layer.loss(checkin_emb_means, checkin_embs[:, i, :], neg_embs[:, i, :]) / len(checkins)
+        return loss / 4
+
+    def hyperedge_loss2(self, Nodes, negs):
         user_embs = self.forward(Nodes[0])
         time_embs = self.forward(Nodes[1])
         location_embs = self.forward(Nodes[2])
