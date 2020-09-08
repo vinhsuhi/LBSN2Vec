@@ -54,7 +54,7 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
     embedding_model = embedding_model.cuda()
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, embedding_model.parameters()), lr=args.learning_rate)
     sentence_length = sentences.shape[1]
-    BATCH_SIZE = 4
+    BATCH_SIZE = 512
     N_ITERS = len(sentences) // BATCH_SIZE
     if N_ITERS % BATCH_SIZE > 0:
         N_ITERS += 1
@@ -96,7 +96,7 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
                 this_user_checkins = np.concatenate(this_user_checkins, axis=0)
                 num_checkins_to_sample = int(alpha * len(this_user_checkins))
                 if num_checkins_to_sample > 0:
-                    checkin_indices = np.random.randint(0, len(this_user_checkins), num_checkins_to_sample)
+                    checkin_indices = np.random.randint(0, len(this_user_checkins), min(num_checkins_to_sample, 2*win_size*BATCH_SIZE))
                     checkins = this_user_checkins[checkin_indices]
                     checkins = torch.LongTensor(checkins).cuda()
                     neg_ind = np.random.randint(0, len(selected_checkins), 10)
@@ -107,8 +107,6 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
                     print("loss2: {:.4f}".format(loss2))
                     loss2.backward()
                     optimizer.step()
-            break
-        break
     embeddings = embedding_model.node_embedding(torch.LongTensor(np.arange(n_nodes)).cuda())
     embeddings = embeddings.detach().cpu().numpy()
     return embeddings

@@ -77,7 +77,7 @@ class EmbeddingLossFunctions(object):
         if loss != loss:
             import pdb
             pdb.set_trace()
-        return loss, loss0, loss1
+        return loss
 
 
 class MappingLossFunctions(object):
