@@ -19,8 +19,9 @@ import networkx as nx
 from gensim.models import Word2Vec
 from evaluation import *
 import argparse
-import learn
+# import learn
 from embedding_model import EmbModel
+import torch
 
 
 def parse_args():
@@ -50,11 +51,11 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
 
     embedding_model = EmbModel(n_nodes, emb_dim)
     embedding_model = embedding_model.cuda()
-    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, embedding_model.parameters()), lr=args.lr)
+    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, embedding_model.parameters()), lr=args.learning_rate)
 
-    for epoch in tqdm(range(n_epochs)):
+    for epoch in range(n_epochs):
         np.random.shuffle(sentences)
-        for i in range(len(sentences)):
+        for i in tqdm(range(len(sentences))):
             this_sentence = sentences[i]
             for j in range(len(this_sentence)):
                 word = this_sentence[j]
@@ -73,12 +74,16 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
                     neg = np.random.randint(min_user, max_user, num_neg)
                     neg = torch.LongTensor(neg).cuda()
                     optimizer.zero_grad()
-                    loss1 = embedding_model.edge_loss(edges, embedding_model, neg)
+                    loss1 = embedding_model.edge_loss(edges, neg)
                     loss1.backward()
                     optimizer.step()
-                    print("Loss1: {:.4f}".format(loss1))
+                    if i % 100 == 0:
+                        print("Loss1: {:.4f}".format(loss1))
 
-                this_user_checkins = user_checkins_dict[word]
+                try:
+                    this_user_checkins = user_checkins_dict[word]
+                except:
+                    continue
                 if len(this_user_checkins) > 0:
                     sampled_users = []
                     sampled_times = []
@@ -103,6 +108,8 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
                         negs = [Neg[:, idx] for idx in range(Neg.shape[1])]
                         optimizer.zero_grad()
                         loss2 = embedding_model.hyperedge_loss(Nodes, negs)
+                        if i % 100 == 0:
+                            print("Loss2: {:.4f}".format(loss2))
                         loss2.backward()
                         optimizer.step()
                         
@@ -368,7 +375,6 @@ def save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples)
 if __name__ == "__main__":
     args = parse_args()
     train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps = load_data(args)
-
     if not args.load:
         sentences = random_walk(friendship_old, n_users, args)
         if not args.py:
@@ -380,6 +386,14 @@ if __name__ == "__main__":
             embs_file = "temp/processed/embs.txt"
             embs = read_embs(embs_file)
         else:
+            train_checkins -= 1
+            val_checkins -= 1
+            train_user_checkins = {key - 1: value - 1 for key, value in train_user_checkins.items()}
+            val_user_checkins = {key - 1: value - 1 for key, value in val_user_checkins.items()}
+            friendship_new -= 1
+            friendship_old -= 1
+            for i in range(len(sentences)):
+                sentences[i] = [x-1 for x in sentences[i]]
             embs = learn_emb(sentences, n_nodes_total, args.dim_emb, args.num_epochs, args.win_size, \
                 train_checkins, train_user_checkins, alpha=args.mobility_ratio, num_neg = args.K_neg)
     else:
@@ -394,12 +408,13 @@ if __name__ == "__main__":
     embs_cate = embs[offset3:]
 
 
-    # import pdb; pdb.set_trace()
-    val_checkins[:,0] -= 1
-    val_checkins[:,1] -= (offset1+1)
-    val_checkins[:,2] -= (offset2+1)
+    
 
     if args.mode == 'friend':
         friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10, new_maps=new_maps, maps=maps)
     else:
+        # import pdb; pdb.set_trace()
+        val_checkins[:,0] -= 1
+        val_checkins[:,1] -= (offset1+1)
+        val_checkins[:,2] -= (offset2+1)
         location_prediction(val_checkins[:,:3], embs, embs_venue, k=10)

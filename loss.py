@@ -74,6 +74,9 @@ class EmbeddingLossFunctions(object):
         loss0 = true_xent.sum()
         loss1 = self.neg_sample_weights * neg_xent.sum()
         loss = loss0 + loss1
+        if loss != loss:
+            import pdb
+            pdb.set_trace()
         return loss, loss0, loss1
 
 
