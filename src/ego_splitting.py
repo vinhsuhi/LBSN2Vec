@@ -26,7 +26,8 @@ class EgoNetSplitter(object):
         """
         ego_net_minus_ego = self.graph.subgraph(self.graph.neighbors(node))
         # print("ego_net_minus_ego   ",ego_net_minus_ego.nodes)
-
+        # for i in nx.connected_components(ego_net_minus_ego):
+            # print(i)
         components = {i: n for i, n in enumerate(nx.connected_components(ego_net_minus_ego))}
         new_mapping = {}
         personalities = []
