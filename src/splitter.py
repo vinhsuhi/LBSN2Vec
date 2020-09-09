@@ -129,6 +129,7 @@ class SplitterTrainer(object):
         """
         Fitting DeepWalk on base model.
         """
+        # print(self.graph.nodes)
         self.base_walker = DeepWalker(self.graph, self.args)
         print("\nDoing base random walks.\n")
         self.base_walker.create_features()

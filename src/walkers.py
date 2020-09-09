@@ -51,7 +51,7 @@ class DeepWalker(object):
         :return self.embedding: Embedding of nodes in the latent space.
         """
         self.paths = [[str(node) for node in walk] for walk in self.paths]
-
+        # print(self.paths)
         model = Word2Vec(self.paths,
                          size=self.args.dimensions,
                          window=self.args.window_size,
@@ -59,6 +59,7 @@ class DeepWalker(object):
                          sg=1,
                          workers=self.args.workers,
                          iter=1)
-
+        # print(model['1'])
         self.embedding = np.array([list(model[str(n)]) for n in self.graph.nodes()])
+        # print(self.embedding)
         return self.embedding

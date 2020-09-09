@@ -25,14 +25,34 @@ class EgoNetSplitter(object):
             node: Node ID for egonet (ego node).
         """
         ego_net_minus_ego = self.graph.subgraph(self.graph.neighbors(node))
+        # print("ego_net_minus_ego   ",ego_net_minus_ego.nodes)
         components = {i: n for i, n in enumerate(nx.connected_components(ego_net_minus_ego))}
         new_mapping = {}
         personalities = []
+        # print("components   ",components)
+        components_new = {}
+        node_alone = []
+        k_new = 0
         for k, v in components.items():
+            # print(type(v))
+            # print(v)
+            if len(v)==1:
+                node_alone.extend(list(v))
+            else:
+                components_new[k_new] = v
+                k_new+=1
+        components_new[k_new] = node_alone
+        components = components_new
+
+        for k, v in components.items():
+            # print("k:  ",k)
+            # print("v:  ",v)
             personalities.append(self.index)
             for other_node in v:
                 new_mapping[other_node] = self.index
             self.index = self.index+1
+        # print("new_mapping   ",new_mapping)
+        # print("personalities   ",personalities)
         self.components[node] = new_mapping
         self.personalities[node] = personalities
 
@@ -52,7 +72,7 @@ class EgoNetSplitter(object):
         Mapping the personas to new nodes.
         """
         self.personality_map = {p: n for n in self.graph.nodes() for p in self.personalities[n]}
-
+        # print("personality_map    ",self.personality_map)
     def _get_new_edge_ids(self, edge):
         """
         Getting the new edge identifiers.
