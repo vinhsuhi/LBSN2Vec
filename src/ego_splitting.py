@@ -26,6 +26,7 @@ class EgoNetSplitter(object):
         """
         ego_net_minus_ego = self.graph.subgraph(self.graph.neighbors(node))
         # print("ego_net_minus_ego   ",ego_net_minus_ego.nodes)
+
         components = {i: n for i, n in enumerate(nx.connected_components(ego_net_minus_ego))}
         new_mapping = {}
         personalities = []
@@ -33,10 +34,11 @@ class EgoNetSplitter(object):
         components_new = {}
         node_alone = []
         k_new = 0
+        thresold = 1
         for k, v in components.items():
             # print(type(v))
             # print(v)
-            if len(v)==1:
+            if len(v)>=thresold:
                 node_alone.extend(list(v))
             else:
                 components_new[k_new] = v
