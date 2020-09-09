@@ -41,6 +41,7 @@ def parse_args():
     parser.add_argument('--load', action='store_true') 
     parser.add_argument('--py', action='store_true') 
     parser.add_argument('--dataset_name', type=str, default='NYC')
+    parser.add_argument('--clean', action='store_true', help='use cleaned dataset')
     args = parser.parse_args()
     return args
 
@@ -214,16 +215,18 @@ def load_data(args):
     maps = None
     new_maps = None
     if args.input_type == "mat":
-        mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
+        if args.clean:
+            mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
+        else:
+            mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
         selected_checkins = mat['selected_checkins'] 
         friendship_old = mat["friendship_old"] # edge index from 0
         friendship_new = mat["friendship_new"] 
-    # elif args.input_type == "npy":
-    #     selected_checkins = np.load('CA Dataset/selected_checkins_new.npy')
-    #     friendship_old = np.load('CA Dataset/old_friendship_new.npy')
-    #     friendship_new = np.load('CA Dataset/new_friendship_new.npy')
     elif args.input_type == "persona":
-        mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
+        if args.clean:
+            mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
+        else:
+            mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
         edges, maps = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), 'Suhi_output/ego_net_{}.txt'.format(args.dataset_name))
         friendship_old = edges 
         friendship_n = mat["friendship_new"] 
@@ -252,7 +255,6 @@ def load_data(args):
         #     friendship_new.append(frnni)
         # friendship_new = np.array(friendship_new)
         friendship_new = friendship_n
-
 
     offset1 = max(selected_checkins[:,0])
     _, n = np.unique(selected_checkins[:,1], return_inverse=True) # 
