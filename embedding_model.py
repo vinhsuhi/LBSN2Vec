@@ -29,7 +29,7 @@ class EmbModel(nn.Module):
 
     def hyperedge_loss(self, checkins, neg_checkins):
         checkin_embs = self.forward(checkins) # 8 x 4 x 128
-        checkin_emb_means = torch.mean(checkin_embs, axis=1) # 8 x 128
+        checkin_emb_means = F.normalize(torch.mean(checkin_embs, dim=1), dim=1) # 8 x 128
         neg_embs = self.forward(neg_checkins)
         loss = 0
         for i in range(checkins.shape[1]):

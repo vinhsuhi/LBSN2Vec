@@ -19,7 +19,7 @@ import networkx as nx
 from gensim.models import Word2Vec
 from evaluation import *
 import argparse
-# import learn
+import learn
 from embedding_model import EmbModel
 import torch
 import time
@@ -30,11 +30,11 @@ def parse_args():
     parser.add_argument('--num_walks', type=int, default=10)
     parser.add_argument('--walk_length', type=int, default=80)
     parser.add_argument('--workers', type=int, default=2)
-    parser.add_argument('--num_epochs', type=int, default=1)
+    parser.add_argument('--num_epochs', type=int, default=10)
     parser.add_argument('--mobility_ratio', type=float, default=0.2)
     parser.add_argument('--K_neg', type=int, default=10)
     parser.add_argument('--win_size', type=int, default=10)
-    parser.add_argument('--learning_rate', type=float, default=0.001)
+    parser.add_argument('--learning_rate', type=float, default=0.01)
     parser.add_argument('--dim_emb', type=int, default=128)
     parser.add_argument('--mode', type=str, default='friend', help="friend or POI")
     parser.add_argument('--input_type', type=str, default="mat", help="mat or persona") 
