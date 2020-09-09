@@ -26,27 +26,43 @@ class EgoNetSplitter(object):
         """
         ego_net_minus_ego = self.graph.subgraph(self.graph.neighbors(node))
         # print("ego_net_minus_ego   ",ego_net_minus_ego.nodes)
-        # for i in nx.connected_components(ego_net_minus_ego):
-            # print(i)
-        components = {i: n for i, n in enumerate(nx.connected_components(ego_net_minus_ego))}
+        ############### AVG DEGREE #########################
+        connected_components_list = []
+        component_combie = []
+        avg_degree_thresold = 1
+        for i in nx.connected_components(ego_net_minus_ego):
+            sub_graph_component = self.graph.subgraph(i)
+            # print(self.graph.subgraph(i).copy().edges)
+            # print(self.graph.subgraph(i).copy().edges)
+            avg_degree = len(sub_graph_component.edges)/len(sub_graph_component.nodes)
+            if avg_degree <= avg_degree_thresold:
+                component_combie.extend(i)
+            else:
+                connected_components_list.append(i)
+        connected_components_list.append(component_combie)
+
+        # components = {i: n for i, n in enumerate(nx.connected_components(ego_net_minus_ego))}
+        components = {i: n for i, n in enumerate(connected_components_list)}
+        #######################################################
+        ###############  NUMBER NODE  #########################
         new_mapping = {}
         personalities = []
         # print("components   ",components)
         components_new = {}
-        node_alone = []
+        node_combie = []
         k_new = 0
-        thresold = 1
+        node_thresold = 1
         for k, v in components.items():
             # print(type(v))
             # print(v)
-            if len(v)>=thresold:
-                node_alone.extend(list(v))
+            if len(v)>=node_thresold:
+                node_combie.extend(list(v))
             else:
                 components_new[k_new] = v
                 k_new+=1
-        components_new[k_new] = node_alone
+        components_new[k_new] = node_combie
         components = components_new
-
+        ########################################
         for k, v in components.items():
             # print("k:  ",k)
             # print("v:  ",v)
