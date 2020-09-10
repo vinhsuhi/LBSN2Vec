@@ -57,7 +57,7 @@ def train_social(embedding_model, optimizer, win_size, alpha, this_sentences, \
         optimizer.step()
 
 
-def train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha, optimizer, j):
+def train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha, optimizer, j, win_size, BATCH_SIZE):
     words = this_sentences[:, j]
     this_user_checkins = []
     for w in words:
@@ -121,7 +121,7 @@ def learn_emb(args, sentences, n_nodes, emb_dim, n_epochs, win_size, \
             for j in range(sentence_length):
                 train_social(embedding_model, optimizer, win_size, \
                     alpha, this_sentences, j, loss1s, min_user, max_user, num_neg)
-                train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha, optimizer, j)
+                train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha, optimizer, j, win_size, BATCH_SIZE)
                 if maps is not None: 
                     train_persona(embedding_model, optimizer, mymaps, mynew_maps, this_sentences, j, min_user, max_user, num_neg)
             print("loss1: {:.4f}".format(np.mean(loss1s)))
