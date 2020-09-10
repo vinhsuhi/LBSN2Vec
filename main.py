@@ -50,6 +50,8 @@ def learn_emb(args, sentences, n_nodes, emb_dim, n_epochs, win_size, \
         np.random.shuffle(sentences)
         for iter in tqdm(range(N_ITERS)):
             this_sentences = sentences[iter * BATCH_SIZE: (iter + 1) * BATCH_SIZE]
+            loss1s = []
+            loss2s = []
             for j in range(sentence_length):
                 words = this_sentences[:, j]
                 edges = []
@@ -69,18 +71,15 @@ def learn_emb(args, sentences, n_nodes, emb_dim, n_epochs, win_size, \
                     neg = torch.LongTensor(neg).cuda()
                     optimizer.zero_grad()
                     loss1 = embedding_model.edge_loss(edges, neg)
+                    loss1s.append(loss1)
                     loss1.backward()
                     optimizer.step()
-                    if iter % 50 == 0:
-                        print("Loss1: {:.4f}".format(loss1))
                 this_user_checkins = []
                 for w in words:
                     try:
                         this_checkins = user_checkins_dict[w]
                         this_user_checkins.append(this_checkins)
                     except Exception as err:
-                        print(err)
-                        print(w)
                         continue
                 this_user_checkins = np.concatenate(this_user_checkins, axis=0)
                 num_checkins_to_sample = int(alpha * len(this_user_checkins))
@@ -93,10 +92,12 @@ def learn_emb(args, sentences, n_nodes, emb_dim, n_epochs, win_size, \
                     neg = torch.LongTensor(neg).cuda()
                     optimizer.zero_grad()
                     loss2 = embedding_model.hyperedge_loss(checkins, neg)
-                    if iter % 50 == 0:
-                        print("loss2: {:.4f}".format(loss2))
+                    loss2s.append(loss2)
                     loss2.backward()
                     optimizer.step()
+            print("loss1: {:.4f}".format(np.mean(loss1s)))
+            print("loss2: {:.4f}".format(np.mean(loss2s)))
+            print("-"*100)
     embeddings = embedding_model.node_embedding(torch.LongTensor(np.arange(n_nodes)).cuda())
     embeddings = embeddings.detach().cpu().numpy()
     return embeddings
