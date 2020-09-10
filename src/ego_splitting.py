@@ -55,7 +55,7 @@ class EgoNetSplitter(object):
         for k, v in components.items():
             # print(type(v))
             # print(v)
-            if len(v)>=node_thresold:
+            if len(v)<=node_thresold:
                 node_combie.extend(list(v))
             else:
                 components_new[k_new] = v
