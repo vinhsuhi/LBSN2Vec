@@ -148,7 +148,7 @@ def sample_neg(friendship_old, selected_checkins):
     return neg_user_samples, neg_checkins_samples
 
 
-def save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples):
+def save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins):
     input_dir = "temp/processed/"
     if not os.path.isdir(input_dir):
         os.makedirs(input_dir)
