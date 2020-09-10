@@ -71,7 +71,7 @@ def learn_emb(args, sentences, n_nodes, emb_dim, n_epochs, win_size, \
                     neg = torch.LongTensor(neg).cuda()
                     optimizer.zero_grad()
                     loss1 = embedding_model.edge_loss(edges, neg)
-                    loss1s.append(loss1)
+                    loss1s.append(loss1.item())
                     loss1.backward()
                     optimizer.step()
                 this_user_checkins = []
@@ -92,7 +92,7 @@ def learn_emb(args, sentences, n_nodes, emb_dim, n_epochs, win_size, \
                     neg = torch.LongTensor(neg).cuda()
                     optimizer.zero_grad()
                     loss2 = embedding_model.hyperedge_loss(checkins, neg)
-                    loss2s.append(loss2)
+                    loss2s.append(loss2.item())
                     loss2.backward()
                     optimizer.step()
             print("loss1: {:.4f}".format(np.mean(loss1s)))
