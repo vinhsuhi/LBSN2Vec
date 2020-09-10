@@ -29,13 +29,13 @@ class EgoNetSplitter(object):
         ############### AVG DEGREE #########################
         connected_components_list = []
         component_combie = []
-        avg_degree_thresold = 1
+        avg_degree_threshold = 1
         for i in nx.connected_components(ego_net_minus_ego):
             sub_graph_component = self.graph.subgraph(i)
             # print(self.graph.subgraph(i).copy().edges)
             # print(self.graph.subgraph(i).copy().edges)
             avg_degree = len(sub_graph_component.edges)/len(sub_graph_component.nodes)
-            if avg_degree <= avg_degree_thresold:
+            if avg_degree <= avg_degree_threshold:
                 component_combie.extend(i)
             else:
                 connected_components_list.append(i)
@@ -49,19 +49,27 @@ class EgoNetSplitter(object):
         personalities = []
         # print("components   ",components)
         components_new = {}
-        node_combie = []
+        node_combine = []
         k_new = 0
-        node_thresold = 1
+        node_threshold = 1
         for k, v in components.items():
             # print(type(v))
             # print(v)
-            if len(v)<=node_thresold:
-                node_combie.extend(list(v))
+            if len(v)<=node_threshold:
+                node_combine.extend(list(v))
             else:
                 components_new[k_new] = v
                 k_new+=1
-        components_new[k_new] = node_combie
+        components_new[k_new] = node_combine
         components = components_new
+
+        #######################################################
+        ################# ORIGINAL CODE #######################
+
+        # new_mapping = {}
+        # personalities = []
+        # components = {i: n for i, n in enumerate(nx.connected_components(ego_net_minus_ego))}
+
         ########################################
         for k, v in components.items():
             # print("k:  ",k)
@@ -84,6 +92,7 @@ class EgoNetSplitter(object):
         self.index = 0
         print("Creating egonets.")
         for node in tqdm(self.graph.nodes()):
+            # print("nodes   ",node)
             self._create_egonet(node)
 
     def _map_personalities(self):
