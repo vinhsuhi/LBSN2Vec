@@ -85,7 +85,7 @@ def train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha
 def train_persona(embedding_model, optimizer, maps, new_maps, this_sentences, j, min_user, max_user, num_neg):
     words = this_sentences[:, j]
     groups = [maps[ele] for ele in words]
-    toconnect = np.array([np.random.choice(ele) for ele in groups])
+    toconnect = np.array([np.random.choice(new_maps[ele]) for ele in groups])
     edges = np.array([words, toconnect])
     edges = torch.LongTensor(edges).cuda()
     neg = np.random.randint(min_user, max_user, num_neg)
