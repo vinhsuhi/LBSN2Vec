@@ -41,7 +41,7 @@ def train_social(embedding_model, optimizer, win_size, alpha, this_sentences, \
             if j >= k:
                 this_edges1 = this_sentences[:, [j, j - k]]
                 edges.append(this_edges1)
-            if j + k < len(this_sentences):
+            if j + k < this_sentences.shape[1]:
                 this_edges2 = this_sentences[:, [j, j + k]]
                 edges.append(this_edges2)
     if len(edges) > 0:
