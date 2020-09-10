@@ -1,6 +1,8 @@
 import numpy as np 
 import networkx as nx 
 import torch 
+import multiprocessing
+
 
 class BasicWalker:
     def __init__(self, G, start_nodes=None):
@@ -42,4 +44,33 @@ class BasicWalker:
             walks = walks[:-1]
         walks = walks[0]
         return walks
+
+
+def deepwalk_walk_wrapper(class_instance, walk_length, start_node):
+    class_instance.deepwalk_walk(walk_length, start_node)
+
+
+def deepwalk_walk(params):
+    '''
+    Simulate a random walk starting from start node.
+    '''
+    walk_length = params["walk_length"]
+    neibs = params["neibs"]
+    nodes = params["nodes"]
+    # if args["iter"] % 5 == 0:
+    print("Iter:", params["iter"]) # keep printing, avoid moving process to swap
+
+    walks = []
+    for node in nodes:
+        walk = [node]
+        if len(neibs[node]) == 0:
+            walks.append(walk)
+            continue
+        while len(walk) < walk_length:
+            cur = int(walk[-1])
+            cur_nbrs = neibs[cur]
+            if len(cur_nbrs) == 0: break
+            walk.append(np.random.choice(cur_nbrs))
+        walks.append(walk)
+    return walks
 

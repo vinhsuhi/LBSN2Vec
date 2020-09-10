@@ -5,7 +5,6 @@ import pdb
 import os
 from evaluation import *
 import argparse
-import learn
 from embedding_model import EmbModel
 import torch
 import time
@@ -108,6 +107,7 @@ if __name__ == "__main__":
     if not args.load:
         sentences = random_walk(friendship_old, n_users, args)
         if not args.py:
+            import learn
             neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
             embs_ini = initialize_emb(args, n_nodes_total)
             save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples)

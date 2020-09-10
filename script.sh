@@ -18,10 +18,9 @@ done
 
 mkdir results/cpp
 
-for DATA in KualaLampur NYC Jakarta Istanbul SaoPaulo TKY hongzhi
+for DATA in KualaLampur 
 do
-    # python -u main.py --dataset_name ${DATA} --mode POI --input_type mat --py > results/POI_ori_${DATA}
-    python -u main.py --dataset_name ${DATA} --mode friend --input_type mat  --clean --num_epochs 1 > results/cpp/friend_ori_${DATA}
+    python -u main.py --dataset_name ${DATA} --mode friend --input_type mat  --clean --num_epochs 1 --walk_length 6
 done
 
 ################################## FOR PYTHON #########################################
