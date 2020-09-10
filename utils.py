@@ -4,103 +4,186 @@ import networkx as nx
 from scipy.io import loadmat
 from collections import Counter
 from tqdm import tqdm
-
-def random_walk(num_walk, walk_len, Graph):
-    """
-    TODO: DONE!
-    parameters:
-    * num_walk: Number of walks per node
-    * walk_len: The length of each walk
-    * Graph: The input graph
-
-    return:
-    * walks: Matrix m x n, m = num_walk * num_nodes, n = walk_len
-    """
-    walks = []
-    num_nodes = Graph.number_of_nodes()
-    for i in tqdm(range(num_walk), desc="Walking"):
-        for node in tqdm(Graph.nodes()):
-            walk = [node]
-            curr_node = node
-            for j in range(walk_len - 1):
-                if Graph.degree(curr_node) > 0:
-                    neighbors = [node for node in Graph[curr_node]]
-                    rand_node = np.random.choice(neighbors)
-                else:
-                    rand_node = curr_node
-                curr_node = rand_node
-                walk.append(curr_node)
-            walks.append(walk)
-    
-    return np.array(walks).flatten()
+from gensim.models import Word2Vec
+from walkers import BasicWalker
+from scipy.sparse import csr_matrix
 
 
-def create_social_graph(users_IDs, old_friendship):
-    """
-    TODO: Create social graph: DONE!
-    parameters:
-    * users_IDs: array of user_IDs
-    * old_friendship: edge list of graph
+def load_ego(path1, path2):
+    edges = []
+    with open(path1, 'r', encoding='utf-8') as file:
+        for line in file:
+            data_line = line.strip().split()
+            edges.append([int(ele) + 1 for ele in data_line[:2]])
+    edges = np.array(edges)
 
-    return:
-    * SocialGraph: The undirected networkx graph
-    """
-
-    SocialGraph = nx.Graph()
-    SocialGraph.add_nodes_from(users_IDs)
-    SocialGraph.add_edges_from(old_friendship)
-
-    return SocialGraph
+    maps = dict()
+    with open(path2, 'r', encoding='utf-8') as file:
+        for line in file:
+            data_line = line.strip().split(',')
+            maps[int(data_line[0]) + 1] = int(data_line[1])
+    return edges, maps
 
 
-def get_neg_sample(Graph):
-    """
-    TODO: latter
-    """
-    print("have not implement yet!")
-    exit()
+def random_walk(friendship_old, n_users, args):
+    print("Performing random walks on hypergraph...")
+    # graph: undirected, edges = friendship_old
+    adj = csr_matrix((np.ones(len(friendship_old)), (friendship_old[:,0]-1, friendship_old[:,1]-1)), shape=(n_users, n_users), dtype=int)
+    adj = adj + adj.T
+    G = nx.from_scipy_sparse_matrix(adj)
+    walker = BasicWalker(G)
+    sentences = walker.simulate_walks(num_walks=args.num_walks, walk_length=args.walk_length, num_workers=args.workers)
+    for i in range(len(sentences)):
+        sentences[i] = [x+1 for x in sentences[i]]
+    # sentences: args.walk_length of each walk may be different
+    return sentences
 
 
-def load_data(path):
-    data = loadmat(path)
-    selected_checkins = data['selected_checkins']
-    # selected_users_IDs = data['selected_users_IDs']
+def initialize_emb(args, n_nodes_total):
+    # TODO: initialize here!
+    embs_ini = (np.random.uniform(size=(n_nodes_total, args.dim_emb)) -0.5)/args.dim_emb
+    embs_len = np.sqrt(np.sum(embs_ini**2, axis=1)).reshape(-1,1)
+    embs_ini = embs_ini / embs_len
+    return embs_ini
 
-    offset1 = np.max(selected_checkins[:, 0])
-    unique1 = np.unique(selected_checkins[:, 1])
-    unique1_dict = {ele: i + 1 for i, ele in enumerate(unique1)}
-    selected_checkins[:, 1] = np.array([unique1_dict[id] + offset1 for id in selected_checkins[:, 1]])
-    offset2 = np.max(selected_checkins[:, 1])
-    unique2 = np.unique(selected_checkins[:, 2])
-    unique2_dict = {ele: i + 1 for i, ele in enumerate(unique2)}
-    selected_checkins[:, 2] = np.array([unique2_dict[id] + offset2 for id in selected_checkins[:, 2]])
-    offset3 = np.max(selected_checkins[:, 2])
-    unique3 = np.unique(selected_checkins[:, 3])
-    unique3_dict = {ele: i + 1 for i, ele in enumerate(unique3)}
-    selected_checkins[:, 3] = np.array([unique3_dict[id] + offset3 for id in selected_checkins[:, 3]])
 
-    num_node_total = np.max(selected_checkins)
-    num_users = len(data['selected_users_IDs'])
+def read_embs(embs_file):
+    embs = []
+    with open(embs_file, "r") as fp:
+        for line in fp.readlines()[1:]:
+            embs.append([float(x) for x in line.strip().split()])
+    embs = np.array(embs)
+    return embs
 
-    # preprocessing data
-    users = np.arange(num_users, dtype=int) + 1
-    old_social_edges = data['friendship_old']
-    new_social_edges = data['friendship_new']
 
-    SocialGraph = create_social_graph(users, old_social_edges)
-    counter_checkin_dict = Counter(selected_checkins[:, 0])
-    user_checkins_counter = np.zeros(num_users)
-    for i in range(num_users):
-        user_checkins_counter[i] = counter_checkin_dict[i + 1]
-
-    user_checkin_dict = dict() # i: list of [i, x, y, z]s
-
-    for i in range(len(selected_checkins)):
-        user = selected_checkins[i, 0]
-        if user not in user_checkin_dict:
-            user_checkin_dict[user] = [selected_checkins[i]]
+def load_data(args):
+    maps = None
+    new_maps = None
+    if args.input_type == "mat":
+        if args.clean:
+            mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
         else:
-            user_checkin_dict[user].append(selected_checkins[i])
-    
+            mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
+        selected_checkins = mat['selected_checkins'] 
+        friendship_old = mat["friendship_old"] # edge index from 0
+        friendship_new = mat["friendship_new"] 
+    elif args.input_type == "persona":
+        if args.clean:
+            mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
+        else:
+            mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
+        edges, maps = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), 'Suhi_output/ego_net_{}.txt'.format(args.dataset_name))
+        friendship_old = edges 
+        friendship_n = mat["friendship_new"] 
+        new_maps = dict()
+        for key, value in maps.items():
+            if value not in new_maps:
+                new_maps[value] = set([key])
+            else:
+                new_maps[value].add(key)
+        
+        def create_new_checkins(old_checkins, new_maps):
+            new_checkins = []
+            for i in range(len(old_checkins)):
+                checkins_i = old_checkins[i]
+                user = old_checkins[i][0]
+                for ele in new_maps[user]:
+                    new_checkins.append([ele, checkins_i[1], checkins_i[2], checkins_i[3]])
+            new_checkins = np.array(new_checkins)
+            return new_checkins
+                
+        selected_checkins = create_new_checkins(mat['selected_checkins'], new_maps)
+        friendship_new = friendship_n
 
-    return selected_checkins, SocialGraph, num_users, user_checkins_counter, user_checkin_dict
+    offset1 = max(selected_checkins[:,0])
+    _, n = np.unique(selected_checkins[:,1], return_inverse=True) # 
+    selected_checkins[:,1] = n + offset1 + 1
+    offset2 = max(selected_checkins[:,1])
+    _, n = np.unique(selected_checkins[:,2], return_inverse=True)
+    selected_checkins[:,2] = n + offset2 + 1
+    offset3 = max(selected_checkins[:,2])
+    _, n = np.unique(selected_checkins[:,3], return_inverse=True)
+    selected_checkins[:,3] = n + offset3 + 1
+    n_nodes_total = np.max(selected_checkins)
+
+    n_users = selected_checkins[:,0].max() # user
+    print(f"""Number of users: {n_users}
+        Number of nodes total: {n_nodes_total}""")
+
+    n_data = selected_checkins.shape[0]
+    if args.mode == "friend":
+        n_train = n_data
+    else:
+        n_train = int(n_data * 0.8)
+
+    sorted_checkins = selected_checkins[np.argsort(selected_checkins[:,1])]
+    train_checkins = sorted_checkins[:n_train]
+    val_checkins = sorted_checkins[n_train:]
+
+    print("Build user checkins dictionary...")
+    train_user_checkins = {}
+    for user_id in range(1, n_users+1): 
+        inds_checkins = np.argwhere(train_checkins[:,0] == user_id).flatten()
+        checkins = train_checkins[inds_checkins]
+        train_user_checkins[user_id] = checkins
+    val_user_checkins = {}
+    for user_id in range(1, n_users+1): 
+        inds_checkins = np.argwhere(val_checkins[:,0] == user_id).flatten()
+        checkins = val_checkins[inds_checkins]
+        val_user_checkins[user_id] = checkins
+
+    return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps
+
+
+def sample_neg(friendship_old, selected_checkins):
+    # for negative sampling
+    user_ids, counts = np.unique(friendship_old.flatten(), return_counts=True)
+    freq = (100*counts/counts.sum()) ** 0.75
+    neg_user_samples = np.repeat(user_ids, np.round(1000000 * freq/sum(freq)).astype(np.int64)).astype(np.int64)
+    neg_checkins_samples = {}
+    for i in range(selected_checkins.shape[1]):
+        values, counts = np.unique(selected_checkins[:,i], return_counts=True)
+        freq = (100*counts/counts.sum()) ** 0.75
+        neg_checkins_samples[i] = np.repeat(values, np.round(1000000 * freq/sum(freq)).astype(np.int64))
+    return neg_user_samples, neg_checkins_samples
+
+
+def save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins):
+    input_dir = "temp/processed/"
+    if not os.path.isdir(input_dir):
+        os.makedirs(input_dir)
+    print("Write walks")
+    with open(f"{input_dir}/walk.txt", "w+") as fp:
+        fp.write(f"{len(sentences)} {args.walk_length}\n")
+        for sent in sentences:
+            fp.write(" ".join(map(str, sent)) + "\n")
+
+    print("Write user_checkins")
+    with open(f"{input_dir}/user_checkins.txt", "w+") as fp:
+        fp.write(f"{len(train_user_checkins)}\n") # num users
+        for id in sorted(train_user_checkins.keys()):
+            checkins = train_user_checkins[id]
+            fp.write(f"{checkins.shape[0]}\n")
+            for checkin in checkins:
+                fp.write(" ".join(map(str, checkin)) + "\n")
+
+    print("Write embs_ini")
+    with open(f"{input_dir}/embs_ini.txt", "w+") as fp:
+        fp.write(f"{embs_ini.shape[0]} {embs_ini.shape[1]}\n") # num users
+        for emb in embs_ini:
+            fp.write(" ".join([f"{x:.5f}" for x in emb]) + "\n")
+
+    print("Write neg_user_samples")
+    with open(f"{input_dir}/neg_user_samples.txt", "w+") as fp:
+        fp.write(f"{neg_user_samples.shape[0]}\n") # num users
+        for neg in neg_user_samples:
+            fp.write(f"{neg}\n")
+
+    print("Write neg_checkins_samples")
+    with open(f"{input_dir}/neg_checkins_samples.txt", "w+") as fp:
+        keys = sorted(neg_checkins_samples.keys())
+        for key in keys:
+            neg_table = neg_checkins_samples[key]
+            fp.write(f"{neg_table.shape[0]}\n")
+            fp.write("\n".join(map(str, neg_table)) + "\n")
+
