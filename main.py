@@ -28,11 +28,12 @@ def parse_args():
     parser.add_argument('--py', action='store_true') 
     parser.add_argument('--dataset_name', type=str, default='NYC')
     parser.add_argument('--clean', action='store_true', help='use cleaned dataset')
+    parser.add_argument('--batchsize', type=int, defaut=512)
     args = parser.parse_args()
     return args
 
 
-def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
+def learn_emb(args, sentences, n_nodes, emb_dim, n_epochs, win_size, \
         selected_checkins, user_checkins_dict, alpha=0.2, num_neg=10):
     min_user = np.min(selected_checkins[:,0])
     max_user = np.max(selected_checkins[:,0])
@@ -41,7 +42,7 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
     embedding_model = embedding_model.cuda()
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, embedding_model.parameters()), lr=args.learning_rate)
     sentence_length = sentences.shape[1]
-    BATCH_SIZE = 512
+    BATCH_SIZE = args.batchsize
     N_ITERS = len(sentences) // BATCH_SIZE
     if N_ITERS % BATCH_SIZE > 0:
         N_ITERS += 1
@@ -124,7 +125,7 @@ if __name__ == "__main__":
             friendship_old -= 1
             for i in range(len(sentences)):
                 sentences[i] = [x-1 for x in sentences[i]]
-            embs = learn_emb(sentences, n_nodes_total, args.dim_emb, args.num_epochs, args.win_size, \
+            embs = learn_emb(args, sentences, n_nodes_total, args.dim_emb, args.num_epochs, args.win_size, \
                 train_checkins, train_user_checkins, alpha=args.mobility_ratio, num_neg = args.K_neg)
     else:
         embs_file = "temp/processed/embs.txt"
