@@ -27,15 +27,19 @@ class EgoNetSplitter(object):
         ego_net_minus_ego = self.graph.subgraph(self.graph.neighbors(node))
         # print("ego_net_minus_ego   ",ego_net_minus_ego.nodes)
         ############### AVG DEGREE #########################
+        ###############  NUMBER NODE  #########################
+        new_mapping = {}
+        personalities = []
         connected_components_list = []
         component_combie = []
         avg_degree_threshold = 1
+        node_threshold = 1
         for i in nx.connected_components(ego_net_minus_ego):
             sub_graph_component = self.graph.subgraph(i)
             # print(self.graph.subgraph(i).copy().edges)
             # print(self.graph.subgraph(i).copy().edges)
             avg_degree = len(sub_graph_component.edges)/len(sub_graph_component.nodes)
-            if avg_degree <= avg_degree_threshold:
+            if avg_degree <= avg_degree_threshold or len(sub_graph_component.nodes) <= node_threshold:
                 component_combie.extend(i)
             else:
                 connected_components_list.append(i)
@@ -43,25 +47,6 @@ class EgoNetSplitter(object):
 
         # components = {i: n for i, n in enumerate(nx.connected_components(ego_net_minus_ego))}
         components = {i: n for i, n in enumerate(connected_components_list)}
-        #######################################################
-        ###############  NUMBER NODE  #########################
-        new_mapping = {}
-        personalities = []
-        # print("components   ",components)
-        components_new = {}
-        node_combine = []
-        k_new = 0
-        node_threshold = 1
-        for k, v in components.items():
-            # print(type(v))
-            # print(v)
-            if len(v)<=node_threshold:
-                node_combine.extend(list(v))
-            else:
-                components_new[k_new] = v
-                k_new+=1
-        components_new[k_new] = node_combine
-        components = components_new
 
         #######################################################
         ################# ORIGINAL CODE #######################
