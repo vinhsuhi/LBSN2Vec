@@ -75,35 +75,6 @@ def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, n
     print(f"Recall@{k}: {recall:.3f}")
 
 
-def friendship_linkprediction2(embs_user, friendship_old, friendship_new, k=10, new_maps=None):
-    friendship_old_dict = {(x[0], x[1]): True for x in friendship_old}
-    friendship_new_dict = {(x[0], x[1]): True for x in friendship_new if (x[0], x[1]) not in friendship_old_dict and (x[1], x[0]) not in friendship_old_dict}
-    scores = embs_user.dot(embs_user.T)
-    scores = np.tril(scores, k=-1)# lower diagonal matrix
-    # scores[scores < 0.5] = 0
-    # scores[not_trained_user_ids, :] = 0
-    # scores[:, not_trained_user_ids] = 0
-    scores[friendship_old[:,0], friendship_old[:,1]] = 0 # evaluate only new friendship
-    scores[friendship_old[:,1], friendship_old[:,0]] = 0
-    # rank scores
-    inds = np.argwhere(scores > 0)
-    rank_list = np.zeros((inds.shape[0], 3))
-    rank_list[:, :2] = inds
-    rank_list[:,2] = scores[inds[:,0], inds[:, 1]]
-    rank_list = rank_list[np.argsort(-rank_list[:, 2])]
-    import pdb 
-    pdb.set_trace()
-    n_relevants = 0
-    for src, trg, score in rank_list[:k]:
-        if (src, trg) in friendship_new_dict or (trg, src) in friendship_new_dict:
-            n_relevants += 1
-    precision = n_relevants/k
-    recall = n_relevants/len(friendship_new_dict)
-    # f1 = 2*precision*recall/(precision+recall)
-    print(f"Precision@{k}: {precision:.3f}")
-    print(f"Recall@{k}: {recall:.3f}")
-    # print(f"F1@{k}: {np.mean(f1s):.3f}")
-
 def friendship_linkprediction_with_sample(embs_user, friendship_old, friendship_new, k=10):
     friendship_old_dict = {(x[0], x[1]): True for x in friendship_old}
     friendship_new_dict = {(x[0], x[1]): True for x in friendship_new if (x[0], x[1]) not in friendship_old_dict 
