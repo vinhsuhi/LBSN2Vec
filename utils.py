@@ -39,35 +39,6 @@ def random_walk(friendship_old, n_users, args):
     return sentences
 
 
-def deepwalk_walk_wrapper(class_instance, walk_length, start_node):
-    class_instance.deepwalk_walk(walk_length, start_node)
-
-
-def deepwalk_walk(params):
-    '''
-    Simulate a random walk starting from start node.
-    '''
-    walk_length = params["walk_length"]
-    neibs = params["neibs"]
-    nodes = params["nodes"]
-    # if args["iter"] % 5 == 0:
-    print("Iter:", params["iter"]) # keep printing, avoid moving process to swap
-
-    walks = []
-    for node in nodes:
-        walk = [node]
-        if len(neibs[node]) == 0:
-            walks.append(walk)
-            continue
-        while len(walk) < walk_length:
-            cur = int(walk[-1])
-            cur_nbrs = neibs[cur]
-            if len(cur_nbrs) == 0: break
-            walk.append(np.random.choice(cur_nbrs))
-        walks.append(walk)
-    return walks
-
-
 def initialize_emb(args, n_nodes_total):
     # TODO: initialize here!
     embs_ini = (np.random.uniform(size=(n_nodes_total, args.dim_emb)) -0.5)/args.dim_emb
