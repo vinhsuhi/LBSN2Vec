@@ -51,7 +51,6 @@ class EmbeddingLossFunctions(object):
 
     def sigmoid_cross_entropy_with_logits(self, labels, logits, debug=False):
         sig_aff = torch.sigmoid(logits)
-        print(sig_aff)
         loss = labels * -torch.log(sig_aff) + (1 - labels) * -torch.log(1 - sig_aff)
         return loss
 

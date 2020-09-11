@@ -25,6 +25,7 @@ def parse_args():
     parser.add_argument('--mode', type=str, default='friend', help="friend or POI")
     parser.add_argument('--input_type', type=str, default="mat", help="mat or persona") 
     parser.add_argument('--load', action='store_true') 
+    parser.add_argument('--cuda', action='store_true') 
     parser.add_argument('--py', action='store_true') 
     parser.add_argument('--dataset_name', type=str, default='NYC')
     parser.add_argument('--clean', action='store_true', help='use cleaned dataset')
