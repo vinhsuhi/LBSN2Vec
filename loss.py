@@ -65,7 +65,11 @@ class EmbeddingLossFunctions(object):
         neg_aff = self.neg_cost(inputs1, neg_samples)
         true_labels = torch.ones(true_aff.shape)  
         if cuda:
-            true_labels = true_labels.cuda()
+            try:
+                true_labels = true_labels.cuda()
+            except:
+                import pdb
+                pdb.set_trace()
         true_xent = self.sigmoid_cross_entropy_with_logits(labels=true_labels, logits=true_aff)
         neg_labels = torch.zeros(neg_aff.shape)
         if cuda:
