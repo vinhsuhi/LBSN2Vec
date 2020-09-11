@@ -34,7 +34,7 @@ def parse_args():
 
 
 def train_social(embedding_model, optimizer, win_size, alpha, this_sentences, \
-                    j, loss1s, min_user, max_user, num_neg):
+                    j, loss1s, min_user, max_user, num_neg, args):
     print("social")
     edges = []
     for k in range(1, win_size + 1):
@@ -48,9 +48,12 @@ def train_social(embedding_model, optimizer, win_size, alpha, this_sentences, \
     if len(edges) > 0:
         edges = np.concatenate(edges, axis=0)
         edges = torch.LongTensor(edges)
-        edges = edges.cuda()
+        if args.cuda:
+            edges = edges.cuda()
         neg = np.random.randint(min_user, max_user, num_neg)
-        neg = torch.LongTensor(neg).cuda()
+        neg = torch.LongTensor(neg)
+        if args.cuda:
+            neg = neg.cuda()
         optimizer.zero_grad()
         loss1 = embedding_model.edge_loss(edges, neg)
         loss1s.append(loss1.item())
@@ -58,7 +61,7 @@ def train_social(embedding_model, optimizer, win_size, alpha, this_sentences, \
         optimizer.step()
 
 
-def train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha, optimizer, j, win_size, BATCH_SIZE):
+def train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha, optimizer, j, win_size, BATCH_SIZE, args):
     print("POI")
     words = this_sentences[:, j]
     this_user_checkins = []
@@ -73,10 +76,14 @@ def train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha
     if num_checkins_to_sample > 0:
         checkin_indices = np.random.randint(0, len(this_user_checkins), min(num_checkins_to_sample, 2*win_size*BATCH_SIZE))
         checkins = this_user_checkins[checkin_indices]
-        checkins = torch.LongTensor(checkins).cuda()
+        checkins = torch.LongTensor(checkins)
+        if args.cuda:
+            checkins = checkins.cuda()
         neg_ind = np.random.randint(0, len(selected_checkins), 10)
         neg = selected_checkins[neg_ind]
-        neg = torch.LongTensor(neg).cuda()
+        neg = torch.LongTensor(neg)
+        if args.cuda:
+            neg = neg.cuda()
         optimizer.zero_grad()
         loss2 = embedding_model.hyperedge_loss(checkins, neg)
         loss2s.append(loss2.item())
@@ -84,15 +91,19 @@ def train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha
         optimizer.step()
 
 
-def train_persona(embedding_model, optimizer, maps, new_maps, this_sentences, j, min_user, max_user, num_neg):
+def train_persona(embedding_model, optimizer, maps, new_maps, this_sentences, j, min_user, max_user, num_neg, args):
     print("x"*100)
     words = this_sentences[:, j]
     groups = [maps[ele] for ele in words]
     toconnect = np.array([np.random.choice(new_maps[ele]) for ele in groups])
     edges = np.array([words, toconnect])
-    edges = torch.LongTensor(edges).cuda()
+    edges = torch.LongTensor(edges)
+    if args.cuda:
+        edges = edges.cuda()
     neg = np.random.randint(min_user, max_user, num_neg)
-    neg = torch.LongTensor(neg).cuda()
+    neg = torch.LongTensor(neg)
+    if args.cuda:
+        neg = neg.cuda()
     optimizer.zero_grad()
     loss_persona = embedding_model.edge_loss(edges, neg)
     loss_persona.backward()
@@ -109,7 +120,8 @@ def learn_emb(args, sentences, n_nodes, emb_dim, n_epochs, win_size, \
     max_user = np.max(selected_checkins[:,0])
     sentences = np.array(sentences)
     embedding_model = EmbModel(n_nodes, emb_dim)
-    embedding_model = embedding_model.cuda()
+    if args.cuda:
+        embedding_model = embedding_model.cuda()
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, embedding_model.parameters()), lr=args.learning_rate)
     sentence_length = sentences.shape[1]
     BATCH_SIZE = args.batchsize
@@ -124,14 +136,17 @@ def learn_emb(args, sentences, n_nodes, emb_dim, n_epochs, win_size, \
             loss2s = []
             for j in range(sentence_length):
                 train_social(embedding_model, optimizer, win_size, \
-                    alpha, this_sentences, j, loss1s, min_user, max_user, num_neg)
-                train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha, optimizer, j, win_size, BATCH_SIZE)
+                    alpha, this_sentences, j, loss1s, min_user, max_user, num_neg, args)
+                train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha, optimizer, j, win_size, BATCH_SIZE, args)
                 if maps is not None: 
-                    train_persona(embedding_model, optimizer, mymaps, mynew_maps, this_sentences, j, min_user, max_user, num_neg)
+                    train_persona(embedding_model, optimizer, mymaps, mynew_maps, this_sentences, j, min_user, max_user, num_neg, args)
             print("loss1: {:.4f}".format(np.mean(loss1s)))
             print("loss2: {:.4f}".format(np.mean(loss2s)))
             print("-"*100)
-    embeddings = embedding_model.node_embedding(torch.LongTensor(np.arange(n_nodes)).cuda())
+    if args.cuda:
+        embeddings = embedding_model.node_embedding(torch.LongTensor(np.arange(n_nodes)).cuda())
+    else:
+        embeddings = embedding_model.node_embedding(torch.LongTensor(np.arange(n_nodes)))
     embeddings = embeddings.detach().cpu().numpy()
     return embeddings
 
