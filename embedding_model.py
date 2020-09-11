@@ -33,7 +33,7 @@ class EmbModel(nn.Module):
         neg_embs = self.forward(neg_checkins)
         loss = 0
         for i in range(checkins.shape[1]):
-            loss += self.link_pred_layer.loss(checkin_emb_means, checkin_embs[:, i, :], neg_embs[:, i, :]) / len(checkins)
+            loss += self.link_pred_layer.loss(checkin_emb_means, checkin_embs[:, i, :], neg_embs[:, i, :], debug=True) / len(checkins)
         return loss / 4
 
     def hyperedge_loss2(self, Nodes, negs):
