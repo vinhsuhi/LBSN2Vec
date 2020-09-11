@@ -149,7 +149,7 @@ class SplitterTrainer(object):
         # import pdb
         # pdb.set_trace()
         persona_map = self.egonet_splitter.personality_map
-        with open('Suhi_output/ego_net_{}.txt'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
+        with open('Suhi_output/ego_net_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
             for key, value in persona_map.items():
                 file.write('{},{}\n'.format(key, value))
         nx.write_edgelist(self.egonet_splitter.persona_graph, 'Suhi_output/edgelist_{}'.format(self.args.lbsn))
