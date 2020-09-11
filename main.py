@@ -35,6 +35,7 @@ def parse_args():
 
 def train_social(embedding_model, optimizer, win_size, alpha, this_sentences, \
                     j, loss1s, min_user, max_user, num_neg):
+    print("social")
     edges = []
     for k in range(1, win_size + 1):
         if np.random.rand() > alpha:
@@ -58,6 +59,7 @@ def train_social(embedding_model, optimizer, win_size, alpha, this_sentences, \
 
 
 def train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha, optimizer, j, win_size, BATCH_SIZE):
+    print("POI")
     words = this_sentences[:, j]
     this_user_checkins = []
     for w in words:
@@ -83,6 +85,7 @@ def train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha
 
 
 def train_persona(embedding_model, optimizer, maps, new_maps, this_sentences, j, min_user, max_user, num_neg):
+    print("x"*100)
     words = this_sentences[:, j]
     groups = [maps[ele] for ele in words]
     toconnect = np.array([np.random.choice(new_maps[ele]) for ele in groups])
@@ -93,6 +96,7 @@ def train_persona(embedding_model, optimizer, maps, new_maps, this_sentences, j,
     optimizer.zero_grad()
     loss_persona = embedding_model.edge_loss(edges, neg)
     loss_persona.backward()
+    print("loss3: {:.4f}".format(loss_persona))
     optimizer.step()
 
 
