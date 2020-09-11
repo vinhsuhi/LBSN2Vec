@@ -20,7 +20,7 @@ def parse_args():
     parser.add_argument('--mobility_ratio', type=float, default=0.2)
     parser.add_argument('--K_neg', type=int, default=10)
     parser.add_argument('--win_size', type=int, default=10)
-    parser.add_argument('--learning_rate', type=float, default=0.001)
+    parser.add_argument('--learning_rate', type=float, default=0.001) # ten times for python would return better result
     parser.add_argument('--dim_emb', type=int, default=128)
     parser.add_argument('--mode', type=str, default='friend', help="friend or POI")
     parser.add_argument('--input_type', type=str, default="mat", help="mat or persona") 
@@ -33,8 +33,74 @@ def parse_args():
     return args
 
 
+def train_social(embedding_model, optimizer, win_size, alpha, this_sentences, \
+                    j, loss1s, min_user, max_user, num_neg):
+    edges = []
+    for k in range(1, win_size + 1):
+        if np.random.rand() > alpha:
+            if j >= k:
+                this_edges1 = this_sentences[:, [j, j - k]]
+                edges.append(this_edges1)
+            if j + k < this_sentences.shape[1]:
+                this_edges2 = this_sentences[:, [j, j + k]]
+                edges.append(this_edges2)
+    if len(edges) > 0:
+        edges = np.concatenate(edges, axis=0)
+        edges = torch.LongTensor(edges)
+        edges = edges.cuda()
+        neg = np.random.randint(min_user, max_user, num_neg)
+        neg = torch.LongTensor(neg).cuda()
+        optimizer.zero_grad()
+        loss1 = embedding_model.edge_loss(edges, neg)
+        loss1s.append(loss1.item())
+        loss1.backward()
+        optimizer.step()
+
+
+def train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha, optimizer, j, win_size, BATCH_SIZE):
+    words = this_sentences[:, j]
+    this_user_checkins = []
+    for w in words:
+        try:
+            this_checkins = user_checkins_dict[w]
+            this_user_checkins.append(this_checkins)
+        except:
+            continue
+    this_user_checkins = np.concatenate(this_user_checkins, axis=0)
+    num_checkins_to_sample = int(alpha * len(this_user_checkins))
+    if num_checkins_to_sample > 0:
+        checkin_indices = np.random.randint(0, len(this_user_checkins), min(num_checkins_to_sample, 2*win_size*BATCH_SIZE))
+        checkins = this_user_checkins[checkin_indices]
+        checkins = torch.LongTensor(checkins).cuda()
+        neg_ind = np.random.randint(0, len(selected_checkins), 10)
+        neg = selected_checkins[neg_ind]
+        neg = torch.LongTensor(neg).cuda()
+        optimizer.zero_grad()
+        loss2 = embedding_model.hyperedge_loss(checkins, neg)
+        loss2s.append(loss2.item())
+        loss2.backward()
+        optimizer.step()
+
+
+def train_persona(embedding_model, optimizer, maps, new_maps, this_sentences, j, min_user, max_user, num_neg):
+    words = this_sentences[:, j]
+    groups = [maps[ele] for ele in words]
+    toconnect = np.array([np.random.choice(new_maps[ele]) for ele in groups])
+    edges = np.array([words, toconnect])
+    edges = torch.LongTensor(edges).cuda()
+    neg = np.random.randint(min_user, max_user, num_neg)
+    neg = torch.LongTensor(neg).cuda()
+    optimizer.zero_grad()
+    loss_persona = embedding_model.edge_loss(edges, neg)
+    loss_persona.backward()
+    optimizer.step()
+
+
 def learn_emb(args, sentences, n_nodes, emb_dim, n_epochs, win_size, \
-        selected_checkins, user_checkins_dict, alpha=0.2, num_neg=10):
+        selected_checkins, user_checkins_dict, alpha=0.2, num_neg=10, maps=None, new_maps=None):
+    if maps is not None:
+        mymaps = {k - 1: v - 1 for k, v in maps.items()}
+        mynew_maps = {k - 1: [ele - 1 for ele in v] for k, v in new_maps.items()}
     min_user = np.min(selected_checkins[:,0])
     max_user = np.max(selected_checkins[:,0])
     sentences = np.array(sentences)
@@ -53,48 +119,11 @@ def learn_emb(args, sentences, n_nodes, emb_dim, n_epochs, win_size, \
             loss1s = []
             loss2s = []
             for j in range(sentence_length):
-                words = this_sentences[:, j]
-                edges = []
-                for k in range(1, win_size + 1):
-                    if np.random.rand() > alpha:
-                        if j >= k:
-                            this_edges1 = this_sentences[:, [j, j - k]]
-                            edges.append(this_edges1)
-                        if j + k < sentence_length:
-                            this_edges2 = this_sentences[:, [j, j + k]]
-                            edges.append(this_edges2)
-                if len(edges) > 0:
-                    edges = np.concatenate(edges, axis=0)
-                    edges = torch.LongTensor(edges)
-                    edges = edges.cuda()
-                    neg = np.random.randint(min_user, max_user, num_neg)
-                    neg = torch.LongTensor(neg).cuda()
-                    optimizer.zero_grad()
-                    loss1 = embedding_model.edge_loss(edges, neg)
-                    loss1s.append(loss1.item())
-                    loss1.backward()
-                    optimizer.step()
-                this_user_checkins = []
-                for w in words:
-                    try:
-                        this_checkins = user_checkins_dict[w]
-                        this_user_checkins.append(this_checkins)
-                    except Exception as err:
-                        continue
-                this_user_checkins = np.concatenate(this_user_checkins, axis=0)
-                num_checkins_to_sample = int(alpha * len(this_user_checkins))
-                if num_checkins_to_sample > 0:
-                    checkin_indices = np.random.randint(0, len(this_user_checkins), min(num_checkins_to_sample, 2*win_size*BATCH_SIZE))
-                    checkins = this_user_checkins[checkin_indices]
-                    checkins = torch.LongTensor(checkins).cuda()
-                    neg_ind = np.random.randint(0, len(selected_checkins), 10)
-                    neg = selected_checkins[neg_ind]
-                    neg = torch.LongTensor(neg).cuda()
-                    optimizer.zero_grad()
-                    loss2 = embedding_model.hyperedge_loss(checkins, neg)
-                    loss2s.append(loss2.item())
-                    loss2.backward()
-                    optimizer.step()
+                train_social(embedding_model, optimizer, win_size, \
+                    alpha, this_sentences, j, loss1s, min_user, max_user, num_neg)
+                train_poi(user_checkins_dict, this_sentences, embedding_model, loss2s, alpha, optimizer, j, win_size, BATCH_SIZE)
+                if maps is not None: 
+                    train_persona(embedding_model, optimizer, mymaps, mynew_maps, this_sentences, j, min_user, max_user, num_neg)
             print("loss1: {:.4f}".format(np.mean(loss1s)))
             print("loss2: {:.4f}".format(np.mean(loss2s)))
             print("-"*100)
@@ -127,7 +156,7 @@ if __name__ == "__main__":
             for i in range(len(sentences)):
                 sentences[i] = [x-1 for x in sentences[i]]
             embs = learn_emb(args, sentences, n_nodes_total, args.dim_emb, args.num_epochs, args.win_size, \
-                train_checkins, train_user_checkins, alpha=args.mobility_ratio, num_neg = args.K_neg)
+                train_checkins, train_user_checkins, alpha=args.mobility_ratio, num_neg = args.K_neg, maps=maps, new_maps=new_maps)
     else:
         embs_file = "temp/processed/embs.txt"
         embs = read_embs(embs_file)
