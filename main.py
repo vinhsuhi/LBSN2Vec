@@ -150,7 +150,7 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
                     loss_persona = embedding_model.edge_loss(edges, neg)
                     loss_persona.backward()
                     optimizer.step()
-                    loss3s.append(loss_persona)
+                    loss3s.append(loss_persona.item())
             print("Loss1: {:.4f}".format(np.mean(loss1s)))
             print("Loss2: {:.4f}".format(np.mean(loss2s)))
             if args.input_type == "persona":
