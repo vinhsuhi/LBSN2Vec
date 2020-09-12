@@ -112,6 +112,12 @@ def train_persona(embedding_model, optimizer, maps, new_maps, this_sentences, j,
 
 def learn_emb(args, sentences, n_nodes, emb_dim, n_epochs, win_size, \
         selected_checkins, user_checkins_dict, alpha=0.2, num_neg=10, maps=None, new_maps=None):
+    
+    import pdb 
+    pdb.set_trace()
+
+
+
     if maps is not None:
         mymaps = {k - 1: v - 1 for k, v in maps.items()}
         mynew_maps = {k - 1: [ele - 1 for ele in v] for k, v in new_maps.items()}
