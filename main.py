@@ -395,7 +395,7 @@ if __name__ == "__main__":
             for i in range(len(sentences)):
                 sentences[i] = [x-1 for x in sentences[i]]
             embs = learn_emb(sentences, n_nodes_total, args.dim_emb, args.num_epochs, args.win_size, \
-                train_checkins, train_user_checkins, alpha=args.mobility_ratio, num_neg = args.K_neg, args)
+                train_checkins, train_user_checkins, alpha=args.mobility_ratio, num_neg = args.K_neg, args=args)
     else:
         embs_file = "temp/processed/embs.txt"
         embs = read_embs(embs_file)
