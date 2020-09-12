@@ -49,28 +49,29 @@ class EmbeddingLossFunctions(object):
         return neg_aff
 
 
-    def sigmoid_cross_entropy_with_logits(self, labels, logits):
+    def sigmoid_cross_entropy_with_logits(self, labels, logits, debug=False):
         sig_aff = torch.sigmoid(logits)
         loss = labels * -torch.log(sig_aff) + (1 - labels) * -torch.log(1 - sig_aff)
         return loss
 
-    def _xent_loss(self, inputs1, inputs2, neg_samples):
+    def _xent_loss(self, inputs1, inputs2, neg_samples, debug=False):
         """
         inputs1: Tensor (512, 256), normalized vector
         inputs2: Tensor (512, 256), normalized vector
         neg_sample: Tensor (20, 256)
         """
+        # try:
         cuda = inputs1.is_cuda
         true_aff = self.affinity(inputs1, inputs2)
         neg_aff = self.neg_cost(inputs1, neg_samples)
         true_labels = torch.ones(true_aff.shape)  
         if cuda:
             true_labels = true_labels.cuda()
-        true_xent = self.sigmoid_cross_entropy_with_logits(labels=true_labels, logits=true_aff)
+        true_xent = self.sigmoid_cross_entropy_with_logits(labels=true_labels, logits=true_aff, debug=debug)
         neg_labels = torch.zeros(neg_aff.shape)
         if cuda:
             neg_labels = neg_labels.cuda()
-        neg_xent = self.sigmoid_cross_entropy_with_logits(labels=neg_labels, logits=neg_aff)
+        neg_xent = self.sigmoid_cross_entropy_with_logits(labels=neg_labels, logits=neg_aff, debug=debug)
         loss0 = true_xent.sum()
         loss1 = self.neg_sample_weights * neg_xent.sum()
         loss = loss0 + loss1
