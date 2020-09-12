@@ -29,7 +29,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="LBSN configurations")
     parser.add_argument('--num_walks', type=int, default=10)
     parser.add_argument('--walk_length', type=int, default=80)
-    parser.add_argument('--workers', type=int, default=2)
+    parser.add_argument('--workers', type=int, default=26)
     parser.add_argument('--num_epochs', type=int, default=10)
     parser.add_argument('--mobility_ratio', type=float, default=0.2)
     parser.add_argument('--K_neg', type=int, default=10)
@@ -39,6 +39,7 @@ def parse_args():
     parser.add_argument('--batchsize', type=int, default=512)
     parser.add_argument('--mode', type=str, default='friend', help="friend or POI")
     parser.add_argument('--input_type', type=str, default="mat", help="mat or persona") 
+    parser.add_argument('--cuda', action='store_true')
     parser.add_argument('--load', action='store_true') 
     parser.add_argument('--py', action='store_true') 
     parser.add_argument('--dataset_name', type=str, default='NYC')
@@ -428,13 +429,14 @@ if __name__ == "__main__":
             val_user_checkins = {key - 1: value - 1 for key, value in val_user_checkins.items()}
             friendship_new -= 1
             friendship_old -= 1
+            maps_suhi = dict()
+            new_maps_suhi = dict()
             if maps is not None:
                 maps_suhi = dict()
                 new_maps_suhi = dict()
-
-                for key, value in maps_suhi.items():
+                for key, value in maps.items():
                     maps_suhi[key -1] = value - 1
-                for key, value in new_maps_suhi.items():
+                for key, value in new_maps.items():
                     new_maps_suhi[key - 1] = [ele - 1 for ele in value]
             for i in range(len(sentences)):
                 sentences[i] = [x-1 for x in sentences[i]]
