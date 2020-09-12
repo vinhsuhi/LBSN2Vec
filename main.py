@@ -36,6 +36,7 @@ def parse_args():
     parser.add_argument('--win_size', type=int, default=10)
     parser.add_argument('--learning_rate', type=float, default=0.01)
     parser.add_argument('--dim_emb', type=int, default=128)
+    parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--mode', type=str, default='friend', help="friend or POI")
     parser.add_argument('--input_type', type=str, default="mat", help="mat or persona") 
     parser.add_argument('--load', action='store_true') 
@@ -47,7 +48,7 @@ def parse_args():
 
 
 def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
-        selected_checkins, user_checkins_dict, alpha=0.2, num_neg=10):
+        selected_checkins, user_checkins_dict, alpha=0.2, num_neg=10, args=None):
     min_user = np.min(selected_checkins[:,0])
     max_user = np.max(selected_checkins[:,0])
     sentences = np.array(sentences)
@@ -55,7 +56,7 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
     embedding_model = embedding_model.cuda()
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, embedding_model.parameters()), lr=args.learning_rate)
     sentence_length = sentences.shape[1]
-    BATCH_SIZE = 512
+    BATCH_SIZE = args.batchsize
     N_ITERS = len(sentences) // BATCH_SIZE
     if N_ITERS % BATCH_SIZE > 0:
         N_ITERS += 1
@@ -394,7 +395,7 @@ if __name__ == "__main__":
             for i in range(len(sentences)):
                 sentences[i] = [x-1 for x in sentences[i]]
             embs = learn_emb(sentences, n_nodes_total, args.dim_emb, args.num_epochs, args.win_size, \
-                train_checkins, train_user_checkins, alpha=args.mobility_ratio, num_neg = args.K_neg)
+                train_checkins, train_user_checkins, alpha=args.mobility_ratio, num_neg = args.K_neg, args)
     else:
         embs_file = "temp/processed/embs.txt"
         embs = read_embs(embs_file)
