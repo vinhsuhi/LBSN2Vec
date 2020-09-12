@@ -32,14 +32,14 @@ class EgoNetSplitter(object):
         personalities = []
         connected_components_list = []
         component_combie = []
-        avg_degree_threshold = 1
-        node_threshold = 1
+        avg_degree_threshold = 0
+        node_threshold = 0
         for i in nx.connected_components(ego_net_minus_ego):
             sub_graph_component = self.graph.subgraph(i)
             # print(self.graph.subgraph(i).copy().edges)
             # print(self.graph.subgraph(i).copy().edges)
             avg_degree = len(sub_graph_component.edges)/len(sub_graph_component.nodes)
-            if avg_degree <= avg_degree_threshold or len(sub_graph_component.nodes) <= node_threshold:
+            if avg_degree < avg_degree_threshold or len(sub_graph_component.nodes) < node_threshold:
                 component_combie.extend(i)
             else:
                 connected_components_list.append(i)

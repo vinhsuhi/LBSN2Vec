@@ -149,10 +149,25 @@ class SplitterTrainer(object):
         # import pdb
         # pdb.set_trace()
         persona_map = self.egonet_splitter.personality_map
+        edges_list = self.egonet_splitter.persona_graph.edges
+        nodes_list = self.egonet_splitter.persona_graph.nodes
+        id = 0
+        continue_map = {}
+        for i in nodes_list:
+            continue_map[i] = id
+            id +=1
+        edges_continue = [[continue_map[edge[0]],continue_map[edge[1]]] for edge in edges_list]
+        # print(edges_list)
+        # print(edges_continue)
+        # print(nodes_list)
+        # print(continue_map)
+        persona_graph_continue = nx.from_edgelist(edges_continue)
+        persona_map_continue = {continue_map[n]: persona_map[n] for n in nodes_list }
         with open('Suhi_output/ego_net_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
-            for key, value in persona_map.items():
+            for key, value in persona_map_continue.items():
                 file.write('{},{}\n'.format(key, value))
-        nx.write_edgelist(self.egonet_splitter.persona_graph, 'Suhi_output/edgelist_{}'.format(self.args.lbsn))
+        # nx.write_edgelist(self.egonet_splitter.persona_graph, 'Suhi_output/edgelist_{}'.format(self.args.lbsn))
+        nx.write_edgelist(persona_graph_continue, 'Suhi_output/edgelist_{}'.format(self.args.lbsn))
 
         print("DONE!, I'm in spliter.py, line 147")
         exit()
