@@ -46,9 +46,29 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+def train_persona(embedding_model, optimizer, maps, new_maps, this_sentences, j, min_user, max_user, num_neg, args):
+    print("x"*100)
+    words = this_sentences[:, j]
+    groups = [maps[ele] for ele in words]
+    toconnect = np.array([np.random.choice(new_maps[ele]) for ele in groups])
+    edges = np.array([words, toconnect])
+    edges = torch.LongTensor(edges)
+    if args.cuda:
+        edges = edges.cuda()
+    neg = np.random.randint(min_user, max_user, num_neg)
+    neg = torch.LongTensor(neg)
+    if args.cuda:
+        neg = neg.cuda()
+    optimizer.zero_grad()
+    loss_persona = embedding_model.edge_loss(edges, neg)
+    loss_persona.backward()
+    print("loss3: {:.4f}".format(loss_persona))
+    optimizer.step()
+
+
 
 def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
-        selected_checkins, user_checkins_dict, alpha=0.2, num_neg=10, args=None):
+        selected_checkins, user_checkins_dict, alpha=0.2, num_neg=10, args=None, maps=None, new_maps=None):
     min_user = np.min(selected_checkins[:,0])
     max_user = np.max(selected_checkins[:,0])
     sentences = np.array(sentences)
@@ -110,6 +130,22 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
                     if iter % 50 == 0:
                         print("loss2: {:.4f}".format(loss2))
                     loss2.backward()
+                    optimizer.step()
+                if args.input_type == "persona":
+                    groups = [maps[ele] for ele in words]
+                    toconnect = np.array([np.random.choice(new_maps[ele]) for ele in groups])
+                    edges = np.array([words, toconnect])
+                    edges = torch.LongTensor(edges)
+                    if args.cuda:
+                        edges = edges.cuda()
+                    neg = np.random.randint(min_user, max_user, num_neg)
+                    neg = torch.LongTensor(neg)
+                    if args.cuda:
+                        neg = neg.cuda()
+                    optimizer.zero_grad()
+                    loss_persona = embedding_model.edge_loss(edges, neg)
+                    loss_persona.backward()
+                    print("loss3: {:.4f}".format(loss_persona))
                     optimizer.step()
     embeddings = embedding_model.node_embedding(torch.LongTensor(np.arange(n_nodes)).cuda())
     embeddings = embeddings.detach().cpu().numpy()
@@ -392,10 +428,18 @@ if __name__ == "__main__":
             val_user_checkins = {key - 1: value - 1 for key, value in val_user_checkins.items()}
             friendship_new -= 1
             friendship_old -= 1
+            if maps is not None:
+                maps_suhi = dict()
+                new_maps_suhi = dict()
+
+                for key, value in maps_suhi.items():
+                    maps_suhi[key -1] = value - 1
+                for key, value in new_maps_suhi.items():
+                    new_maps_suhi[key - 1] = [ele - 1 for ele in value]
             for i in range(len(sentences)):
                 sentences[i] = [x-1 for x in sentences[i]]
             embs = learn_emb(sentences, n_nodes_total, args.dim_emb, args.num_epochs, args.win_size, \
-                train_checkins, train_user_checkins, alpha=args.mobility_ratio, num_neg = args.K_neg, args=args)
+                train_checkins, train_user_checkins, alpha=args.mobility_ratio, num_neg = args.K_neg, args=args, maps=maps_suhi, new_maps = new_maps_suhi)
     else:
         embs_file = "temp/processed/embs.txt"
         embs = read_embs(embs_file)
