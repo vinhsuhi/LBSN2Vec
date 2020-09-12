@@ -85,7 +85,11 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
         np.random.shuffle(sentences)
         for iter in tqdm(range(N_ITERS)):
             this_sentences = sentences[iter * BATCH_SIZE: (iter + 1) * BATCH_SIZE]
+            loss1s = []
+            loss2s = []
+            loss3s = []
             for j in range(sentence_length):
+                
                 words = this_sentences[:, j]
                 edges = []
                 for k in range(1, win_size + 1):
@@ -106,8 +110,8 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
                     loss1 = embedding_model.edge_loss(edges, neg)
                     loss1.backward()
                     optimizer.step()
-                    if iter % 50 == 0:
-                        print("Loss1: {:.4f}".format(loss1))
+                    loss1s.append(loss1.item())
+
                 this_user_checkins = []
                 for w in words:
                     try:
@@ -128,10 +132,9 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
                     neg = torch.LongTensor(neg).cuda()
                     optimizer.zero_grad()
                     loss2 = embedding_model.hyperedge_loss(checkins, neg)
-                    if iter % 50 == 0:
-                        print("loss2: {:.4f}".format(loss2))
                     loss2.backward()
                     optimizer.step()
+                    loss2s.append(loss2.item())
                 if args.input_type == "persona":
                     groups = [maps[ele] for ele in words]
                     toconnect = np.array([np.random.choice(new_maps[ele]) for ele in groups])
@@ -146,8 +149,12 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
                     optimizer.zero_grad()
                     loss_persona = embedding_model.edge_loss(edges, neg)
                     loss_persona.backward()
-                    print("loss3: {:.4f}".format(loss_persona))
                     optimizer.step()
+                    loss3s.append(loss_persona)
+            print("Loss1: {:.4f}".format(np.mean(loss1s)))
+            print("Loss2: {:.4f}".format(np.mean(loss2s)))
+            if args.input_type == "persona":
+                print("Loss3: {:.4f}".format(np.mean(loss3s)))
     embeddings = embedding_model.node_embedding(torch.LongTensor(np.arange(n_nodes)).cuda())
     embeddings = embeddings.detach().cpu().numpy()
     return embeddings
