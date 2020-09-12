@@ -58,10 +58,11 @@ def read_embs(embs_file):
 def to_continuous(edges, maps):
     maps_real = dict() 
     maps2 = dict()
-    count = 0
+    count = 1
     for key, value in maps.items():
         maps_real[count] = value
         maps2[key] = count
+        count += 1
     new_edges = []
     for i in range(len(edges)):
         edge_i = edges[i]
