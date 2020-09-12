@@ -163,6 +163,8 @@ class SplitterTrainer(object):
         # print(continue_map)
         persona_graph_continue = nx.from_edgelist(edges_continue)
         persona_map_continue = {continue_map[n]: persona_map[n] for n in nodes_list }
+        print("splitter number_connected_cmponents continue graph   :  ", nx.number_connected_components(persona_graph_continue))
+
         with open('Suhi_output/ego_net_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
             for key, value in persona_map_continue.items():
                 file.write('{},{}\n'.format(key, value))
