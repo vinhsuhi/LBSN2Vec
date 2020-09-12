@@ -59,14 +59,14 @@ def to_continuous(edges, maps):
     maps_real = dict() 
     maps2 = dict()
     count = 0
-    for key, value in maps:
+    for key, value in maps.items():
         maps_real[count] = value
         maps2[key] = count
     new_edges = []
     for i in range(len(edges)):
         edge_i = edges[i]
         new_edge_i = [maps2[ele] for ele in edge_i]
-        new_edges.append(edge_i)
+        new_edges.append(new_edge_i)
     new_edges = np.array(new_edges)
     return new_edges, maps_real
 
@@ -87,7 +87,7 @@ def load_data(args):
         else:
             mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
         edges, maps = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), 'Suhi_output/ego_net_{}.txt'.format(args.dataset_name))
-        edges, maps = to_continuous(edges, maps) 
+        edges, maps = to_continuous(edges, maps)
         friendship_old = edges
         friendship_n = mat["friendship_new"] 
         new_maps = dict()
