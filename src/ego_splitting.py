@@ -54,21 +54,12 @@ class EgoNetSplitter(object):
         # components = {i: n for i, n in enumerate(nx.connected_components(ego_net_minus_ego))}
 
         ########################################
-        if isPOInode:
+
+        for k, v in components.items():
             personalities.append(self.index)
-            # Find max component
-            k_max = max(components,key=lambda k: len(components[k]))
-            v_max = components[k_max]
-            for other_node in v_max:
+            for other_node in v:
                 new_mapping[other_node] = self.index
-            self.index = self.index + 1
-            # print(components[k_max])
-        else:
-            for k, v in components.items():
-                personalities.append(self.index)
-                for other_node in v:
-                    new_mapping[other_node] = self.index
-                self.index = self.index+1
+            self.index = self.index+1
 
         # print("new_mapping   ",new_mapping)
         # print("personalities   ",personalities)
@@ -86,7 +77,7 @@ class EgoNetSplitter(object):
         # print(self.listPOI)
         for node in tqdm(self.graph.nodes()):
             if node in self.listPOI:
-                self._create_egonet(node,True)
+                continue
             else:
                 self._create_egonet(node,False)
 
@@ -94,8 +85,12 @@ class EgoNetSplitter(object):
         """
         Mapping the personas to new nodes.
         """
-        self.personality_map = {p: n for n in self.graph.nodes() for p in self.personalities[n]}
-
+        # self.personality_map = {p: n for n in self.graph.nodes() for p in self.personalities[n]}
+        self.personality_map = {}
+        for n in self.graph.nodes():
+            if n not in self.listPOI:
+                for p in self.personalities[n]:
+                    self.personality_map[p] = n
     def _get_new_edge_ids(self, edge):
         """
         Getting the new edge identifiers.
@@ -111,11 +106,12 @@ class EgoNetSplitter(object):
         print("Creating the persona graph.")
         # self.persona_graph_edges = [self._get_new_edge_ids(e) for e in tqdm(self.graph.edges())]
         self.persona_graph_edges = []
+        self.persona_graphPOI_edges = []
         for e in tqdm(self.graph.edges()):
-            try:
+            if e[0] in self.listPOI or e[1] in self.listPOI:
+                self.persona_graphPOI_edges.append(e)
+            else:
                 self.persona_graph_edges.append(self._get_new_edge_ids(e))
-            except:
-                pass
 
         self.persona_graph = nx.from_edgelist(self.persona_graph_edges)
 
