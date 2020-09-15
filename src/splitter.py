@@ -150,8 +150,31 @@ class SplitterTrainer(object):
         # import pdb
         # pdb.set_trace()
         persona_map = self.egonet_splitter.personality_map
-        edges_list = self.egonet_splitter.persona_graph.edges
-        nodes_list = self.egonet_splitter.persona_graph.nodes
+        friend_label = []
+        for i in persona_map:
+            if persona_map[i] not in self.listPOI:
+                friend_label.append(i)
+
+        friend_subgraph = self.egonet_splitter.persona_graph.subgraph(friend_label).copy()
+        # print([i for i in self.egonet_splitter.persona_graph.edges])
+        # print([i for i in friend_subgraph.edges])
+        self.egonet_splitter.persona_graph.remove_edges_from([i for i in friend_subgraph.edges])
+        poi_subgraph = self.egonet_splitter.persona_graph
+        # poi_subgraph = self.egonet_splitter.persona_graph.remove_edges_from([(0,2)]).copy()
+        # edges_list = self.egonet_splitter.persona_graph.edges
+        # nodes_list = self.egonet_splitter.persona_graph.nodes
+        # print(friend_subgraph.nodes)
+        # print(poi_subgraph)
+        with open('Suhi_output/edgelistPOI_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
+            for e1, e2 in poi_subgraph.edges:
+                if e1 in friend_label:
+                    file.write('{},{}\n'.format(persona_map[e2], e1))
+                else:
+                    file.write('{},{}\n'.format(persona_map[e1], e2))
+
+        edges_list = friend_subgraph.edges
+        nodes_list = friend_subgraph.nodes
+
         id = 0
         continue_map = {}
         for i in nodes_list:
@@ -169,9 +192,7 @@ class SplitterTrainer(object):
         with open('Suhi_output/ego_net_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
             for key, value in persona_map_continue.items():
                 file.write('{},{}\n'.format(key, value))
-        with open('Suhi_output/edgelistPOI_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
-            for key, value in self.egonet_splitter.persona_graphPOI_edges:
-                file.write('{},{}\n'.format(key, value))
+
         # nx.write_edgelist(self.egonet_splitter.persona_graph, 'Suhi_output/edgelist_{}'.format(self.args.lbsn))
         nx.write_edgelist(persona_graph_continue, 'Suhi_output/edgelist_{}'.format(self.args.lbsn))
 
