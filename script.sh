@@ -73,7 +73,7 @@ python -u main.py --dataset_name KualaLampur --mode friend --input_type mat --cl
 for DATA in hongzhi
 do
     # python -u main.py --dataset_name ${DATA} --mode POI --input_type mat --py > results/POI_ori_${DATA}
-    python -u main.py --dataset_name ${DATA} --mode friend --input_type mat --py > results/friend_ori_${DATA}
+    python -u main.py --dataset_name ${DATA} --mode friend --input_type mat --clean --num_epochs 1 --lea
 done
 
 for DATA in NYC
