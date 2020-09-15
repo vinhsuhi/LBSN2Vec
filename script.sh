@@ -28,6 +28,11 @@ do
     python -u main.py --dataset_name ${DATA} --mode friend --input_type persona
 done
 
+########################### PESONA POI ################################################
+for DATA in hongzhi NYC TKY Istanbul Jakarta KualaLampur Saopaulo
+do
+python src/main.py --edge-path input/${DATA}_friends.csv --lbsn ${DATA} --listPOI input/location_${DATA}
+done
 ################################## ORIGRAPH C++ ######################################
 
 mkdir results/cpp
