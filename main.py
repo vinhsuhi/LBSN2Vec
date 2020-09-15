@@ -239,7 +239,7 @@ def read_embs(embs_file):
     embs = np.array(embs)
     return embs
 
-def load_ego(path1, path2):
+def load_ego(path1, path2, path3=None):
     edges = []
     with open(path1, 'r', encoding='utf-8') as file:
         for line in file:
@@ -252,6 +252,9 @@ def load_ego(path1, path2):
         for line in file:
             data_line = line.strip().split(',')
             maps[int(data_line[0]) + 1] = int(data_line[1])
+
+    if path3 is not None:
+        pass
 
     return edges, maps
 
@@ -291,6 +294,13 @@ def load_data(args):
                     new_checkins.append([ele, checkins_i[1], checkins_i[2], checkins_i[3]])
             new_checkins = np.array(new_checkins)
             return new_checkins
+    
+    elif args.input_type == "persona2":
+        if args.clean:
+            mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
+        else:
+            mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
+        edges, maps = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), 'Suhi_output/ego_net_{}.txt'.format(args.dataset_name))
                 
         selected_checkins = create_new_checkins(mat['selected_checkins'], new_maps)
         # friendship_new = []
