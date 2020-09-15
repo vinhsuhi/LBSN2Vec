@@ -107,12 +107,13 @@ class SplitterTrainer(object):
     """
     Class for training a Splitter.
     """
-    def __init__(self, graph, args):
+    def __init__(self, graph,listPOI, args):
         """
         :param graph: NetworkX graph object.
         :param args: Arguments object.
         """
         self.graph = graph
+        self.listPOI = listPOI
         self.args = args
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -143,7 +144,7 @@ class SplitterTrainer(object):
         Creating an EgoNetSplitter.
         """
         self.egonet_splitter = EgoNetSplitter()
-        self.egonet_splitter.fit(self.graph)
+        self.egonet_splitter.fit(self.graph,self.listPOI)
         # print(self.egonet_splitter.persona_graph_edges)
         # print(self.egonet_splitter.persona_graph)
         # import pdb

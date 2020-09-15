@@ -18,16 +18,14 @@ class EgoNetSplitter(object):
     def __init__(self, resolution=1.0):
         self.resolution = resolution
 
-    def _create_egonet(self, node):
+    def _create_egonet(self, node,isPOInode = False):
         """
         Creating an ego net, extracting personas and partitioning it.
         Args:
             node: Node ID for egonet (ego node).
         """
         ego_net_minus_ego = self.graph.subgraph(self.graph.neighbors(node))
-        # print("ego_net_minus_ego   ",ego_net_minus_ego.nodes)
-        ############### AVG DEGREE #########################
-        ###############  NUMBER NODE  #########################
+        components = {i: n for i, n in enumerate(nx.connected_components(ego_net_minus_ego))}
         new_mapping = {}
         personalities = []
         connected_components_list = []
@@ -56,13 +54,22 @@ class EgoNetSplitter(object):
         # components = {i: n for i, n in enumerate(nx.connected_components(ego_net_minus_ego))}
 
         ########################################
-        for k, v in components.items():
-            # print("k:  ",k)
-            # print("v:  ",v)
+        if isPOInode:
             personalities.append(self.index)
-            for other_node in v:
+            # Find max component
+            k_max = max(components,key=lambda k: len(components[k]))
+            v_max = components[k_max]
+            for other_node in v_max:
                 new_mapping[other_node] = self.index
-            self.index = self.index+1
+            self.index = self.index + 1
+            # print(components[k_max])
+        else:
+            for k, v in components.items():
+                personalities.append(self.index)
+                for other_node in v:
+                    new_mapping[other_node] = self.index
+                self.index = self.index+1
+
         # print("new_mapping   ",new_mapping)
         # print("personalities   ",personalities)
         self.components[node] = new_mapping
@@ -76,16 +83,19 @@ class EgoNetSplitter(object):
         self.personalities = {}
         self.index = 0
         print("Creating egonets.")
+        # print(self.listPOI)
         for node in tqdm(self.graph.nodes()):
-            # print("nodes   ",node)
-            self._create_egonet(node)
+            if node in self.listPOI:
+                self._create_egonet(node,True)
+            else:
+                self._create_egonet(node,False)
 
     def _map_personalities(self):
         """
         Mapping the personas to new nodes.
         """
         self.personality_map = {p: n for n in self.graph.nodes() for p in self.personalities[n]}
-        # print("personality_map    ",self.personality_map)
+
     def _get_new_edge_ids(self, edge):
         """
         Getting the new edge identifiers.
@@ -99,7 +109,14 @@ class EgoNetSplitter(object):
         Create a persona graph using the egonet components.
         """
         print("Creating the persona graph.")
-        self.persona_graph_edges = [self._get_new_edge_ids(e) for e in tqdm(self.graph.edges())]
+        # self.persona_graph_edges = [self._get_new_edge_ids(e) for e in tqdm(self.graph.edges())]
+        self.persona_graph_edges = []
+        for e in tqdm(self.graph.edges()):
+            try:
+                self.persona_graph_edges.append(self._get_new_edge_ids(e))
+            except:
+                pass
+
         self.persona_graph = nx.from_edgelist(self.persona_graph_edges)
 
     def _create_partitions(self):
@@ -112,13 +129,14 @@ class EgoNetSplitter(object):
         for node, membership in self.partitions.items():
             self.overlapping_partitions[self.personality_map[node]].append(membership)
 
-    def fit(self, graph):
+    def fit(self, graph,listPOI):
         """
         Fitting an Ego-Splitter clustering model.
         Arg types:
             * **graph** *(NetworkX graph)* - The graph to be clustered.
         """
         self.graph = graph
+        self.listPOI = listPOI
         self._create_egonets()
         self._map_personalities()
         self._create_persona_graph()
