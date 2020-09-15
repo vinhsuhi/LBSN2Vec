@@ -107,12 +107,13 @@ class SplitterTrainer(object):
     """
     Class for training a Splitter.
     """
-    def __init__(self, graph, args):
+    def __init__(self, graph,listPOI, args):
         """
         :param graph: NetworkX graph object.
         :param args: Arguments object.
         """
         self.graph = graph
+        self.listPOI = listPOI
         self.args = args
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -129,6 +130,7 @@ class SplitterTrainer(object):
         """
         Fitting DeepWalk on base model.
         """
+        # print(self.graph.nodes)
         self.base_walker = DeepWalker(self.graph, self.args)
         print("\nDoing base random walks.\n")
         self.base_walker.create_features()
@@ -142,16 +144,36 @@ class SplitterTrainer(object):
         Creating an EgoNetSplitter.
         """
         self.egonet_splitter = EgoNetSplitter()
-        self.egonet_splitter.fit(self.graph)
+        self.egonet_splitter.fit(self.graph,self.listPOI)
         # print(self.egonet_splitter.persona_graph_edges)
         # print(self.egonet_splitter.persona_graph)
         # import pdb
         # pdb.set_trace()
         persona_map = self.egonet_splitter.personality_map
-        with open('Suhi_output/ego_net_{}.txt'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
-            for key, value in persona_map.items():
+        edges_list = self.egonet_splitter.persona_graph.edges
+        nodes_list = self.egonet_splitter.persona_graph.nodes
+        id = 0
+        continue_map = {}
+        for i in nodes_list:
+            continue_map[i] = id
+            id +=1
+        edges_continue = [[continue_map[edge[0]],continue_map[edge[1]]] for edge in edges_list]
+        # print(edges_list)
+        # print(edges_continue)
+        # print(nodes_list)
+        # print(continue_map)
+        persona_graph_continue = nx.from_edgelist(edges_continue)
+        persona_map_continue = {continue_map[n]: persona_map[n] for n in nodes_list }
+        print("splitter number_connected_cmponents continue graph   :  ", nx.number_connected_components(persona_graph_continue))
+
+        with open('Suhi_output/ego_net_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
+            for key, value in persona_map_continue.items():
                 file.write('{},{}\n'.format(key, value))
-        nx.write_edgelist(self.egonet_splitter.persona_graph, 'Suhi_output/edgelist_{}'.format(self.args.lbsn))
+        with open('Suhi_output/edgelistPOI_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
+            for key, value in self.egonet_splitter.persona_graphPOI_edges:
+                file.write('{},{}\n'.format(key, value))
+        # nx.write_edgelist(self.egonet_splitter.persona_graph, 'Suhi_output/edgelist_{}'.format(self.args.lbsn))
+        nx.write_edgelist(persona_graph_continue, 'Suhi_output/edgelist_{}'.format(self.args.lbsn))
 
         print("DONE!, I'm in spliter.py, line 147")
         exit()

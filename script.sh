@@ -2,16 +2,30 @@
 ################################## PERSONA ######################################
 
 # persona: For one, we need to run splitter to create persona graph
-for DATA in Istanbul Jakarta KualaLampur SaoPaulo TKY
+for DATA in Istanbul Jakarta KualaLampur Saopaulo TKY NYC hongzhi
 do
     python src/main.py --edge-path input/${DATA}_friends.csv --lbsn ${DATA}
 done 
 
 # persona: then we just need to run LBSN with persona graphs
-for DATA in Istanbul Jakarta KualaLampur SaoPaulo TKY NYC hongzhi
+for DATA in Istanbul Jakarta KualaLampur Saopaulo TKY NYC hongzhi
 do
     python -u main.py --dataset_name ${DATA} --mode POI --input_type persona > results/POI_persona_${DATA}
     python -u main.py --dataset_name ${DATA} --mode friend --input_type persona > results/friend_persona_${DATA}
+done
+hongzhi NYC TKY
+
+
+for DATA in TKY
+do
+    python src/main.py --edge-path input/${DATA}_friends.csv --lbsn ${DATA}
+done
+
+# persona: then we just need to run LBSN with persona graphs
+for DATA in  TKY
+do
+    python -u main.py --dataset_name ${DATA} --mode POI --input_type persona
+    python -u main.py --dataset_name ${DATA} --mode friend --input_type persona
 done
 
 ################################## ORIGRAPH C++ ######################################

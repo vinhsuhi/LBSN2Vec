@@ -12,9 +12,12 @@ def parameter_parser():
 
     parser.add_argument("--edge-path",
                         nargs="?",
-                        default="./input/hongzhi_friends.csv",
+                        default="./input/hongzhi_friendPOI.csv",
 	                help="Edge list csv.")
-    
+    parser.add_argument("--listPOI",
+                        nargs="?",
+                        default="./input/location_hongzhi",
+                        help="list Location node.")
     parser.add_argument("--lbsn",
                         nargs="?",
                         default="hongzhi",
