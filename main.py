@@ -239,7 +239,7 @@ def read_embs(embs_file):
     embs = np.array(embs)
     return embs
 
-def load_ego(path1, path2, path3=None):
+def load_ego(path1, path2, path3=None, path4=None):
     edges = []
     with open(path1, 'r', encoding='utf-8') as file:
         for line in file:
@@ -253,10 +253,24 @@ def load_ego(path1, path2, path3=None):
             data_line = line.strip().split(',')
             maps[int(data_line[0]) + 1] = int(data_line[1])
 
+    user_POI = [] # persona user to POI of input of persona
     if path3 is not None:
-        pass
+        with open(path3, 'r', encoding='utf-8') as file:
+            for line in file:
+                data_line = line.strip().split()
+                user_POI.append([int(data_line[0]) + 1, int(data_line[1])])
+    user_POI = np.array(user_POI)
 
-    return edges, maps
+    POI_dict = dict() # POI of input of persona to original POI 
+    if path4 is not None:
+        with open(path4, 'r', encoding='utf-8') as file:
+            for line in file:
+                data_line = line.split()
+                POI_dict[int(data_line[0])] = int(data_line[1])
+    if path3 is not None:
+        return edges, maps, user_POI, POI_dict
+    else:
+        return edges, maps
 
 
 def load_data(args):
@@ -294,22 +308,44 @@ def load_data(args):
                     new_checkins.append([ele, checkins_i[1], checkins_i[2], checkins_i[3]])
             new_checkins = np.array(new_checkins)
             return new_checkins
-    
+                
+        selected_checkins = create_new_checkins(mat['selected_checkins'], new_maps)
+        friendship_new = friendship_n
+
     elif args.input_type == "persona2":
         if args.clean:
             mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
         else:
             mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
-        edges, maps = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), 'Suhi_output/ego_net_{}.txt'.format(args.dataset_name))
-                
-        selected_checkins = create_new_checkins(mat['selected_checkins'], new_maps)
-        # friendship_new = []
-        # for i in range(len(friendship_n)):
-        #     friendship_ni = friendship_n[i]
-        #     frnni = [list(new_maps[friendship_ni[0]])[0], list(new_maps[friendship_ni[1]])[0]]
-        #     friendship_new.append(frnni)
-        # friendship_new = np.array(friendship_new)
+        edges, maps, persona_POI, POI_dict = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), \
+            'Suhi_output/ego_net_{}.txt'.format(args.dataset_name), \
+                'Suhi_output/edgelistPOI_{}'.format(args.dataset_name), 'Suhi_output/location_dict_{}'.format(args.dataset_name))
+
+        friendship_old = edges 
+        friendship_n = mat["friendship_new"] 
+        new_maps = dict()
+        for key, value in maps.items():
+            if value not in new_maps:
+                new_maps[value] = set([key])
+            else:
+                new_maps[value].add(key)
+
+        def create_new_checkins2(old_checkins, new_maps, persona_POI, POI_dict):
+            new_checkins = []
+            for i in range(len(old_checkins)):
+                old_checkini = old_checkins[i]
+                user = old_checkini[0]
+                location = old_checkins[2]
+                location_image = POI_dict[location]
+                for ele in new_maps[user]:
+                    if location_image in persona_POI[ele]:
+                        new_checkins.append([ele, old_checkini[1], old_checkini[2], old_checkini[3]])
+            new_checkins = np.array(new_checkins)
+            return new_checkins
+
+        selected_checkins = create_new_checkins2(mat['selected_checkins'], new_maps, persona_POI, POI_dict)
         friendship_new = friendship_n
+        
 
     offset1 = max(selected_checkins[:,0])
     _, n = np.unique(selected_checkins[:,1], return_inverse=True) # 
