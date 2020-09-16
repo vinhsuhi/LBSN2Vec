@@ -257,7 +257,7 @@ def load_ego(path1, path2, path3=None, path4=None):
     if path3 is not None:
         with open(path3, 'r', encoding='utf-8') as file:
             for line in file:
-                data_line = line.strip().split()
+                data_line = line.strip().split(",")
                 user_POI.append([int(data_line[0]) + 1, int(data_line[1])])
     user_POI = np.array(user_POI)
 
@@ -335,7 +335,7 @@ def load_data(args):
             for i in range(len(old_checkins)):
                 old_checkini = old_checkins[i]
                 user = old_checkini[0]
-                location = old_checkins[2]
+                location = old_checkini[2]
                 location_image = POI_dict[location]
                 for ele in new_maps[user]:
                     if location_image in persona_POI[ele]:
