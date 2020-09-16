@@ -325,8 +325,8 @@ def load_data(args):
                 'Suhi_output/edgelistPOI_{}'.format(args.dataset_name), 'Suhi_output/location_dict_{}'.format(args.dataset_name))
 
         friendship_old = edges 
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         friendship_n = mat["friendship_new"] 
         new_maps = dict()
         for key, value in maps.items():
@@ -348,6 +348,8 @@ def load_data(args):
                     if location_image in persona_POI[ele]:
                         new_checkins.append([ele, old_checkini[1], old_checkini[2], old_checkini[3]])
             new_checkins = np.array(new_checkins)
+            # import pdb
+            # pdb.set_trace()
             return new_checkins
 
         selected_checkins = create_new_checkins2(mat['selected_checkins'], new_maps, persona_POI, POI_dict)

@@ -183,20 +183,25 @@ class SplitterTrainer(object):
         # print(continue_map)
         persona_graph_continue = nx.from_edgelist(edges_continue)
         persona_map_continue = {continue_map[n]: persona_map[n] for n in nodes_list }
+        persona_reverse_map_continue = {}
+        for i in persona_map_continue:
+            if persona_map_continue[i] not in persona_reverse_map_continue:
+                persona_reverse_map_continue[persona_map_continue[i]] = i
         print("Number node of persona graph  : ",len(persona_graph_continue.nodes))
         print("splitter number_connected_cmponents continue graph   :  ", nx.number_connected_components(persona_graph_continue))
 
         with open('Suhi_output/edgelistPOI_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
             for e1, e2 in poi_subgraph.edges:
-                try:
-                    if e2 not in friend_label:
-                        file.write('{},{}\n'.format(continue_map[e1],persona_map[e2]))
-                    elif e1 not in friend_label:
-                        file.write('{},{}\n'.format(continue_map[e2],persona_map[e1]))
-                    elif e1 in friend_label and e2 in friend_label:
-                        print("sai sai 193 canh la : ", e1,"    " ,e2)
-                except:
-                    pass
+                if persona_map[e2] in self.listPOI and e2 in nodes_list:
+                    file.write('{},{}\n'.format(continue_map[e1],persona_map[e2]))
+                elif persona_map[e2] in self.listPOI and e2 not in nodes_list:
+                    file.write('{},{}\n'.format(persona_reverse_map_continue[persona_map[e1]], persona_map[e2]))
+                elif persona_map[e1] in self.listPOI and e1 in nodes_list:
+                    file.write('{},{}\n'.format(continue_map[e2],persona_map[e1]))
+                elif persona_map[e1] in self.listPOI and e1 not in nodes_list:
+                    file.write('{},{}\n'.format(persona_reverse_map_continue[persona_map[e2]], persona_map[e1]))
+                elif e1 in friend_label and e2 in friend_label:
+                    print("sai sai 193 canh la : ", e1,"    " ,e2)
         with open('Suhi_output/ego_net_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
             for key, value in persona_map_continue.items():
                 file.write('{},{}\n'.format(key, value))
