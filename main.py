@@ -253,14 +253,17 @@ def load_ego(path1, path2, path3=None, path4=None):
             data_line = line.strip().split(',')
             maps[int(data_line[0]) + 1] = int(data_line[1])
 
-    user_POI = [] # persona user to POI of input of persona
+    user_POI = dict() # persona user to POI of input of persona
     if path3 is not None:
         with open(path3, 'r', encoding='utf-8') as file:
             for line in file:
-                data_line = line.strip().split()
-                user_POI.append([int(data_line[0]) + 1, int(data_line[1])])
-    user_POI = np.array(user_POI)
-
+                data_line = line.strip().split(',')
+                user = int(data_line[0]) + 1
+                location = int(data_line[1])
+                if user not in user_POI:
+                    user_POI[user] = set([location])
+                else:
+                    user_POI[user].add(location)
     POI_dict = dict() # POI of input of persona to original POI 
     if path4 is not None:
         with open(path4, 'r', encoding='utf-8') as file:
@@ -318,10 +321,12 @@ def load_data(args):
         else:
             mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
         edges, maps, persona_POI, POI_dict = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), \
-            'Suhi_output/ego_net_{}.txt'.format(args.dataset_name), \
+            'Suhi_output/ego_net_{}'.format(args.dataset_name), \
                 'Suhi_output/edgelistPOI_{}'.format(args.dataset_name), 'Suhi_output/location_dict_{}'.format(args.dataset_name))
 
         friendship_old = edges 
+        import pdb
+        pdb.set_trace()
         friendship_n = mat["friendship_new"] 
         new_maps = dict()
         for key, value in maps.items():
@@ -332,12 +337,14 @@ def load_data(args):
 
         def create_new_checkins2(old_checkins, new_maps, persona_POI, POI_dict):
             new_checkins = []
-            for i in range(len(old_checkins)):
+            for i in tqdm(range(len(old_checkins))):
                 old_checkini = old_checkins[i]
                 user = old_checkini[0]
-                location = old_checkins[2]
+                location = old_checkini[2]
                 location_image = POI_dict[location]
                 for ele in new_maps[user]:
+                    if ele not in persona_POI:
+                        continue
                     if location_image in persona_POI[ele]:
                         new_checkins.append([ele, old_checkini[1], old_checkini[2], old_checkini[3]])
             new_checkins = np.array(new_checkins)

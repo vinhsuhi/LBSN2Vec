@@ -31,8 +31,19 @@ done
 ########################### PESONA POI ################################################
 for DATA in hongzhi NYC TKY Istanbul Jakarta KualaLampur Saopaulo
 do
-python src/main.py --edge-path input/${DATA}_friends.csv --lbsn ${DATA} --listPOI input/location_${DATA}
+python src/main.py --edge-path input/${DATA}_friendPOI.csv --lbsn ${DATA} --listPOI input/location_${DATA}
 done
+
+
+python src/main.py --edge-path input/hongzhi_friends.csv --lbsn hongzhi --listPOI input/location_hongzhi
+python src/main.py --edge-path input/NYC_friends.csv --lbsn NYC --listPOI input/location_NYC
+python src/main.py --edge-path input/TKY_friends.csv --lbsn TKY --listPOI input/location_TKY
+python src/main.py --edge-path input/Istanbul_friends.csv --lbsn Istanbul --listPOI input/location_Istanbul
+python src/main.py --edge-path input/Jakarta_friends.csv --lbsn Jakarta --listPOI input/location_Jakarta
+python src/main.py --edge-path input/KualaLampur_friends.csv --lbsn KualaLampur --listPOI input/location_KualaLampur
+python src/main.py --edge-path input/Saopaulo_friends.csv --lbsn Saopaulo --listPOI input/location_Saopaulo
+
+
 ################################## ORIGRAPH C++ ######################################
 
 mkdir results/cpp

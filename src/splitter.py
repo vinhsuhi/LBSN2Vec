@@ -144,6 +144,7 @@ class SplitterTrainer(object):
         Creating an EgoNetSplitter.
         """
         self.egonet_splitter = EgoNetSplitter()
+        print("Number node of origin graph  : ",len(self.graph.nodes))
         self.egonet_splitter.fit(self.graph,self.listPOI)
         # print(self.egonet_splitter.persona_graph_edges)
         # print(self.egonet_splitter.persona_graph)
@@ -156,6 +157,7 @@ class SplitterTrainer(object):
                 friend_label.append(i)
 
         friend_subgraph = self.egonet_splitter.persona_graph.subgraph(friend_label).copy()
+        friend_subgraph = nx.from_edgelist(friend_subgraph.edges)
         # print([i for i in self.egonet_splitter.persona_graph.edges])
         # print([i for i in friend_subgraph.edges])
         self.egonet_splitter.persona_graph.remove_edges_from([i for i in friend_subgraph.edges])
@@ -181,16 +183,20 @@ class SplitterTrainer(object):
         # print(continue_map)
         persona_graph_continue = nx.from_edgelist(edges_continue)
         persona_map_continue = {continue_map[n]: persona_map[n] for n in nodes_list }
+        print("Number node of persona graph  : ",len(persona_graph_continue.nodes))
         print("splitter number_connected_cmponents continue graph   :  ", nx.number_connected_components(persona_graph_continue))
 
         with open('Suhi_output/edgelistPOI_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
             for e1, e2 in poi_subgraph.edges:
-                if e2 not in friend_label:
-                    file.write('{},{}\n'.format(continue_map[e1],persona_map[e2]))
-                elif e1 not in friend_label:
-                    file.write('{},{}\n'.format(continue_map[e2],persona_map[e1]))
-                elif e1 in friend_label and e2 in friend_label:
-                    print("sai sai 193 canh la : ", e1,"    " ,e2)
+                try:
+                    if e2 not in friend_label:
+                        file.write('{},{}\n'.format(continue_map[e1],persona_map[e2]))
+                    elif e1 not in friend_label:
+                        file.write('{},{}\n'.format(continue_map[e2],persona_map[e1]))
+                    elif e1 in friend_label and e2 in friend_label:
+                        print("sai sai 193 canh la : ", e1,"    " ,e2)
+                except:
+                    pass
         with open('Suhi_output/ego_net_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
             for key, value in persona_map_continue.items():
                 file.write('{},{}\n'.format(key, value))
