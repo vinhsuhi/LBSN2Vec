@@ -156,6 +156,7 @@ class SplitterTrainer(object):
                 friend_label.append(i)
 
         friend_subgraph = self.egonet_splitter.persona_graph.subgraph(friend_label).copy()
+        friend_subgraph = nx.from_edgelist(friend_subgraph.edges)
         # print([i for i in self.egonet_splitter.persona_graph.edges])
         # print([i for i in friend_subgraph.edges])
         self.egonet_splitter.persona_graph.remove_edges_from([i for i in friend_subgraph.edges])
