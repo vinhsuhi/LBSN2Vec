@@ -144,6 +144,7 @@ class SplitterTrainer(object):
         Creating an EgoNetSplitter.
         """
         self.egonet_splitter = EgoNetSplitter()
+        print("Number node of origin graph  : ",len(self.graph.nodes))
         self.egonet_splitter.fit(self.graph,self.listPOI)
         # print(self.egonet_splitter.persona_graph_edges)
         # print(self.egonet_splitter.persona_graph)
@@ -182,6 +183,7 @@ class SplitterTrainer(object):
         # print(continue_map)
         persona_graph_continue = nx.from_edgelist(edges_continue)
         persona_map_continue = {continue_map[n]: persona_map[n] for n in nodes_list }
+        print("Number node of persona graph  : ",len(persona_graph_continue.nodes))
         print("splitter number_connected_cmponents continue graph   :  ", nx.number_connected_components(persona_graph_continue))
 
         with open('Suhi_output/edgelistPOI_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
