@@ -165,12 +165,6 @@ class SplitterTrainer(object):
         # nodes_list = self.egonet_splitter.persona_graph.nodes
         # print(friend_subgraph.nodes)
         # print(poi_subgraph)
-        with open('Suhi_output/edgelistPOI_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
-            for e1, e2 in poi_subgraph.edges:
-                if e1 in friend_label:
-                    file.write('{},{}\n'.format(persona_map[e2], e1))
-                else:
-                    file.write('{},{}\n'.format(persona_map[e1], e2))
 
         edges_list = friend_subgraph.edges
         nodes_list = friend_subgraph.nodes
@@ -189,6 +183,14 @@ class SplitterTrainer(object):
         persona_map_continue = {continue_map[n]: persona_map[n] for n in nodes_list }
         print("splitter number_connected_cmponents continue graph   :  ", nx.number_connected_components(persona_graph_continue))
 
+        with open('Suhi_output/edgelistPOI_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
+            for e1, e2 in poi_subgraph.edges:
+                if e2 not in friend_label:
+                    file.write('{},{}\n'.format(continue_map[e1],persona_map[e2]))
+                elif e1 not in friend_label:
+                    file.write('{},{}\n'.format(continue_map[e2],persona_map[e1]))
+                elif e1 in friend_label and e2 in friend_label:
+                    print("sai sai 193 canh la : ", e1,"    " ,e2)
         with open('Suhi_output/ego_net_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
             for key, value in persona_map_continue.items():
                 file.write('{},{}\n'.format(key, value))
