@@ -43,6 +43,13 @@ python src/main.py --edge-path input/Jakarta_friends.csv --lbsn Jakarta --listPO
 python src/main.py --edge-path input/KualaLampur_friends.csv --lbsn KualaLampur --listPOI input/location_KualaLampur
 python src/main.py --edge-path input/Saopaulo_friends.csv --lbsn Saopaulo --listPOI input/location_Saopaulo
 
+########################### PESONA FRIEND , SPLIT POI ################################################
+python src/main.py --edge-path input/hongzhi_friendPOI.csv --edge-path-friend input/hongzhi_friends.csv --lbsn hongzhi --listPOI input/location_hongzhi
+
+for DATA in hongzhi NYC TKY Istanbul Jakarta KualaLampur
+do
+python src/main.py --edge-path input/${DATA}_friendPOI.csv --edge-path-friend input/${DATA}_friends.csv --lbsn ${DATA} --listPOI input/location_${DATA}
+done
 
 ################################## ORIGRAPH C++ ######################################
 

@@ -14,6 +14,10 @@ def parameter_parser():
                         nargs="?",
                         default="./input/hongzhi_friendPOI.csv",
 	                help="Edge list csv.")
+    parser.add_argument("--edge-path-friend",
+                        nargs="?",
+                        default="./input/hongzhi_friendPOI.csv",
+                        help="Edge list friend only csv.")
     parser.add_argument("--listPOI",
                         nargs="?",
                         default="./input/location_hongzhi",
