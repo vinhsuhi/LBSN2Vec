@@ -17,13 +17,14 @@ def main():
     tab_printer(args)
     # graph data fromat?
     graph = graph_reader(args.edge_path)
+    graph_friend = graph_reader(args.edge_path_friend)
     with open(args.listPOI) as f:
         reader = csv.reader(f)
         # print(reader)
         listPOI = [int(i[0]) for i in reader]
     # print(listPOI)
     # exit()
-    trainer = SplitterTrainer(graph,listPOI, args)
+    trainer = SplitterTrainer(graph,graph_friend,listPOI, args)
     trainer.fit()
     trainer.save_embedding()
     trainer.save_persona_graph_mapping()

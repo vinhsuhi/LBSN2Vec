@@ -107,12 +107,13 @@ class SplitterTrainer(object):
     """
     Class for training a Splitter.
     """
-    def __init__(self, graph,listPOI, args):
+    def __init__(self, graph,graph_friend,listPOI, args):
         """
         :param graph: NetworkX graph object.
         :param args: Arguments object.
         """
         self.graph = graph
+        self.graph_friend = graph_friend
         self.listPOI = listPOI
         self.args = args
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -145,63 +146,138 @@ class SplitterTrainer(object):
         """
         self.egonet_splitter = EgoNetSplitter()
         print("Number node of origin graph  : ",len(self.graph.nodes))
-        self.egonet_splitter.fit(self.graph,self.listPOI)
+        self.egonet_splitter.fit(self.graph_friend,self.listPOI)
         # print(self.egonet_splitter.persona_graph_edges)
         # print(self.egonet_splitter.persona_graph)
         # import pdb
         # pdb.set_trace()
+        self.list_friend = self.graph_friend.nodes
         persona_map = self.egonet_splitter.personality_map
-        friend_label = []
-        for i in persona_map:
-            if persona_map[i] not in self.listPOI:
-                friend_label.append(i)
 
-        friend_subgraph = self.egonet_splitter.persona_graph.subgraph(friend_label).copy()
-        friend_subgraph = nx.from_edgelist(friend_subgraph.edges)
-        # print([i for i in self.egonet_splitter.persona_graph.edges])
-        # print([i for i in friend_subgraph.edges])
-        self.egonet_splitter.persona_graph.remove_edges_from([i for i in friend_subgraph.edges])
-        poi_subgraph = self.egonet_splitter.persona_graph
-        # poi_subgraph = self.egonet_splitter.persona_graph.remove_edges_from([(0,2)]).copy()
-        # edges_list = self.egonet_splitter.persona_graph.edges
-        # nodes_list = self.egonet_splitter.persona_graph.nodes
-        # print(friend_subgraph.nodes)
-        # print(poi_subgraph)
+        # Graph persona của friend
+        friend_subgraph = self.egonet_splitter.persona_graph
+        # Xóa cạnh friend-friend đi
+        # còn lại là graph giữa friend- Position
+        friend_POI_graph = self.graph.copy()
+        friend_POI_graph.remove_edges_from([i for i in self.graph_friend.edges])
 
         edges_list = friend_subgraph.edges
         nodes_list = friend_subgraph.nodes
-
         id = 0
         continue_map = {}
         for i in nodes_list:
             continue_map[i] = id
             id +=1
         edges_continue = [[continue_map[edge[0]],continue_map[edge[1]]] for edge in edges_list]
-        # print(edges_list)
-        # print(edges_continue)
-        # print(nodes_list)
-        # print(continue_map)
         persona_graph_continue = nx.from_edgelist(edges_continue)
         persona_map_continue = {continue_map[n]: persona_map[n] for n in nodes_list }
         persona_reverse_map_continue = {}
+        edgelistPOI = []
         for i in persona_map_continue:
             if persona_map_continue[i] not in persona_reverse_map_continue:
-                persona_reverse_map_continue[persona_map_continue[i]] = i
+                persona_reverse_map_continue[persona_map_continue[i]] = [i]
+            else:
+                persona_reverse_map_continue[persona_map_continue[i]].append(i)
+        persona_position_dict = {}
+        # while len(friend_POI_graph.edges) >0:
+        print(len(friend_POI_graph.edges))
+        graph_POI_persona = nx.Graph()
+        for e1,e2 in friend_POI_graph.edges:
+            # print(e1,e2)
+            if e1 in self.list_friend and e2 in self.listPOI:
+                e_friend = e1
+                e_pos = e2
+            elif e2 in self.list_friend and e1 in self.listPOI:
+                e_friend = e2
+                e_pos = e1
+            else:
+                print("cạnh này bị lỗi e1 : ",e1,"   , e2:  ",e2)
+                continue
+            node_persona_respective = persona_reverse_map_continue[e_friend]
+            have_edge = False
+            # Tìm node perona có chung position
+            for persona_node in node_persona_respective:
+                neighbor_nodes = persona_graph_continue.neighbors(persona_node)
+                for neighbor_node in neighbor_nodes:
+                    if self.graph.has_edge(persona_map_continue[neighbor_node],e_pos) or self.graph.has_edge(e_pos,persona_map_continue[neighbor_node]):
+                        edgelistPOI.append([persona_node,e_pos])
+                        edgelistPOI.append([neighbor_node,e_pos])
+                        # print("Xoa cạnh  :  ", e1,e2)
+                        friend_POI_graph.remove_edges_from([(e_friend,e_pos)])
+                        friend_POI_graph.remove_edges_from([(persona_map_continue[neighbor_node],e_pos)])
+                        have_edge = True
+                        graph_POI_persona.add_edge(persona_node,e_pos)
+                        graph_POI_persona.add_edge(neighbor_node,e_pos)
+                        if persona_node not in persona_position_dict:
+                            persona_position_dict[persona_node] = [e_pos]
+                        else:
+                            persona_position_dict[persona_node].append(e_pos)
+                        if neighbor_node not in persona_position_dict:
+                            persona_position_dict[neighbor_node] = [e_pos]
+                        else:
+                            persona_position_dict[neighbor_node].append(e_pos)
+                        continue
+                    if have_edge:
+                        continue
+                if have_edge:
+                    continue
+        graph_POI_POI = nx.Graph()
+        for persona_node in persona_position_dict:
+            e_poses = persona_position_dict[persona_node]
+            for e1 in range(len(e_poses)):
+                for e2 in range(e1+1,len(e_poses)):
+                    graph_POI_POI.add_edge(e1,e2)
+
+        # Ghép các position hay ở chung với nhau
+        for e1, e2 in friend_POI_graph.edges:
+            if e1 in self.list_friend and e2 in self.listPOI:
+                e_friend = e1
+                e_pos = e2
+            elif e2 in self.list_friend and e1 in self.listPOI:
+                e_friend = e2
+                e_pos = e1
+            else:
+                print("cạnh này bị lỗi e1 : ",e1,"   , e2:  ",e2)
+                continue
+            try:
+                node_pos_friend = graph_POI_POI.neighbors(e_pos).copy()
+            except:
+                # print(persona_reverse_map_continue[e_friend])
+                # print("Node position",persona_position_dict[persona_reverse_map_continue[e_friend][0]])
+                persona_node = random.choice(persona_reverse_map_continue[e_friend])
+                edgelistPOI.append([persona_node, e_pos])
+                friend_POI_graph.remove_edges_from([(e_friend, e_pos)])
+                if persona_node in persona_position_dict:
+                    for e_pos_in_this_persona in persona_position_dict[persona_node]:
+                        graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona)
+
+                continue
+            node_persona_respective = persona_reverse_map_continue[e_friend]
+            have_edge = False
+            for persona_node in node_persona_respective:
+                for pos in node_pos_friend:
+                    if graph_POI_persona.has_edge(pos,persona_node):
+                        edgelistPOI.append([persona_node, e_pos])
+                        friend_POI_graph.remove_edges_from([(e_friend,e_pos)])
+                        have_edge = True
+                        if persona_node in persona_position_dict:
+                            for e_pos_in_this_persona in persona_position_dict[persona_node]:
+                                graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona)
+                        continue
+                    if have_edge:
+                        continue
+                if have_edge:
+                    continue
+        print(len(friend_POI_graph.edges))
+        # exit()
         print("Number node of persona graph  : ",len(persona_graph_continue.nodes))
         print("splitter number_connected_cmponents continue graph   :  ", nx.number_connected_components(persona_graph_continue))
 
         with open('Suhi_output/edgelistPOI_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
-            for e1, e2 in poi_subgraph.edges:
-                if persona_map[e2] in self.listPOI and e2 in nodes_list:
-                    file.write('{},{}\n'.format(continue_map[e1],persona_map[e2]))
-                elif persona_map[e2] in self.listPOI and e2 not in nodes_list:
-                    file.write('{},{}\n'.format(persona_reverse_map_continue[persona_map[e1]], persona_map[e2]))
-                elif persona_map[e1] in self.listPOI and e1 in nodes_list:
-                    file.write('{},{}\n'.format(continue_map[e2],persona_map[e1]))
-                elif persona_map[e1] in self.listPOI and e1 not in nodes_list:
-                    file.write('{},{}\n'.format(persona_reverse_map_continue[persona_map[e2]], persona_map[e1]))
-                elif e1 in friend_label and e2 in friend_label:
-                    print("sai sai 193 canh la : ", e1,"    " ,e2)
+            for e1, e2 in edgelistPOI:
+                # e1 persona node
+                # e2 position node
+                file.write('{},{}\n'.format(e1, e2))
         with open('Suhi_output/ego_net_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
             for key, value in persona_map_continue.items():
                 file.write('{},{}\n'.format(key, value))
@@ -295,7 +371,7 @@ class SplitterTrainer(object):
         """
         Fitting a model.
         """
-        self.base_model_fit()
+        # self.base_model_fit()
         self.create_split()
         self.setup_model()
         self.model.train()
