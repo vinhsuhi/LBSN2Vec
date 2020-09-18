@@ -346,13 +346,7 @@ def load_data(args):
                     if location_image in persona_POI[ele]:
                         new_checkins.append([ele, old_checkini[1], old_checkini[2], old_checkini[3]])
 
-
-            
-                
-            import pdb
-            pdb.set_trace()
             new_checkins = np.array(new_checkins)
-            
             return new_checkins
 
         selected_checkins = create_new_checkins2(mat['selected_checkins'], new_maps, persona_POI, POI_dict)
@@ -403,8 +397,6 @@ def load_data(args):
 def random_walk(friendship_old, n_users, args):
     print("Performing random walks on hypergraph...")
     # graph: undirected, edges = friendship_old
-    import pdb
-    pdb.set_trace()
     adj = csr_matrix((np.ones(len(friendship_old)), (friendship_old[:,0]-1, friendship_old[:,1]-1)), shape=(n_users, n_users), dtype=int)
     adj = adj + adj.T
     G = nx.from_scipy_sparse_matrix(adj)

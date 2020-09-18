@@ -30,7 +30,7 @@ class EgoNetSplitter(object):
         personalities = []
         connected_components_list = []
         component_combie = []
-        avg_degree_threshold = 1.5
+        avg_degree_threshold = 0
         node_threshold = 0
         for i in nx.connected_components(ego_net_minus_ego):
             sub_graph_component = self.graph.subgraph(i)
