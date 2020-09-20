@@ -36,8 +36,6 @@ def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, n
             simi_matrix[friendship_i[0], friendship_i[1]] = -2
             simi_matrix[friendship_i[1], friendship_i[0]] = -2
     arg_sorted_simi = simi_matrix.argsort(axis=1)
-    import pdb
-    pdb.set_trace()
 
     friend_dict = dict()
     for i in range(len(friendship_new)):
