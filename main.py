@@ -504,6 +504,11 @@ if __name__ == "__main__":
                 sentences[i] = [x-1 for x in sentences[i]]
             embs = learn_emb(sentences, n_nodes_total, args.dim_emb, args.num_epochs, args.win_size, \
                 train_checkins, train_user_checkins, alpha=args.mobility_ratio, num_neg = args.K_neg, args=args, maps=maps_suhi, new_maps = new_maps_suhi)
+        # evaluate
+        embs_user = embs[:offset1]
+        embs_time = embs[offset1:offset2]
+        embs_venue = embs[offset2:offset3]
+        embs_cate = embs[offset3:]
     else:
         def get_splitter_output(emb_path, persona_path, edge_list_path):
             data_embs = []
@@ -517,7 +522,7 @@ if __name__ == "__main__":
                     new_data_line = [float(ele) for ele in data_line]
                     new_data_line[0] = int(new_data_line[0])
                     data_embs.append(new_data_line)
-            embs = np.zeros((len(data_embs), args.emb_dim))
+            embs = np.zeros((len(data_embs), len(data_embs[0]) - 1))
 
             maps = json.load(open(persona_path, 'r', encoding='utf-8'))
             maps = {int(k) + 1: int(v) + 1 for k,v in maps.items()}
@@ -540,13 +545,9 @@ if __name__ == "__main__":
         emb_path = 'Suhi_output/{}_embedding.csv'.format(args.dataset_name)
         persona_path = 'Suhi_output/{}_personas.json'.format(args.dataset_name)
         edge_list_path = 'Suhi_output/{}.edgelist'.format(args.dataset_name)
-        embs, maps, new_maps, friendship_old = get_splitter_output(emb_path, persona_path, edge_list_path)
+        embs_user, maps, new_maps, friendship_old = get_splitter_output(emb_path, persona_path, edge_list_path)
 
-    # evaluate
-    embs_user = embs[:offset1]
-    embs_time = embs[offset1:offset2]
-    embs_venue = embs[offset2:offset3]
-    embs_cate = embs[offset3:]
+    
     
 
     if args.mode == 'friend':
