@@ -179,12 +179,6 @@ def load_ego(path1, path2, path3=None, path4=None):
     edges = np.array(edges)
     print("Number of edges after: {}".format(len(edges)))
 
-    maps = dict()
-    with open(path2, 'r', encoding='utf-8') as file:
-        for line in file:
-            data_line = line.strip().split(',')
-            maps[int(data_line[0]) + 1] = int(data_line[1])
-
     user_POI = dict() # persona user to POI of input of persona
     if path3 is not None:
         with open(path3, 'r', encoding='utf-8') as file:
@@ -275,7 +269,7 @@ def load_data(args):
 
 
 if __name__ == "__main__":
-    # maps: {key: value}; key in [0,..,n], value in [1,...,m]
+    # maps: {key: value}; key in [1,..,n], value in [1,...,m] (also new_maps)
     args = parse_args()
     train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori = load_data(args)
 
@@ -287,26 +281,6 @@ if __name__ == "__main__":
     learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
     embs_file = "temp/processed/embs.txt"
     embs = read_embs(embs_file)
-    # train_checkins -= 1
-    # val_checkins -= 1
-    # train_user_checkins = {key - 1: value - 1 for key, value in train_user_checkins.items()}
-    # val_user_checkins = {key - 1: value - 1 for key, value in val_user_checkins.items()}
-    # friendship_new -= 1
-    # friendship_old -= 1
-    # maps_suhi = dict()
-    # new_maps_suhi = dict()
-    # if maps is not None:
-    #     maps_suhi = dict()
-    #     new_maps_suhi = dict()
-    #     for key, value in maps.items():
-    #         maps_suhi[key -1] = value - 1
-    #     for key, value in new_maps.items():
-    #         new_maps_suhi[key - 1] = [ele - 1 for ele in value]
-    # for i in range(len(sentences)):
-    #     sentences[i] = [x-1 for x in sentences[i]]
-    # embs = learn_emb(sentences, n_nodes_total, args.dim_emb, args.num_epochs, args.win_size, \
-    #     train_checkins, train_user_checkins, alpha=args.mobility_ratio, num_neg = args.K_neg, args=args, maps=maps_suhi, new_maps = new_maps_suhi)
-    # evaluate
     embs_user = embs[:offset1]
     embs_time = embs[offset1:offset2]
     embs_venue = embs[offset2:offset3]
