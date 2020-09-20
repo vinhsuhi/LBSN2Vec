@@ -23,6 +23,7 @@ import learn
 from embedding_model import EmbModel
 import torch
 import time
+import json
 
 
 def parse_args():
@@ -390,7 +391,7 @@ def load_data(args):
         inds_checkins = np.argwhere(val_checkins[:,0] == user_id).flatten()
         checkins = val_checkins[inds_checkins]
         val_user_checkins[user_id] = checkins
-
+    # everything here is from 1
     return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps
 
 
@@ -469,8 +470,10 @@ def save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples)
 
 
 if __name__ == "__main__":
+    # maps: {key: value}; key in [0,..,n], value in [1,...,m]
     args = parse_args()
     train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps = load_data(args)
+
     if not args.load:
         sentences = random_walk(friendship_old, n_users, args)
         if not args.py:
@@ -502,18 +505,50 @@ if __name__ == "__main__":
             embs = learn_emb(sentences, n_nodes_total, args.dim_emb, args.num_epochs, args.win_size, \
                 train_checkins, train_user_checkins, alpha=args.mobility_ratio, num_neg = args.K_neg, args=args, maps=maps_suhi, new_maps = new_maps_suhi)
     else:
-        embs_file = "temp/processed/embs.txt"
-        embs = read_embs(embs_file)
+        def get_splitter_output(emb_path, persona_path, edge_list_path):
+            data_embs = []
+            with open(emb_path, 'r', encoding='utf-8') as file:
+                for line in file:
+                    data_line = line.split()
+                    new_data_line = [float(ele) for ele in data_line]
+                    new_data_line[0] = int(new_data_line[0])
+                    data_embs.append(new_data_line)
+            embs = np.zeros((len(data_embs), args.emb_dim))
 
+            maps = json.load(open(persona_path, 'r', encoding='utf-8'))
+            maps = {int(k) + 1: int(v) + 1 for k,v in maps.items()}
+
+            new_maps = dict()
+            for key, value in maps.items():
+                if value not in new_maps:
+                    new_maps[value] = set([key])
+                else:
+                    new_maps[value].add(key)
+
+            edges = []
+            with open(edge_list_path, 'r', encoding='utf-8') as file:
+                for line in file:
+                    data_line = line.strip().split()
+                    edges.append([int(ele) + 1 for ele in data_line[:2]])
+            edges = np.array(edges)
+            return embs, maps, new_maps, edges
+
+        emb_path = 'Suhi_output/{}_embedding.csv'.format(args.dataset_name)
+        persona_path = 'Suhi_output/{}_personas.json'.format(args.dataset_name)
+        edge_list_path = 'Suhi_output/{}.edgelist'.format(args.dataset_name)
+        embs, maps, new_maps, friendship_old = get_splitter_output(emb_path, persona_path, edge_list_path)
 
     # evaluate
     embs_user = embs[:offset1]
     embs_time = embs[offset1:offset2]
     embs_venue = embs[offset2:offset3]
     embs_cate = embs[offset3:]
+    
 
     if args.mode == 'friend':
-        if not args.py:
+        # maps and new_maps must be from 1
+        # input friendship must be from 0
+        if np.min(friendship_old) == 1: # cpp
             friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10, new_maps=new_maps, maps=maps)
         else:
             friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=new_maps, maps=maps)
