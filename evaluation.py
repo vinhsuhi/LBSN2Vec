@@ -10,15 +10,28 @@ def normalize_embedding(emb):
     return emb / normalize_factor.reshape(-1, 1)
 
 
-def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=None, maps=None):
+def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=None, maps=None, friendship_old_ori=None):
     normalized_embs_user = normalize_embedding(embs_user)
     simi_matrix = normalized_embs_user.dot(normalized_embs_user.T)
     for i in range(len(simi_matrix)):
         simi_matrix[i, i] = -2
-    for i in range(len(friendship_old)):
-        friendship_i = friendship_old[i]
-        simi_matrix[friendship_i[0], friendship_i[1]] = -2
-        simi_matrix[friendship_i[1], friendship_i[0]] = -2
+
+    if friendship_old_ori is None:
+        friendship_old_ori = friendship_old
+
+    for i in range(len(friendship_old_ori)):
+        friendship_i = friendship_old_ori[i]
+        if new_maps is not None:
+            source, target = friendship_i[0], friendship_i[1]
+            group_source = new_maps[source + 1]
+            group_target = new_maps[target + 1]
+            for eles in group_source:
+                for elet in group_target:
+                    simi_matrix[eles, elet] = -2
+                    simi_matrix[elet, eles] = -2
+        else:
+            simi_matrix[friendship_i[0], friendship_i[1]] = -2
+            simi_matrix[friendship_i[1], friendship_i[0]] = -2
     arg_sorted_simi = simi_matrix.argsort(axis=1)
 
     friend_dict = dict()

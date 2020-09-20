@@ -280,6 +280,7 @@ def load_ego(path1, path2, path3=None, path4=None):
 def load_data(args):
     maps = None
     new_maps = None
+    friendship_old_ori = None
     if args.input_type == "mat":
         if args.clean:
             mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
@@ -294,6 +295,7 @@ def load_data(args):
         else:
             mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
         edges, maps = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), 'Suhi_output/ego_net_{}'.format(args.dataset_name))
+        friendship_old_ori = mat['friendship_old']
         friendship_old = edges 
         friendship_n = mat["friendship_new"] 
         new_maps = dict()
@@ -324,7 +326,7 @@ def load_data(args):
         edges, maps, persona_POI, POI_dict = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), \
             'Suhi_output/ego_net_{}'.format(args.dataset_name), \
                 'Suhi_output/edgelistPOI_{}'.format(args.dataset_name), 'Suhi_output/location_dict_{}'.format(args.dataset_name))
-
+        friendship_old_ori = mat['friendship_old']
         friendship_old = edges 
         friendship_n = mat["friendship_new"] 
         new_maps = dict()
@@ -392,7 +394,7 @@ def load_data(args):
         checkins = val_checkins[inds_checkins]
         val_user_checkins[user_id] = checkins
     # everything here is from 1
-    return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps
+    return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori
 
 
 def random_walk(friendship_old, n_users, args):
@@ -472,7 +474,7 @@ def save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples)
 if __name__ == "__main__":
     # maps: {key: value}; key in [0,..,n], value in [1,...,m]
     args = parse_args()
-    train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps = load_data(args)
+    train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori = load_data(args)
 
     if not args.load:
         sentences = random_walk(friendship_old, n_users, args)
@@ -554,9 +556,9 @@ if __name__ == "__main__":
         # maps and new_maps must be from 1
         # input friendship must be from 0
         if np.min(friendship_old) == 1: # cpp
-            friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10, new_maps=new_maps, maps=maps)
+            friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
         else:
-            friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=new_maps, maps=maps)
+            friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
 
     else:
         # import pdb; pdb.set_trace()
