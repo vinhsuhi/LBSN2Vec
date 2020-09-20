@@ -555,6 +555,8 @@ if __name__ == "__main__":
     if args.mode == 'friend':
         # maps and new_maps must be from 1
         # input friendship must be from 0
+        if np.min(friendship_old_ori) == 1:
+            friendship_old_ori -= 1
         if np.min(friendship_old) == 1: # cpp
             friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
         else:

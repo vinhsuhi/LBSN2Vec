@@ -27,8 +27,11 @@ def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, n
             group_target = new_maps[target + 1]
             for eles in group_source:
                 for elet in group_target:
-                    simi_matrix[eles, elet] = -2
-                    simi_matrix[elet, eles] = -2
+                    if eles == 0 or elet == 0:
+                        print("LOL")
+                        exit()
+                    simi_matrix[eles - 1, elet - 1] = -2
+                    simi_matrix[elet - 1, eles - 1] = -2
         else:
             simi_matrix[friendship_i[0], friendship_i[1]] = -2
             simi_matrix[friendship_i[1], friendship_i[0]] = -2
