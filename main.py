@@ -508,8 +508,12 @@ if __name__ == "__main__":
         def get_splitter_output(emb_path, persona_path, edge_list_path):
             data_embs = []
             with open(emb_path, 'r', encoding='utf-8') as file:
+                count = 0
                 for line in file:
-                    data_line = line.split()
+                    if count == 0:
+                        count += 1
+                        continue
+                    data_line = line.strip().split(',')
                     new_data_line = [float(ele) for ele in data_line]
                     new_data_line[0] = int(new_data_line[0])
                     data_embs.append(new_data_line)
