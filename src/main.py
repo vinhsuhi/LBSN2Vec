@@ -5,6 +5,7 @@ from param_parser import parameter_parser
 from splitter import SplitterTrainer
 from utils import tab_printer, graph_reader
 import csv
+from scipy.io import loadmat
 
 def main():
     """
@@ -18,13 +19,15 @@ def main():
     # graph data fromat?
     graph = graph_reader(args.edge_path)
     graph_friend = graph_reader(args.edge_path_friend)
+    mat = loadmat('dataset/cleaned_{}.mat'.format(args.lbsn))
+
     with open(args.listPOI) as f:
         reader = csv.reader(f)
         # print(reader)
         listPOI = [int(i[0]) for i in reader]
     # print(listPOI)
     # exit()
-    trainer = SplitterTrainer(graph,graph_friend,listPOI, args)
+    trainer = SplitterTrainer(graph,graph_friend,listPOI,mat, args)
     trainer.fit()
     trainer.save_embedding()
     trainer.save_persona_graph_mapping()
