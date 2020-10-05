@@ -162,9 +162,11 @@ def load_ego(path1, path2, path3=None, path4=None):
 
     additional_edges = []
 
+    center_ori_dict = dict()
     for key, value in new_maps.items():
         max_node += 1
         maps[max_node] = key
+        center_ori_dict[max_node] = key
         new_maps[key].add(max_node)
         for ele in value:
             additional_edges.append([max_node, ele])
@@ -197,7 +199,7 @@ def load_ego(path1, path2, path3=None, path4=None):
                 data_line = line.split()
                 POI_dict[int(data_line[0])] = int(data_line[1])
     if path3 is not None:
-        return edges, maps, user_POI, POI_dict, new_maps
+        return edges, maps, user_POI, POI_dict, new_maps, center_ori_dict
     else:
         return edges, maps, new_maps
 
@@ -211,7 +213,7 @@ def load_data2(args):
         mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
     else:
         mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
-    edges, maps, persona_POI, POI_dict = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), \
+    edges, maps, persona_POI, POI_dict, center_ori_dict = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), \
                                                   'Suhi_output/ego_net_{}'.format(args.dataset_name), \
                                                   'Suhi_output/edgelistPOI_{}'.format(args.dataset_name),
                                                   'Suhi_output/location_dict_{}'.format(args.dataset_name))
@@ -225,11 +227,14 @@ def load_data2(args):
         else:
             new_maps[value].add(key)
 
-    def create_new_checkins2(old_checkins, new_maps, persona_POI, POI_dict):
+    def create_new_checkins2(old_checkins, new_maps, persona_POI, POI_dict, center_ori_dict):
+        ori_center_dict = {v:k for k,v in center_ori_dict.items()}
         new_checkins = []
         for i in tqdm(range(len(old_checkins))):
             old_checkini = old_checkins[i]
             user = old_checkini[0]
+            center_user = ori_center_dict[user]
+            new_checkins.append([center_user, old_checkini[1], old_checkini[2], old_checkini[3]])
             location = old_checkini[2]
             location_image = POI_dict[location]
             for ele in new_maps[user]:
@@ -237,7 +242,6 @@ def load_data2(args):
                     continue
                 if location_image in persona_POI[ele]:
                     new_checkins.append([ele, old_checkini[1], old_checkini[2], old_checkini[3]])
-
         new_checkins = np.array(new_checkins)
         return new_checkins
 
