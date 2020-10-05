@@ -202,6 +202,89 @@ def load_ego(path1, path2, path3=None, path4=None):
         return edges, maps, new_maps
 
 
+def load_data2(args):
+    maps = None
+    new_maps = None
+    friendship_old_ori = None
+
+    if args.clean:
+        mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
+    else:
+        mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
+    edges, maps, persona_POI, POI_dict = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), \
+                                                  'Suhi_output/ego_net_{}'.format(args.dataset_name), \
+                                                  'Suhi_output/edgelistPOI_{}'.format(args.dataset_name),
+                                                  'Suhi_output/location_dict_{}'.format(args.dataset_name))
+    friendship_old_ori = mat['friendship_old']
+    friendship_old = edges
+    friendship_n = mat["friendship_new"]
+    new_maps = dict()
+    for key, value in maps.items():
+        if value not in new_maps:
+            new_maps[value] = set([key])
+        else:
+            new_maps[value].add(key)
+
+    def create_new_checkins2(old_checkins, new_maps, persona_POI, POI_dict):
+        new_checkins = []
+        for i in tqdm(range(len(old_checkins))):
+            old_checkini = old_checkins[i]
+            user = old_checkini[0]
+            location = old_checkini[2]
+            location_image = POI_dict[location]
+            for ele in new_maps[user]:
+                if ele not in persona_POI:
+                    continue
+                if location_image in persona_POI[ele]:
+                    new_checkins.append([ele, old_checkini[1], old_checkini[2], old_checkini[3]])
+
+        new_checkins = np.array(new_checkins)
+        return new_checkins
+
+    selected_checkins = create_new_checkins2(mat['selected_checkins'], new_maps, persona_POI, POI_dict)
+    friendship_new = friendship_n
+
+
+    offset1 = max(selected_checkins[:, 0])
+    _, n = np.unique(selected_checkins[:, 1], return_inverse=True)  #
+    selected_checkins[:, 1] = n + offset1 + 1
+    offset2 = max(selected_checkins[:, 1])
+    _, n = np.unique(selected_checkins[:, 2], return_inverse=True)
+    selected_checkins[:, 2] = n + offset2 + 1
+    offset3 = max(selected_checkins[:, 2])
+    _, n = np.unique(selected_checkins[:, 3], return_inverse=True)
+    selected_checkins[:, 3] = n + offset3 + 1
+    n_nodes_total = np.max(selected_checkins)
+
+    n_users = selected_checkins[:, 0].max()  # user
+    print(f"""Number of users: {n_users}
+    Number of nodes total: {n_nodes_total}""")
+
+    n_data = selected_checkins.shape[0]
+    if args.mode == "friend":
+        n_train = n_data
+    else:
+        n_train = int(n_data * 0.8)
+
+    sorted_checkins = selected_checkins[np.argsort(selected_checkins[:, 1])]
+    train_checkins = sorted_checkins[:n_train]
+    val_checkins = sorted_checkins[n_train:]
+
+    print("Build user checkins dictionary...")
+    train_user_checkins = {}
+    for user_id in range(1, n_users + 1):
+        inds_checkins = np.argwhere(train_checkins[:, 0] == user_id).flatten()
+        checkins = train_checkins[inds_checkins]
+        train_user_checkins[user_id] = checkins
+    val_user_checkins = {}
+    for user_id in range(1, n_users + 1):
+        inds_checkins = np.argwhere(val_checkins[:, 0] == user_id).flatten()
+        checkins = val_checkins[inds_checkins]
+        val_user_checkins[user_id] = checkins
+    # everything here is from 1
+    return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori
+
+
 def load_data(args):
     maps = None
     new_maps = None
@@ -271,7 +354,10 @@ def load_data(args):
 if __name__ == "__main__":
     # maps: {key: value}; key in [1,..,n], value in [1,...,m] (also new_maps)
     args = parse_args()
-    train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori = load_data(args)
+    if args.input_type == "persona2":
+        train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori = load_data2(args)
+    else:
+        train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori = load_data(args)
 
     sentences = random_walk(friendship_old, n_users, args)
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
@@ -286,10 +372,26 @@ if __name__ == "__main__":
     embs_venue = embs[offset2:offset3]
     embs_cate = embs[offset3:]
 
-    if np.min(friendship_old_ori) == 1:
-        friendship_old_ori -= 1
-    if np.min(friendship_old) == 1: # cpp
-        friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
-    else:
-        friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
+    # if np.min(friendship_old_ori) == 1:
+    #     friendship_old_ori -= 1
+    # if np.min(friendship_old) == 1: # cpp
+    #     friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
+    # else:
+    #     friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
 
+    if args.mode == 'friend':
+        # maps and new_maps must be from 1
+        # input friendship must be from 0
+        if np.min(friendship_old_ori) == 1:
+            friendship_old_ori -= 1
+        if np.min(friendship_old) == 1: # cpp
+            friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
+        else:
+            friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
+
+    else:
+        # import pdb; pdb.set_trace()
+        val_checkins[:,0] -= 1
+        val_checkins[:,1] -= (offset1+1)
+        val_checkins[:,2] -= (offset2+1)
+        location_prediction(val_checkins[:,:3], embs, embs_venue, k=10)
