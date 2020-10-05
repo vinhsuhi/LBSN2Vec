@@ -121,8 +121,8 @@ def load_data2(args):
         mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
     else:
         mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
-    edges, maps, persona_POI, POI_dict, center_ori_dict = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), \
-                                                  'Suhi_output/ego_net_{}'.format(args.dataset_name), \
+    edges, maps, persona_POI, POI_dict, center_ori_dict = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), 
+                                                  'Suhi_output/ego_net_{}'.format(args.dataset_name), 
                                                   'Suhi_output/edgelistPOI_{}'.format(args.dataset_name),
                                                   'Suhi_output/location_dict_{}'.format(args.dataset_name))
     friendship_old_ori = mat['friendship_old']
