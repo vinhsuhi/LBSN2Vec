@@ -47,6 +47,8 @@ def parse_args():
     parser.add_argument('--py', action='store_true') 
     parser.add_argument('--dataset_name', type=str, default='NYC')
     parser.add_argument('--clean', action='store_true', help='use cleaned dataset')
+    parser.add_argument('--save_emb', action='store_true', help='use cleaned dataset')
+    parser.add_argument('--emb_name', action='', help='use cleaned dataset')
     args = parser.parse_args()
     return args
 
@@ -275,21 +277,16 @@ if __name__ == "__main__":
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
     embs_ini = initialize_emb(args, n_nodes_total)
     save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins)
-    
-    learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
-    embs_file = "temp/processed/embs.txt"
-    embs = read_embs(embs_file)
-    embs_user = embs[:offset1]
-    embs_time = embs[offset1:offset2]
-    embs_venue = embs[offset2:offset3]
-    embs_cate = embs[offset3:]
-
-    # if np.min(friendship_old_ori) == 1:
-    #     friendship_old_ori -= 1
-    # if np.min(friendship_old) == 1: # cpp
-    #     friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
-    # else:
-    #     friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
+    list_user_embs = []
+    for i in range(args.num_embs):
+        learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
+        embs_file = "temp/processed/embs.txt"
+        embs = read_embs(embs_file)
+        embs_user = embs[:offset1]
+        embs_time = embs[offset1:offset2]
+        embs_venue = embs[offset2:offset3]
+        embs_cate = embs[offset3:]
+        list_user_embs.append(embs_user)
 
     if args.mode == 'friend':
         # maps and new_maps must be from 1
