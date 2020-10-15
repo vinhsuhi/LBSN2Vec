@@ -213,6 +213,8 @@ def load_data(args):
     friendship_old_ori = mat['friendship_old']
     friendship_old = edges 
     friendship_new = mat["friendship_new"] 
+    friendship_new = [[int(friendship_new[i, 0]), int(friendship_new[i, 1])] for i in range(len(friendship_new))]
+    friendship_new = np.array(friendship_new)
     
     def create_new_checkins(old_checkins, new_maps):
         new_checkins = []
@@ -277,7 +279,7 @@ def sample_edges_non_edges(edges, num_samples, n_nodes):
     return edges_sampled, non_edges
 
 def eval_acc(mlp, embs, friendship_new):
-            friendship_new = torch.FloatTensor(friendship_new)
+            friendship_new = torch.LongTensor(friendship_new)
             friendship_new = friendship_new.cuda()
             pred = mlp.forward(embs, friendship_new)
             pred = F.log_softmax(pred)
@@ -321,7 +323,6 @@ if __name__ == "__main__":
         
         embs = torch.FloatTensor(embs_user)
         embs = embs.cuda()
-        
 
         for ep in range(10):
             mlp_optimizer.zero_grad()
