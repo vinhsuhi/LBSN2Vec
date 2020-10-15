@@ -323,7 +323,7 @@ if __name__ == "__main__":
         embs = embs.cuda()
         
 
-        for ep in range(10000):
+        for ep in range(10):
             mlp_optimizer.zero_grad()
             edges, non_edges = sample_edges_non_edges(friendship_old-1, 2000, n_users)
             edges = torch.LongTensor(edges)
@@ -339,7 +339,7 @@ if __name__ == "__main__":
             print("Loss: {:.4f}".format(loss.item()))
             mlp_optimizer.step()
 
-        #eval_acc(mlp, embs, friendship_new)
+        eval_acc(mlp, embs, friendship_new - 1)
     
 
         # evaluate here
