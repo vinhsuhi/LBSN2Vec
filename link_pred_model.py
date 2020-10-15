@@ -21,14 +21,12 @@ class StructMLP(nn.Module):
         self.ds_layer_1 = nn.Linear(input_rep, num_neurons)
         self.ds_layer_2 = nn.Linear(num_neurons, num_neurons)
         self.rho_layer_1 = nn.Linear(num_neurons, num_neurons)
-        self.rho_layer_2 = nn.Linear(num_neurons, num_neurons)
 
         #One Hidden Layer
         self.layer1 = nn.Linear(num_neurons, num_neurons)
         self.layer2 = nn.Linear(num_neurons, 2)
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
-        self.device = torch.device("cuda")
 
     def forward(self, input_tensor, samples):
         """
@@ -42,6 +40,8 @@ class StructMLP(nn.Module):
         x = self.relu(x)
         x = self.ds_layer_2(x)
         x = x[samples]
+        import pdb
+        pdb.set_trace()
         x = torch.sum(x, dim=1)
         x = self.rho_layer_1(x)
 
