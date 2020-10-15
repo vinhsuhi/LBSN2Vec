@@ -25,7 +25,10 @@ import torch
 import time
 import json
 from utils import save_info, sample_neg, read_embs, initialize_emb, random_walk
-
+import torch.nn as nn
+from link_pred_model import StructMLP
+import torch.nn.functional as F
+from sklearn.metrics import f1_score, accuracy_score
 
 
 def parse_args():
@@ -264,6 +267,25 @@ def load_data(args):
     # everything here is from 1
     return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori
 
+def sample_edges_non_edges(edges, num_samples, n_nodes):
+    num_edges = edges.shape[0]
+    edges_sampled = edges[np.random.randint(num_edges, size=num_samples)]
+    source = np.random.randint(0, n_nodes, num_samples)
+    target = np.random.randint(0, n_nodes, num_samples)
+    non_edges = np.array([source, target])
+    return edges_sampled, non_edges
+
+def eval_acc(mlp, embs, friendship_new):
+            friendship_new = torch.FloatTensor(friendship_new)
+            friendship_new = friendship_new.cuda()
+            pred = mlp.forward(embs, friendship_new)
+            pred = F.log_softmax(pred)
+            pred = pred.detach().cpu().numpy()
+            pred = np.argmax(pred, axis=1)
+            t_test = np.ones(len(pred))
+            print("Test Micro F1 Score: ", f1_score(t_test, pred, average='micro'))
+            print("Test Weighted F1 Score: ", f1_score(t_test, pred, average='weighted'))
+            print("Test Accuracy Score: ", accuracy_score(t_test, pred))
 
 if __name__ == "__main__":
     # maps: {key: value}; key in [1,..,n], value in [1,...,m] (also new_maps)
@@ -277,8 +299,7 @@ if __name__ == "__main__":
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
     embs_ini = initialize_emb(args, n_nodes_total)
     save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins)
-    list_user_embs = []
-    for i in range(args.num_embs):
+    for i in tqdm(range(args.num_embs)):
         learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
         embs_file = "temp/processed/embs.txt"
         embs = read_embs(embs_file)
@@ -286,8 +307,37 @@ if __name__ == "__main__":
         embs_time = embs[offset1:offset2]
         embs_venue = embs[offset2:offset3]
         embs_cate = embs[offset3:]
-        list_user_embs.append(embs_user)
 
+        # predict link here
+        
+        mlp = StructMLP(embs_user.shape[1], 256)
+        mlp = mlp.cuda()
+        mlp_optimizer = torch.optim.Adam(mlp.parameters(), lr=0.001)
+
+        embs = torch.FloatTensor(embs)
+        embs = embs.cuda()
+
+        for ep in range(10):
+            mlp_optimizer.zero_grad()
+            edges, non_edges = sample_edges_non_edges(friendship_old, 2000, n_users)
+            edges = torch.LongTensor(edges)
+            non_edges = torch.LongTensor(non_edges)
+            edges = edges.cuda()
+            non_edges = non_edges.cuda()
+            samples = torch.cat((edges, non_edges), dim=0)
+            labels = torch.cat((torch.ones(len(edges)), torch.zeros(len(non_edges))), dim = 0)
+            samples = samples.cuda()
+            labels = labels.cuda()
+            loss = mlp.compute_loss(embs, samples, labels)
+            loss.backward()
+            print("Loss: {:.4f}".format(loss.item()))
+            mlp_optimizer.step()
+
+        eval_acc(mlp, embs, friendship_new)
+    
+
+        # evaluate here
+    exit()
     if args.mode == 'friend':
         # maps and new_maps must be from 1
         # input friendship must be from 0
