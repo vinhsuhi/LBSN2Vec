@@ -40,8 +40,6 @@ class StructMLP(nn.Module):
         x = self.relu(x)
         x = self.ds_layer_2(x)
         x = x[samples]
-        import pdb
-        pdb.set_trace()
         x = torch.sum(x, dim=1)
         x = self.rho_layer_1(x)
 
