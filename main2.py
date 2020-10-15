@@ -316,10 +316,10 @@ if __name__ == "__main__":
         mlp = mlp.cuda()
         mlp_optimizer = torch.optim.Adam(mlp.parameters(), lr=0.001)
 
-        """
+        
         embs = torch.FloatTensor(embs_user)
         embs = embs.cuda()
-        """
+        
 
         for ep in range(10):
             mlp_optimizer.zero_grad()
@@ -342,6 +342,7 @@ if __name__ == "__main__":
 
         # evaluate here
     exit()
+
     """
     if args.mode == 'friend':
         # maps and new_maps must be from 1
