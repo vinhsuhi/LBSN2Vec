@@ -329,11 +329,9 @@ if __name__ == "__main__":
             edges = edges.cuda()
             non_edges = non_edges.cuda()
             samples = torch.cat((edges, non_edges), dim=0)
-            labels = torch.cat((torch.ones(len(edges)), torch.zeros(len(non_edges))), dim = 0)
+            labels = torch.cat((torch.ones(len(edges)), torch.zeros(len(non_edges))), dim = 0).long()
             samples = samples.cuda()
             labels = labels.cuda()
-            import pdb
-            pdb.set_trace()
             loss = mlp.compute_loss(embs, samples, labels)
             loss.backward()
             print("Loss: {:.4f}".format(loss.item()))
