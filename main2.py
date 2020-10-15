@@ -50,8 +50,7 @@ def parse_args():
     parser.add_argument('--py', action='store_true') 
     parser.add_argument('--dataset_name', type=str, default='NYC')
     parser.add_argument('--clean', action='store_true', help='use cleaned dataset')
-    parser.add_argument('--save_emb', action='store_true', help='use cleaned dataset')
-    parser.add_argument('--emb_name', action='', help='use cleaned dataset')
+    parser.add_argument('--num_embs', type=int, default=10)
     args = parser.parse_args()
     return args
 
