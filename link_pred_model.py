@@ -36,7 +36,6 @@ class StructMLP(nn.Module):
         TODO: what is samples
         """
         #Deepsets initially on each of the samples
-        sum_tensor = torch.zeros(samples.shape[0], self.num_neurons).to(self.device)
         #Process the input tensor to form n choose k combinations and create a zero tensor
         set_init_rep = input_tensor
         x = self.ds_layer_1(set_init_rep)
@@ -45,9 +44,6 @@ class StructMLP(nn.Module):
         x = x[samples]
         x = torch.sum(x, dim=1)
         x = self.rho_layer_1(x)
-        sum_tensor += x
-
-        x = sum_tensor / input_tensor.shape[0]
 
         #One Hidden Layer for predictor
         x = self.layer1(x)
@@ -63,4 +59,5 @@ class StructMLP(nn.Module):
         target: label of edges and non-edges 
         """
         pred = self.forward(input_tensor, samples)
-        return F.cross_entropy(pred, target)
+        loss = F.cross_entropy(pred, target)
+        return loss
