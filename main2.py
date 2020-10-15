@@ -258,11 +258,13 @@ def load_data(args):
         inds_checkins = np.argwhere(train_checkins[:,0] == user_id).flatten()
         checkins = train_checkins[inds_checkins]
         train_user_checkins[user_id] = checkins
+        break
     val_user_checkins = {}
     for user_id in range(1, n_users+1): 
         inds_checkins = np.argwhere(val_checkins[:,0] == user_id).flatten()
         checkins = val_checkins[inds_checkins]
         val_user_checkins[user_id] = checkins
+        break
     # everything here is from 1
     return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori
 
@@ -299,6 +301,7 @@ if __name__ == "__main__":
     embs_ini = initialize_emb(args, n_nodes_total)
     save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins)
     for i in tqdm(range(args.num_embs)):
+        """
         learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
         embs_file = "temp/processed/embs.txt"
         embs = read_embs(embs_file)
@@ -306,15 +309,17 @@ if __name__ == "__main__":
         embs_time = embs[offset1:offset2]
         embs_venue = embs[offset2:offset3]
         embs_cate = embs[offset3:]
-
+        """
         # predict link here
-        
+        embs_user = np.random.rand(n_users, 128)
         mlp = StructMLP(embs_user.shape[1], 256)
         mlp = mlp.cuda()
         mlp_optimizer = torch.optim.Adam(mlp.parameters(), lr=0.001)
 
-        embs = torch.FloatTensor(embs)
+        """
+        embs = torch.FloatTensor(embs_user)
         embs = embs.cuda()
+        """
 
         for ep in range(10):
             mlp_optimizer.zero_grad()
@@ -337,6 +342,7 @@ if __name__ == "__main__":
 
         # evaluate here
     exit()
+    """
     if args.mode == 'friend':
         # maps and new_maps must be from 1
         # input friendship must be from 0
@@ -346,10 +352,10 @@ if __name__ == "__main__":
             friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
         else:
             friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
-
     else:
         # import pdb; pdb.set_trace()
         val_checkins[:,0] -= 1
         val_checkins[:,1] -= (offset1+1)
         val_checkins[:,2] -= (offset2+1)
         location_prediction(val_checkins[:,:3], embs, embs_venue, k=10)
+    """
