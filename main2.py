@@ -298,14 +298,12 @@ if __name__ == "__main__":
     else:
         train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori = load_data(args)
 
-    """
     sentences = random_walk(friendship_old, n_users, args)
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
     embs_ini = initialize_emb(args, n_nodes_total)
     save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins)
-    """
+
     for i in tqdm(range(args.num_embs)):
-        """
         learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
         embs_file = "temp/processed/embs.txt"
         embs = read_embs(embs_file)
@@ -313,9 +311,7 @@ if __name__ == "__main__":
         embs_time = embs[offset1:offset2]
         embs_venue = embs[offset2:offset3]
         embs_cate = embs[offset3:]
-        """
         # predict link here
-        embs_user = np.random.rand(n_users, 128)
         mlp = StructMLP(embs_user.shape[1], 256)
         mlp = mlp.cuda()
         mlp_optimizer = torch.optim.Adam(mlp.parameters(), lr=0.001)
@@ -324,7 +320,7 @@ if __name__ == "__main__":
         embs = torch.FloatTensor(embs_user)
         embs = embs.cuda()
 
-        for ep in range(10):
+        for ep in range(100):
             mlp_optimizer.zero_grad()
             edges, non_edges = sample_edges_non_edges(friendship_old-1, 2000, n_users)
             edges = torch.LongTensor(edges)
