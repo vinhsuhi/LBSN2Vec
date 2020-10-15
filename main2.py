@@ -270,10 +270,10 @@ def load_data(args):
 
 def sample_edges_non_edges(edges, num_samples, n_nodes):
     num_edges = edges.shape[0]
-    edges_sampled = edges[np.random.randint(num_edges, size=num_samples)]
+    edges_sampled = edges[np.random.randint(0, num_edges, size=num_samples)]
     source = np.random.randint(0, n_nodes, num_samples)
     target = np.random.randint(0, n_nodes, num_samples)
-    non_edges = np.array([source, target])
+    non_edges = np.array([source, target]).T
     return edges_sampled, non_edges
 
 def eval_acc(mlp, embs, friendship_new):
@@ -332,6 +332,8 @@ if __name__ == "__main__":
             labels = torch.cat((torch.ones(len(edges)), torch.zeros(len(non_edges))), dim = 0)
             samples = samples.cuda()
             labels = labels.cuda()
+            import pdb
+            pdb.set_trace()
             loss = mlp.compute_loss(embs, samples, labels)
             loss.backward()
             print("Loss: {:.4f}".format(loss.item()))

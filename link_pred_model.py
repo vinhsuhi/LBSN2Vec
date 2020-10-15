@@ -35,8 +35,12 @@ class StructMLP(nn.Module):
         TODO: what is input_tensor
         TODO: what is samples
         """
+        import pdb
+        pdb.set_trace()
         #Deepsets initially on each of the samples
         sum_tensor = torch.zeros(samples.shape[0], self.num_neurons).to(self.device)
+        print("1")
+        print(sum_tensor)
         for i in range(input_tensor.shape[0]):
             #Process the input tensor to form n choose k combinations and create a zero tensor
             set_init_rep = input_tensor[i].view(-1, self.input_rep)
@@ -45,6 +49,8 @@ class StructMLP(nn.Module):
             x = self.ds_layer_2(x)
             x = x[samples]
             x = torch.sum(x, dim=1)
+            import pdb
+            pdb.set_trace()
             x = self.rho_layer_1(x)
             sum_tensor += x
 
