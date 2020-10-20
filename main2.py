@@ -260,13 +260,11 @@ def load_data(args):
         inds_checkins = np.argwhere(train_checkins[:,0] == user_id).flatten()
         checkins = train_checkins[inds_checkins]
         train_user_checkins[user_id] = checkins
-        break
     val_user_checkins = {}
     for user_id in range(1, n_users+1): 
         inds_checkins = np.argwhere(val_checkins[:,0] == user_id).flatten()
         checkins = val_checkins[inds_checkins]
         val_user_checkins[user_id] = checkins
-        break
     # everything here is from 1
     return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori
 
@@ -311,6 +309,7 @@ if __name__ == "__main__":
         embs_time = embs[offset1:offset2]
         embs_venue = embs[offset2:offset3]
         embs_cate = embs[offset3:]
+        np.save('embs_{}_{}.npy'.format(args.dataset_name, i))
         # predict link here
         mlp = StructMLP(embs_user.shape[1], 256)
         mlp = mlp.cuda()
