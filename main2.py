@@ -280,32 +280,33 @@ def eval_acc(mlp, embs, friendship_new, friendship_old, k=10, new_maps=None, map
     friendship_new = torch.LongTensor(friendship_new)
     friendship_new = friendship_new.cuda()
     pred = mlp.forward(embs, friendship_new)
-    pred = F.log_softmax(pred)
     pred = pred.detach().cpu().numpy()
-    # pred = np.argmax(pred, axis=1)
+    pred = np.argmax(pred, axis=1)
     t_test = np.ones(len(pred))
-    # print("Test Micro F1 Score: ", f1_score(t_test, pred, average='micro'))
-    # print("Test Weighted F1 Score: ", f1_score(t_test, pred, average='weighted'))
-    # print("Test Accuracy Score: ", accuracy_score(t_test, pred))
+    print("Test Micro F1 Score: ", f1_score(t_test, pred, average='micro'))
+    print("Test Weighted F1 Score: ", f1_score(t_test, pred, average='weighted'))
+    print("Test Accuracy Score: ", accuracy_score(t_test, pred))
+    return
 
     simi_matrix = np.zeros((embs.shape[0], embs.shape[0]))
 
     for i in tqdm(range(embs.shape[0])):
         for j in range(embs.shape[0]):
             input = torch.LongTensor([[i, j]]).cuda()
-            pred = F.log_softmax(mlp.forward(embs, input))
+            pred = F.softmax(mlp.forward(embs, input))
             pred = pred.detach().cpu().numpy()
-            simi_matrix[i,j] = pred[-1]
+            simi_matrix[i,j] = pred[0, -1]
     
     friendship_linkprediction(embs, friendship_old, friendship_new, k=k, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori, simi=simi_matrix)
 
 
 class MappingModel(nn.Module):
     def __init__(self, dim):
+        super(MappingModel, self).__init__()
         self.weight = nn.Linear(dim, dim)
     
     def forward(self, emb):
-        return torch.mm(emb, self.weight)
+        return self.weight(emb)
 
     def loss(self, source, target):
         sub = (source - target) ** 2
@@ -317,15 +318,13 @@ class MappingModel(nn.Module):
 def map_to_old_embs(first_emb, to_map):
     model = MappingModel(first_emb.shape[1])
     model = model.cuda()
-    optimizer = torch.optim.Adam(mlp.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    source_emb = torch.FloatTensor(to_map).cuda()
+    target_emb = torch.FloatTensor(first_emb).cuda()
 
     mapp_epochs = 100
     for epoch in range(mapp_epochs):
         optimizer.zero_grad()
-        source_emb = torch.FloatTensor(to_map)
-        source_emb = source_emb.cuda()
-        target_emb = torch.FloatTensor(first_emb)
-        target_emb = target_emb.cuda()
 
         new_source = model(source_emb)
         loss = model.loss(new_source, target_emb)
@@ -344,10 +343,12 @@ if __name__ == "__main__":
     else:
         train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori = load_data(args)
 
+    """
     sentences = random_walk(friendship_old, n_users, args)
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
     embs_ini = initialize_emb(args, n_nodes_total)
     save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins)
+    """
     first_emb = None
     for i in tqdm(range(args.num_embs)):
         if not os.path.exists('embs_{}_{}.npy'.format(args.dataset_name, i)):
@@ -360,7 +361,7 @@ if __name__ == "__main__":
             embs_cate = embs[offset3:]
             np.save('embs_{}_{}.npy'.format(args.dataset_name, i), embs_user)
         else:
-            embs_user = np.load('embs_{}_{}.npy'.format(args.dataset_name, i), embs_user)
+            embs_user = np.load('embs_{}_{}.npy'.format(args.dataset_name, i))
         
         if i == 0:
             first_emb = embs_user
@@ -369,7 +370,7 @@ if __name__ == "__main__":
         # predict link here
         mlp = StructMLP(embs_user.shape[1], 256)
         mlp = mlp.cuda()
-        mlp_optimizer = torch.optim.Adam(mlp.parameters(), lr=0.001)
+        mlp_optimizer = torch.optim.Adam(mlp.parameters(), lr=0.01)
 
         
         embs = torch.FloatTensor(embs_user)
@@ -388,10 +389,13 @@ if __name__ == "__main__":
             labels = labels.cuda()
             loss = mlp.compute_loss(embs, samples, labels)
             loss.backward()
-            print("Loss: {:.4f}".format(loss.item()))
+            if ep % 30 == 0:
+                print("Loss: {:.4f}".format(loss.item()))
             mlp_optimizer.step()
 
         eval_acc(mlp, embs, friendship_new - 1, friendship_old - 1, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
+        import pdb
+        pdb.set_trace()
         # evaluate here
     # exit()
 
