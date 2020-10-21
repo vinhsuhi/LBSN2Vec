@@ -276,17 +276,65 @@ def sample_edges_non_edges(edges, num_samples, n_nodes):
     non_edges = np.array([source, target]).T
     return edges_sampled, non_edges
 
-def eval_acc(mlp, embs, friendship_new):
-            friendship_new = torch.LongTensor(friendship_new)
-            friendship_new = friendship_new.cuda()
-            pred = mlp.forward(embs, friendship_new)
-            pred = F.log_softmax(pred)
+def eval_acc(mlp, embs, friendship_new, friendship_old, k=10, new_maps=None, maps=None, friendship_old_ori=None):
+    friendship_new = torch.LongTensor(friendship_new)
+    friendship_new = friendship_new.cuda()
+    pred = mlp.forward(embs, friendship_new)
+    pred = F.log_softmax(pred)
+    pred = pred.detach().cpu().numpy()
+    # pred = np.argmax(pred, axis=1)
+    t_test = np.ones(len(pred))
+    # print("Test Micro F1 Score: ", f1_score(t_test, pred, average='micro'))
+    # print("Test Weighted F1 Score: ", f1_score(t_test, pred, average='weighted'))
+    # print("Test Accuracy Score: ", accuracy_score(t_test, pred))
+
+    simi_matrix = np.zeros((embs.shape[0], embs.shape[0]))
+
+    for i in tqdm(range(embs.shape[0])):
+        for j in range(embs.shape[0]):
+            input = torch.LongTensor([[i, j]]).cuda()
+            pred = F.log_softmax(mlp.forward(embs, input))
             pred = pred.detach().cpu().numpy()
-            pred = np.argmax(pred, axis=1)
-            t_test = np.ones(len(pred))
-            print("Test Micro F1 Score: ", f1_score(t_test, pred, average='micro'))
-            print("Test Weighted F1 Score: ", f1_score(t_test, pred, average='weighted'))
-            print("Test Accuracy Score: ", accuracy_score(t_test, pred))
+            simi_matrix[i,j] = pred[-1]
+    
+    friendship_linkprediction(embs, friendship_old, friendship_new, k=k, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori, simi=simi_matrix)
+
+
+class MappingModel(nn.Module):
+    def __init__(self, dim):
+        self.weight = nn.Linear(dim, dim)
+    
+    def forward(self, emb):
+        return torch.mm(emb, self.weight)
+
+    def loss(self, source, target):
+        sub = (source - target) ** 2
+        losses = torch.sum(sub, dim=1)
+        loss = torch.mean(losses)
+        return loss
+
+
+def map_to_old_embs(first_emb, to_map):
+    model = MappingModel(first_emb.shape[1])
+    model = model.cuda()
+    optimizer = torch.optim.Adam(mlp.parameters(), lr=0.01)
+
+    mapp_epochs = 100
+    for epoch in range(mapp_epochs):
+        optimizer.zero_grad()
+        source_emb = torch.FloatTensor(to_map)
+        source_emb = source_emb.cuda()
+        target_emb = torch.FloatTensor(first_emb)
+        target_emb = target_emb.cuda()
+
+        new_source = model(source_emb)
+        loss = model.loss(new_source, target_emb)
+        print("Mapping Loss: {:.4f}".format(loss.item()))
+        loss.backward()
+        optimizer.step()
+
+    new_source = model(source_emb)
+    return new_source.detach().cpu().numpy()
 
 if __name__ == "__main__":
     # maps: {key: value}; key in [1,..,n], value in [1,...,m] (also new_maps)
@@ -300,16 +348,24 @@ if __name__ == "__main__":
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
     embs_ini = initialize_emb(args, n_nodes_total)
     save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins)
-
+    first_emb = None
     for i in tqdm(range(args.num_embs)):
-        learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
-        embs_file = "temp/processed/embs.txt"
-        embs = read_embs(embs_file)
-        embs_user = embs[:offset1]
-        embs_time = embs[offset1:offset2]
-        embs_venue = embs[offset2:offset3]
-        embs_cate = embs[offset3:]
-        np.save('embs_{}_{}.npy'.format(args.dataset_name, i), embs_user)
+        if not os.path.exists('embs_{}_{}.npy'.format(args.dataset_name, i)):
+            learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
+            embs_file = "temp/processed/embs.txt"
+            embs = read_embs(embs_file)
+            embs_user = embs[:offset1]
+            embs_time = embs[offset1:offset2]
+            embs_venue = embs[offset2:offset3]
+            embs_cate = embs[offset3:]
+            np.save('embs_{}_{}.npy'.format(args.dataset_name, i), embs_user)
+        else:
+            embs_user = np.load('embs_{}_{}.npy'.format(args.dataset_name, i), embs_user)
+        
+        if i == 0:
+            first_emb = embs_user
+        else:
+            embs_user = map_to_old_embs(first_emb, embs_user)
         # predict link here
         mlp = StructMLP(embs_user.shape[1], 256)
         mlp = mlp.cuda()
@@ -322,7 +378,7 @@ if __name__ == "__main__":
         for ep in range(100):
             mlp_optimizer.zero_grad()
             edges, non_edges = sample_edges_non_edges(friendship_old-1, 2000, n_users)
-            edges = torch.LongTensor(edges)
+            edges = torch.LongTensor(edges) 
             non_edges = torch.LongTensor(non_edges)
             edges = edges.cuda()
             non_edges = non_edges.cuda()
@@ -335,11 +391,9 @@ if __name__ == "__main__":
             print("Loss: {:.4f}".format(loss.item()))
             mlp_optimizer.step()
 
-        eval_acc(mlp, embs, friendship_new - 1)
-    
-
+        eval_acc(mlp, embs, friendship_new - 1, friendship_old - 1, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
         # evaluate here
-    exit()
+    # exit()
 
     """
     if args.mode == 'friend':
