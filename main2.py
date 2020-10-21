@@ -349,6 +349,11 @@ if __name__ == "__main__":
     embs_ini = initialize_emb(args, n_nodes_total)
     save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins)
     """
+    mlp = StructMLP(args.dim_emb, 256)
+    mlp = mlp.cuda()
+    mlp_optimizer = torch.optim.Adam(mlp.parameters(), lr=0.01)
+
+
     first_emb = None
     for i in tqdm(range(args.num_embs)):
         if not os.path.exists('embs_{}_{}.npy'.format(args.dataset_name, i)):
@@ -368,9 +373,7 @@ if __name__ == "__main__":
         else:
             embs_user = map_to_old_embs(first_emb, embs_user)
         # predict link here
-        mlp = StructMLP(embs_user.shape[1], 256)
-        mlp = mlp.cuda()
-        mlp_optimizer = torch.optim.Adam(mlp.parameters(), lr=0.01)
+        
 
         
         embs = torch.FloatTensor(embs_user)
@@ -389,7 +392,7 @@ if __name__ == "__main__":
             labels = labels.cuda()
             loss = mlp.compute_loss(embs, samples, labels)
             loss.backward()
-            if ep % 30 == 0:
+            if ep % 25 == 0:
                 print("Loss: {:.4f}".format(loss.item()))
             mlp_optimizer.step()
 
