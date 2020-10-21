@@ -36,7 +36,7 @@ def parse_args():
     parser.add_argument('--num_walks', type=int, default=10)
     parser.add_argument('--walk_length', type=int, default=80)
     parser.add_argument('--workers', type=int, default=26)
-    parser.add_argument('--num_epochs', type=int, default=10)
+    parser.add_argument('--num_epochs', type=int, default=1)
     parser.add_argument('--mobility_ratio', type=float, default=0.2)
     parser.add_argument('--K_neg', type=int, default=10)
     parser.add_argument('--win_size', type=int, default=10)
@@ -309,7 +309,7 @@ if __name__ == "__main__":
         embs_time = embs[offset1:offset2]
         embs_venue = embs[offset2:offset3]
         embs_cate = embs[offset3:]
-        np.save('embs_{}_{}.npy'.format(args.dataset_name, i))
+        np.save('embs_{}_{}.npy'.format(args.dataset_name, i), embs_user)
         # predict link here
         mlp = StructMLP(embs_user.shape[1], 256)
         mlp = mlp.cuda()
