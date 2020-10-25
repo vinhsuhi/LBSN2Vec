@@ -96,4 +96,4 @@ def bias_walk(cur, cur_nbrs, user_poi_dict):
     prob += np.max(prob) / 10
     if np.max(prob) == 0:
         prob += 1
-    return np.random.choice(cur_nbrs, p=prob/prob.max())
+    return np.random.choice(cur_nbrs, p=prob/prob.sum())
