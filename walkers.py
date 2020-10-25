@@ -91,7 +91,10 @@ def bias_walk(cur, cur_nbrs, user_poi_dict):
         nb_poi = user_poi_dict[nb]
         common = nb_poi.intersection(this_poi)
         union = nb_poi.union(this_poi)
-        prob.append(len(common) / len(union))
+        if len(union) == 0:
+            prob.append(0)
+        else:
+            prob.append(len(common) / len(union))
     prob = np.array(prob)
     prob += np.max(prob) / 10
     if np.max(prob) == 0:
