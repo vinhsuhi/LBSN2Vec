@@ -5,7 +5,7 @@ import multiprocessing
 
 
 class BasicWalker:
-    def __init__(self, G, start_nodes=None):
+    def __init__(self, G, start_nodes=None, user_poi_dict={}, bias=False):
         self.G = G
         if hasattr(G, 'neibs'):
             self.neibs = G.neibs
@@ -15,13 +15,15 @@ class BasicWalker:
             self.start_nodes = start_nodes
         else:
             self.start_nodes = list(self.G.nodes())
+        
+        self.user_poi_dict = user_poi_dict
+        self.bias = bias
 
 
     def build_neibs_dict(self):
         self.neibs = {}
         for node in self.G.nodes():
             self.neibs[node] = list(self.G.neighbors(node))
-
 
     def simulate_walks(self, num_walks, walk_length, num_workers):
         pool = multiprocessing.Pool(processes=num_workers)
@@ -33,8 +35,9 @@ class BasicWalker:
             _ns = nodes.copy()
             np.random.shuffle(_ns)
             nodess.append(_ns)
-        params = list(map(lambda x: {'walk_length': walk_length, 'neibs': self.neibs, 'iter': x, 'nodes': nodess[x]},
+        params = list(map(lambda x: {'walk_length': walk_length, 'neibs': self.neibs, 'iter': x, 'nodes': nodess[x], 'bias': self.bias, 'user_poi_dict': self.user_poi_dict},
             list(range(1, num_walks+1))))
+        
         walks = pool.map(deepwalk_walk, params)
         pool.close()
         pool.join()
@@ -54,6 +57,8 @@ def deepwalk_walk(params):
     '''
     Simulate a random walk starting from start node.
     '''
+    bias = params["bias"]
+    user_poi_dict = params["user_poi_dict"]
     walk_length = params["walk_length"]
     neibs = params["neibs"]
     nodes = params["nodes"]
@@ -70,7 +75,25 @@ def deepwalk_walk(params):
             cur = int(walk[-1])
             cur_nbrs = neibs[cur]
             if len(cur_nbrs) == 0: break
-            walk.append(np.random.choice(cur_nbrs))
+            if not bias:
+                walk.append(np.random.choice(cur_nbrs))
+            else:
+                walk.append(bias_walk(cur, cur_nbrs, user_poi_dict))
         walks.append(walk)
     return walks
 
+
+def bias_walk(cur, cur_nbrs, user_poi_dict):
+    this_poi = user_poi_dict[cur]
+    prob = []
+    for i in range(len(cur_nbrs)):
+        nb = cur_nbrs[i]
+        nb_poi = user_poi_dict[nb]
+        common = nb_poi.intersection(this_poi)
+        union = nb_poi.union(this_poi)
+        prob.append(len(common) / len(union))
+    prob = np.array(prob)
+    prob += np.max(prob) / 10
+    if np.max(prob) == 0:
+        prob += 1
+    return np.random.choice(cur_nbrs, p=prob/prob.max())

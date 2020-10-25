@@ -38,6 +38,8 @@ def parse_args():
     parser.add_argument('--workers', type=int, default=26)
     parser.add_argument('--num_epochs', type=int, default=1)
     parser.add_argument('--mobility_ratio', type=float, default=0.2)
+    parser.add_argument('--bias_randomwalk', action='store_true')
+    parser.add_argument('--run_ori', action='store_true')
     parser.add_argument('--K_neg', type=int, default=10)
     parser.add_argument('--win_size', type=int, default=10)
     parser.add_argument('--learning_rate', type=float, default=0.01)
@@ -188,6 +190,7 @@ def load_data2(args):
 
     print("Build user checkins dictionary...")
     train_user_checkins = {}
+    user_checkin = {}
     for user_id in range(1, n_users + 1):
         inds_checkins = np.argwhere(train_checkins[:, 0] == user_id).flatten()
         checkins = train_checkins[inds_checkins]
@@ -256,17 +259,19 @@ def load_data(args):
 
     print("Build user checkins dictionary...")
     train_user_checkins = {}
+    user_checkin = dict()
     for user_id in range(1, n_users+1): 
         inds_checkins = np.argwhere(train_checkins[:,0] == user_id).flatten()
         checkins = train_checkins[inds_checkins]
         train_user_checkins[user_id] = checkins
+        user_checkin[user_id - 1] = set(np.unique(checkins[:, 2]).tolist())
     val_user_checkins = {}
     for user_id in range(1, n_users+1): 
         inds_checkins = np.argwhere(val_checkins[:,0] == user_id).flatten()
         checkins = val_checkins[inds_checkins]
         val_user_checkins[user_id] = checkins
     # everything here is from 1
-    return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori
+    return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori, user_checkin
 
 def sample_edges_non_edges(edges, num_samples, n_nodes):
     num_edges = edges.shape[0]
@@ -341,66 +346,87 @@ if __name__ == "__main__":
     if args.input_type == "persona2":
         train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori = load_data2(args)
     else:
-        train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori = load_data(args)
+        train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori, user_checkin = load_data(args)
 
-    """
-    sentences = random_walk(friendship_old, n_users, args)
+    
+    sentences = random_walk(friendship_old, n_users, args, user_checkin)
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
     embs_ini = initialize_emb(args, n_nodes_total)
     save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins)
-    """
-    mlp = StructMLP(args.dim_emb, 256)
-    mlp = mlp.cuda()
-    mlp_optimizer = torch.optim.Adam(mlp.parameters(), lr=0.01)
 
+    if args.run_ori:
+        learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
+        embs_file = "temp/processed/embs.txt"
+        embs = read_embs(embs_file)
+        embs_user = embs[:offset1]
+        embs_time = embs[offset1:offset2]
+        embs_venue = embs[offset2:offset3]
+        embs_cate = embs[offset3:]
 
-    first_emb = None
-    for i in tqdm(range(args.num_embs)):
-        if not os.path.exists('embs_{}_{}.npy'.format(args.dataset_name, i)):
-            learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
-            embs_file = "temp/processed/embs.txt"
-            embs = read_embs(embs_file)
-            embs_user = embs[:offset1]
-            embs_time = embs[offset1:offset2]
-            embs_venue = embs[offset2:offset3]
-            embs_cate = embs[offset3:]
-            np.save('embs_{}_{}.npy'.format(args.dataset_name, i), embs_user)
+        if args.mode == 'friend':
+            # maps and new_maps must be from 1
+            # input friendship must be from 0
+            if np.min(friendship_old_ori) == 1:
+                friendship_old_ori -= 1
+            if np.min(friendship_old) == 1: # cpp
+                friendship_linkprediction(embs_user, friendship_old-1, friendship_new-1, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
+            else:
+                friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
+
         else:
-            embs_user = np.load('embs_{}_{}.npy'.format(args.dataset_name, i))
-        
-        if i == 0:
-            first_emb = embs_user
-        else:
-            embs_user = map_to_old_embs(first_emb, embs_user)
-        # predict link here
-        
+            # import pdb; pdb.set_trace()
+            val_checkins[:,0] -= 1
+            val_checkins[:,1] -= (offset1+1)
+            val_checkins[:,2] -= (offset2+1)
+            location_prediction(val_checkins[:,:3], embs, embs_venue, k=10)
 
-        
-        embs = torch.FloatTensor(embs_user)
-        embs = embs.cuda()
+    else:
+        mlp = StructMLP(args.dim_emb, 256)
+        mlp = mlp.cuda()
+        mlp_optimizer = torch.optim.Adam(mlp.parameters(), lr=0.01)
+        first_emb = None
+        for i in tqdm(range(args.num_embs)):
+            if not os.path.exists('embs_{}_{}.npy'.format(args.dataset_name, i)):
+                learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
+                embs_file = "temp/processed/embs.txt"
+                embs = read_embs(embs_file)
+                embs_user = embs[:offset1]
+                embs_time = embs[offset1:offset2]
+                embs_venue = embs[offset2:offset3]
+                embs_cate = embs[offset3:]
+                np.save('embs_{}_{}.npy'.format(args.dataset_name, i), embs_user)
+            else:
+                embs_user = np.load('embs_{}_{}.npy'.format(args.dataset_name, i))
+            
+            if i == 0:
+                first_emb = embs_user
+            else:
+                embs_user = map_to_old_embs(first_emb, embs_user)
+            # predict link here
+            
 
-        for ep in range(100):
-            mlp_optimizer.zero_grad()
-            edges, non_edges = sample_edges_non_edges(friendship_old-1, 2000, n_users)
-            edges = torch.LongTensor(edges) 
-            non_edges = torch.LongTensor(non_edges)
-            edges = edges.cuda()
-            non_edges = non_edges.cuda()
-            samples = torch.cat((edges, non_edges), dim=0)
-            labels = torch.cat((torch.ones(len(edges)), torch.zeros(len(non_edges))), dim = 0).long()
-            samples = samples.cuda()
-            labels = labels.cuda()
-            loss = mlp.compute_loss(embs, samples, labels)
-            loss.backward()
-            if ep % 25 == 0:
-                print("Loss: {:.4f}".format(loss.item()))
-            mlp_optimizer.step()
+            
+            embs = torch.FloatTensor(embs_user)
+            embs = embs.cuda()
 
-        eval_acc(mlp, embs, friendship_new - 1, friendship_old - 1, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
-        import pdb
-        pdb.set_trace()
-        # evaluate here
-    # exit()
+            for ep in range(100):
+                mlp_optimizer.zero_grad()
+                edges, non_edges = sample_edges_non_edges(friendship_old-1, 2000, n_users)
+                edges = torch.LongTensor(edges) 
+                non_edges = torch.LongTensor(non_edges)
+                edges = edges.cuda()
+                non_edges = non_edges.cuda()
+                samples = torch.cat((edges, non_edges), dim=0)
+                labels = torch.cat((torch.ones(len(edges)), torch.zeros(len(non_edges))), dim = 0).long()
+                samples = samples.cuda()
+                labels = labels.cuda()
+                loss = mlp.compute_loss(embs, samples, labels)
+                loss.backward()
+                if ep % 25 == 0:
+                    print("Loss: {:.4f}".format(loss.item()))
+                mlp_optimizer.step()
+
+            eval_acc(mlp, embs, friendship_new - 1, friendship_old - 1, k=10, new_maps=new_maps, maps=maps, friendship_old_ori=friendship_old_ori)
 
     """
     if args.mode == 'friend':
