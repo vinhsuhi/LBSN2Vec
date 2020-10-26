@@ -10,9 +10,12 @@ def normalize_embedding(emb):
     return emb / normalize_factor.reshape(-1, 1)
 
 
-def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=None, maps=None, friendship_old_ori=None):
-    normalized_embs_user = normalize_embedding(embs_user)
-    simi_matrix = normalized_embs_user.dot(normalized_embs_user.T)
+def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=None, maps=None, friendship_old_ori=None, simi=None):
+    if simi is not None:
+        simi_matrix = simi
+    else:
+        normalized_embs_user = normalize_embedding(embs_user)
+        simi_matrix = normalized_embs_user.dot(normalized_embs_user.T)
     for i in range(len(simi_matrix)):
         simi_matrix[i, i] = -2
 
