@@ -294,7 +294,7 @@ if __name__ == "__main__":
 
     center = list(center_ori_maps.keys())
     center_id2dix = {cen: i + 1 for i, cen in enumerate(center)}
-    center_embs = embs_user[center - 1]
+    center_embs = embs_user[np.array(center) - 1]
 
     friendship_old_center = friendship_to_center_friendship(friendship_old_ori, center_ori_maps, center_id2dix)
     friendship_new_center = friendship_to_center_friendship(friendship_new, center_ori_maps, center_id2dix)
