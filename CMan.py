@@ -13,7 +13,7 @@ import multiprocessing
 from evaluation import friendship_pred_persona
 import argparse
 import learn
-from utils import save_info, sample_neg, read_embs, initialize_emb, random_walk
+from utils import save_info, sample_neg, read_embs, initialize_emb, random_walk, renumber_checkins
 from link_pred_model import StructMLP
 from sklearn.metrics import f1_score, accuracy_score
 
@@ -189,23 +189,6 @@ def create_personaPOI_checkins(old_checkins, maps_OritP, persona_POI, POI_maps, 
     personaPOI_checkins = np.array(personaPOI_checkins)
     return personaPOI_checkins
 
-
-def renumber_checkins(checkins_matrix):
-    offset1 = max(checkins_matrix[:,0])
-    _, n = np.unique(checkins_matrix[:,1], return_inverse=True) # 
-    checkins_matrix[:,1] = n + offset1 + 1
-    offset2 = max(checkins_matrix[:,1])
-    _, n = np.unique(checkins_matrix[:,2], return_inverse=True)
-    checkins_matrix[:,2] = n + offset2 + 1
-    offset3 = max(checkins_matrix[:,2])
-    _, n = np.unique(checkins_matrix[:,3], return_inverse=True)
-    checkins_matrix[:,3] = n + offset3 + 1
-    n_nodes_total = np.max(checkins_matrix)
-    n_users = checkins_matrix[:, 0].max()
-
-    print(f"""Number of users: {n_users}
-        Number of nodes total: {n_nodes_total}""")
-    return checkins_matrix, offset1, offset2, offset3, n_nodes_total, n_users
 
 
 

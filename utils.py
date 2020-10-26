@@ -4,7 +4,6 @@ import networkx as nx
 from scipy.io import loadmat
 from collections import Counter
 from tqdm import tqdm
-from gensim.models import Word2Vec
 from walkers import BasicWalker
 from scipy.sparse import csr_matrix
 
@@ -205,4 +204,22 @@ def save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples,
             neg_table = neg_checkins_samples[key]
             fp.write(f"{neg_table.shape[0]}\n")
             fp.write("\n".join(map(str, neg_table)) + "\n")
+
+
+def renumber_checkins(checkins_matrix):
+    offset1 = max(checkins_matrix[:,0])
+    _, n = np.unique(checkins_matrix[:,1], return_inverse=True) # 
+    checkins_matrix[:,1] = n + offset1 + 1
+    offset2 = max(checkins_matrix[:,1])
+    _, n = np.unique(checkins_matrix[:,2], return_inverse=True)
+    checkins_matrix[:,2] = n + offset2 + 1
+    offset3 = max(checkins_matrix[:,2])
+    _, n = np.unique(checkins_matrix[:,3], return_inverse=True)
+    checkins_matrix[:,3] = n + offset3 + 1
+    n_nodes_total = np.max(checkins_matrix)
+    n_users = checkins_matrix[:, 0].max()
+
+    print(f"""Number of users: {n_users}
+        Number of nodes total: {n_nodes_total}""")
+    return checkins_matrix, offset1, offset2, offset3, n_nodes_total, n_users
 
