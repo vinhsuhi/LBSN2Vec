@@ -10,7 +10,7 @@ import pdb
 import math
 import os
 import multiprocessing
-from evaluation import *
+from evaluation import friendship_pred_persona
 import argparse
 import learn
 from utils import save_info, sample_neg, read_embs, initialize_emb, random_walk
@@ -127,13 +127,27 @@ def load_ego(path1, path2, path3=None, path4=None):
 
     if path3 is not None:
         persona_POI = allocate_poi_to_user(path3)
-    
+
     if path4 is not None:
         POI_maps = read_poi_map(path4)
 
     if path3 is not None:
         return persona_edges, maps_PtOri, persona_POI, POI_maps, maps_OritP, center_ori_maps
     return persona_edges, maps_PtOri, maps_OritP, center_ori_maps
+
+def allocate_poi_to_user(path3):
+    user_POI = dict()
+    with open(path3, 'r', encoding='utf-8') as file:
+        for line in file:
+            data_line = line.strip().split(',')
+            user = int(data_line[0]) + 1
+            location = int(data_line[1])
+            if user not in user_POI:
+                user_POI[user] = set([location])
+            else:
+                user_POI[user].add(location)
+    file.close()
+    return user_POI
 
 
 def mat_to_numpy_array(matt):
@@ -164,16 +178,16 @@ def create_personaPOI_checkins(old_checkins, maps_OritP, persona_POI, POI_maps, 
         old_checkini = old_checkins[i]
         user_ori = old_checkini[0]
         center_user = ori_center_dict[user_ori] # center user will have all checkins
-        new_checkins.append([center_user, old_checkini[1], old_checkini[2], old_checkini[3]])
+        personaPOI_checkins.append([center_user, old_checkini[1], old_checkini[2], old_checkini[3]])
         location_ori = old_checkini[2]
-        location_index = POI_maps[location]
+        location_index = POI_maps[location_ori]
         for persona_user in maps_OritP[user_ori]:
             if persona_user not in persona_POI:
                 continue
             if location_index in persona_POI[persona_user]:
-                new_checkins.append([persona_user, old_checkini[1], old_checkini[2], old_checkini[3]])
-    new_checkins = np.array(new_checkins)
-    return new_checkins
+                personaPOI_checkins.append([persona_user, old_checkini[1], old_checkini[2], old_checkini[3]])
+    personaPOI_checkins = np.array(personaPOI_checkins)
+    return personaPOI_checkins
 
 
 def renumber_checkins(checkins_matrix):
