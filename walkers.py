@@ -5,7 +5,7 @@ import multiprocessing
 
 
 class BasicWalker:
-    def __init__(self, G, start_nodes=None, user_poi_dict={}, bias=False):
+    def __init__(self, G, start_nodes=None, user_poi_dict={}, bias=False, thresh=0):
         self.G = G
         if hasattr(G, 'neibs'):
             self.neibs = G.neibs
@@ -18,12 +18,14 @@ class BasicWalker:
         
         self.user_poi_dict = user_poi_dict
         self.bias = bias
+        self.thresh = thresh
 
 
     def build_neibs_dict(self):
         self.neibs = {}
         for node in self.G.nodes():
             self.neibs[node] = list(self.G.neighbors(node))
+
 
     def simulate_walks(self, num_walks, walk_length, num_workers):
         pool = multiprocessing.Pool(processes=num_workers)
@@ -35,7 +37,7 @@ class BasicWalker:
             _ns = nodes.copy()
             np.random.shuffle(_ns)
             nodess.append(_ns)
-        params = list(map(lambda x: {'walk_length': walk_length, 'neibs': self.neibs, 'iter': x, 'nodes': nodess[x], 'bias': self.bias, 'user_poi_dict': self.user_poi_dict},
+        params = list(map(lambda x: {'walk_length': walk_length, 'neibs': self.neibs, 'iter': x, 'nodes': nodess[x], 'bias': self.bias, 'user_poi_dict': self.user_poi_dict, 'thresh': thresh},
             list(range(1, num_walks+1))))
         
         walks = pool.map(deepwalk_walk, params)
@@ -62,6 +64,7 @@ def deepwalk_walk(params):
     walk_length = params["walk_length"]
     neibs = params["neibs"]
     nodes = params["nodes"]
+    thresh = params["thresh"]
     # if args["iter"] % 5 == 0:
     print("Iter:", params["iter"]) # keep printing, avoid moving process to swap
 
@@ -78,24 +81,27 @@ def deepwalk_walk(params):
             if not bias:
                 walk.append(np.random.choice(cur_nbrs))
             else:
-                walk.append(bias_walk(cur, cur_nbrs, user_poi_dict))
+                walk.append(bias_walk(cur, cur_nbrs, user_poi_dict, thresh))
         walks.append(walk)
     return walks
 
 
-def bias_walk(cur, cur_nbrs, user_poi_dict):
+def bias_walk(cur, cur_nbrs, user_poi_dict, thresh):
     this_poi = user_poi_dict[cur]
     prob = []
     for i in range(len(cur_nbrs)):
         nb = cur_nbrs[i]
         nb_poi = user_poi_dict[nb]
+        if nb_poi >= thresh:
+            prob.append(0)
+            continue
         common = nb_poi.intersection(this_poi)
         union = nb_poi.union(this_poi)
         if len(union) == 0:
             prob.append(0)
         else:
             prob.append(len(common) / len(union))
-    prob = np.array(prob)
+    prob = np.array(prob, dtype=float)
     prob += np.max(prob) / 10
     if np.max(prob) == 0:
         prob += 1
