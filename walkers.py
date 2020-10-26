@@ -37,7 +37,7 @@ class BasicWalker:
             _ns = nodes.copy()
             np.random.shuffle(_ns)
             nodess.append(_ns)
-        params = list(map(lambda x: {'walk_length': walk_length, 'neibs': self.neibs, 'iter': x, 'nodes': nodess[x], 'bias': self.bias, 'user_poi_dict': self.user_poi_dict, 'thresh': self.thresh},
+        params = list(map(lambda x: {'walk_length': walk_length, 'neibs': self.neibs, 'iter': x, 'nodes': nodess[x], 'bias': self.bias, 'user_poi_dict': self.user_poi_dict, 'center_ori_maps': self.center_ori_maps},
             list(range(1, num_walks+1))))
         
         walks = pool.map(deepwalk_walk, params)
@@ -64,7 +64,7 @@ def deepwalk_walk(params):
     walk_length = params["walk_length"]
     neibs = params["neibs"]
     nodes = params["nodes"]
-    thresh = params["thresh"]
+    center_ori_maps = params["center_ori_maps"]
     # if args["iter"] % 5 == 0:
     print("Iter:", params["iter"]) # keep printing, avoid moving process to swap
 
@@ -82,12 +82,13 @@ def deepwalk_walk(params):
                 # print("lol")
                 walk.append(np.random.choice(cur_nbrs))
             else:
-                walk.append(bias_walk(cur, cur_nbrs, user_poi_dict, thresh))
+                walk.append(bias_walk(cur, cur_nbrs, user_poi_dict, center_ori_maps))
         walks.append(walk)
     return walks
 
 
-def bias_walk(cur, cur_nbrs, user_poi_dict, thresh):
+def bias_walk(cur, cur_nbrs, user_poi_dict, center_ori_maps):
+    thresh = min(list(center_ori_maps.keys()))
     this_poi = user_poi_dict[cur]
     prob = []
     for i in range(len(cur_nbrs)):
