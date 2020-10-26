@@ -31,6 +31,7 @@ def parse_args():
     parser.add_argument('--dim_emb', type=int, default=128)
     # often change parameters
     parser.add_argument('--dataset_name', type=str, default='NYC')
+    parser.add_argument('--alpha', type=float, default=0.1)
     parser.add_argument('--input_type', type=str, default="persona_ori", help="persona_ori or persona_POI") 
     parser.add_argument('--bias_randomwalk', action='store_true')
     args = parser.parse_args()

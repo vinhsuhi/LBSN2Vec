@@ -31,7 +31,7 @@ def random_walk(friendship_old, n_users, args, user_checkins=None, center_ori_ma
     adj = adj + adj.T
     G = nx.from_scipy_sparse_matrix(adj)
     if args.bias_randomwalk:
-        walker = BasicWalker(G, bias=True, user_poi_dict=user_checkins, center_ori_maps=center_ori_maps)
+        walker = BasicWalker(G, bias=True, user_poi_dict=user_checkins, center_ori_maps=center_ori_maps, alpha=args.alpha)
     else:
         walker = BasicWalker(G)
     sentences = walker.simulate_walks(num_walks=args.num_walks, walk_length=args.walk_length, num_workers=args.workers)
