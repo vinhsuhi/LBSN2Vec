@@ -5,7 +5,7 @@ import multiprocessing
 
 
 class BasicWalker:
-    def __init__(self, G, start_nodes=None, user_poi_dict={}, bias=False, thresh=0):
+    def __init__(self, G, start_nodes=None, user_poi_dict={}, bias=False, center_ori_maps=None):
         self.G = G
         if hasattr(G, 'neibs'):
             self.neibs = G.neibs
@@ -18,7 +18,7 @@ class BasicWalker:
         
         self.user_poi_dict = user_poi_dict
         self.bias = bias
-        self.thresh = thresh
+        self.center_ori_maps = center_ori_maps
 
 
     def build_neibs_dict(self):
