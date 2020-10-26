@@ -113,6 +113,8 @@ def bias_walk(cur, cur_nbrs, user_poi_dict, center_ori_maps,alpha=0.1):
     if np.max(prob) == 0:
         prob += 1
     if center is not None:
+        if alpha == 0:
+            alpha = 1 / len(prob)
         prob[center] = 0
         prob /= prob.sum()
         prob *= (1 - alpha)
