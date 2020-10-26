@@ -194,6 +194,7 @@ class SplitterTrainer(object):
         # while len(friend_POI_graph.edges) >0:
         print("checkin ban đầu  : ",len(friend_POI_graph.edges))
         graph_POI_persona = nx.Graph()      # graph chứa các cạnh nối từ POI -> persona
+        print(" Bat dau P1 ")
         for e1,e2 in friend_POI_graph.edges:
             # print(e1,e2)
             if e1 in self.list_friend and e2 in self.listPOI:
@@ -241,10 +242,11 @@ class SplitterTrainer(object):
                 # if have_edge:
                 #     continue
         ## Xóa cạnh friend - pos đã được nối với nhau
+        print(" Xoa  ",len(edgelistPOI),"  da ton tai")
         for del_edge in edgelistPOI:
             e_friend, e_pos = del_edge[0],del_edge[1]
             friend_POI_graph.remove_edges_from([(e_friend, e_pos)])
-
+        print(" Xong P1 ")
         #######################################
         # Tạo graph các POI ở chung với nhau
         #  For P2
@@ -286,7 +288,7 @@ class SplitterTrainer(object):
         # Ghép các position hay ở chung với nhau
         # Ghép các position cùng class
 
-
+        print("Bat dau P2 P3 ")
         new_num_edges_friend_POI_edges = 0
         old_num_edges_friend_POI_edges = len(friend_POI_graph.edges)
         not_change = False
