@@ -58,9 +58,16 @@ def parse_args():
 
 
 def load_ego(path1, path2, path3=None, path4=None):
-    maps = dict()
-    new_maps = dict()
-    max_node = 0
+    """
+    path1: edgeslist: Friendgraph after splitting
+    path2: ego_net: ego_node --> ori_node
+    path3: edgelist_POI: ego_node --> POI node
+    path4: location_dict: to_ori_location
+    """
+    maps = dict() # maps: persona_node: ori_node (> 1)
+    new_maps = dict() # new_maps: ori_node: set(personas) (> 1)
+    max_node = 0 # start ID of pseudo_node
+
     with open(path2, 'r', encoding='utf-8') as file:
         for line in file:
             data_line = line.strip().split(',')
@@ -73,9 +80,11 @@ def load_ego(path1, path2, path3=None, path4=None):
             maps[persona_node] = ori_node
             if persona_node > max_node:
                 max_node = persona_node
+    
+    thresh = max_node # start ID of pseudo_node (> 1)
 
+    # adding pseudo edges
     additional_edges = []
-
     center_ori_dict = dict()
     for key, value in new_maps.items():
         max_node += 1
@@ -85,6 +94,7 @@ def load_ego(path1, path2, path3=None, path4=None):
         for ele in value:
             additional_edges.append([max_node, ele])
 
+    # read persona graph and add edges (node ids > 1)
     edges = []
     with open(path1, 'r', encoding='utf-8') as file:
         for line in file:
@@ -95,7 +105,10 @@ def load_ego(path1, path2, path3=None, path4=None):
     edges = np.array(edges)
     print("Number of edges after: {}".format(len(edges)))
 
-    user_POI = dict() # persona user to POI of input of persona
+    # edges: The persona graph + Pseudo edges
+
+
+    user_POI = dict() # dict: user --> POI (node_id > 1)
     if path3 is not None:
         with open(path3, 'r', encoding='utf-8') as file:
             for line in file:
@@ -106,34 +119,39 @@ def load_ego(path1, path2, path3=None, path4=None):
                     user_POI[user] = set([location])
                 else:
                     user_POI[user].add(location)
-    POI_dict = dict() # POI of input of persona to original POI 
+    
+    POI_dict = dict() # POI_index ---> POI_id
     if path4 is not None:
         with open(path4, 'r', encoding='utf-8') as file:
             for line in file:
                 data_line = line.split()
                 POI_dict[int(data_line[0])] = int(data_line[1])
+
+    
     if path3 is not None:
-        return edges, maps, user_POI, POI_dict, new_maps, center_ori_dict
+        return edges, maps, user_POI, POI_dict, new_maps, center_ori_dict, thresh
     else:
-        return edges, maps, new_maps
+        return edges, maps, new_maps, thresh
 
 
 def load_data2(args):
-    maps = None
-    new_maps = None
-    friendship_old_ori = None
-
+    # mat
     if args.clean:
         mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
     else:
         mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
-    edges, maps, persona_POI, POI_dict, new_mapss, center_ori_dict = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), 
+
+    # load persona + POI
+    edges, maps, persona_POI, POI_dict, new_mapss, center_ori_dict, thresh = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), 
                                                   'Suhi_output/ego_net_{}'.format(args.dataset_name), 
                                                   'Suhi_output/edgelistPOI_{}'.format(args.dataset_name),
                                                   'Suhi_output/location_dict_{}'.format(args.dataset_name))
-    friendship_old_ori = mat['friendship_old']
-    friendship_old = edges
-    friendship_n = mat["friendship_new"]
+    
+
+    friendship_old_ori = mat['friendship_old'] # friendship from file mat
+    friendship_old = edges # friendship of POI graph
+    friendship_new = mat["friendship_new"] # friendship new from file mat
+
     new_maps = dict()
     for key, value in maps.items():
         if value not in new_maps:
@@ -142,13 +160,21 @@ def load_data2(args):
             new_maps[value].add(key)
 
     def create_new_checkins2(old_checkins, new_maps, persona_POI, POI_dict, center_ori_dict):
+        """
+        center_ori_dict: center_node --> ori_node (> 1)
+        persona_POI: persona_node --> location_of_splitter (> 1)
+        POI_dict: location_ori --> location_of_splitter
+        new_maps: user_ori --> set_of_persona (not center)
+        """
         ori_center_dict = {v:k for k,v in center_ori_dict.items()}
         new_checkins = []
         for i in tqdm(range(len(old_checkins))):
             old_checkini = old_checkins[i]
             user = old_checkini[0]
-            center_user = ori_center_dict[user]
+
+            center_user = ori_center_dict[user] # center user will have all checkins
             new_checkins.append([center_user, old_checkini[1], old_checkini[2], old_checkini[3]])
+
             location = old_checkini[2]
             location_image = POI_dict[location]
             for ele in new_maps[user]:
@@ -160,7 +186,7 @@ def load_data2(args):
         return new_checkins
 
     selected_checkins = create_new_checkins2(mat['selected_checkins'], new_maps, persona_POI, POI_dict, center_ori_dict)
-    friendship_new = friendship_n
+    # friendship_new = friendship_n
 
 
     offset1 = max(selected_checkins[:, 0])
@@ -195,13 +221,17 @@ def load_data2(args):
         inds_checkins = np.argwhere(train_checkins[:, 0] == user_id).flatten()
         checkins = train_checkins[inds_checkins]
         train_user_checkins[user_id] = checkins
+        user_checkin[user_id - 1] = checkins
     val_user_checkins = {}
     for user_id in range(1, n_users + 1):
         inds_checkins = np.argwhere(val_checkins[:, 0] == user_id).flatten()
         checkins = val_checkins[inds_checkins]
         val_user_checkins[user_id] = checkins
+
     # everything here is from 1
-    return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori
+    return  train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, \
+            friendship_old, friendship_new, selected_checkins, \
+            offset1, offset2, offset3, new_maps, maps, friendship_old_ori, user_checkin, thresh
 
 
 def load_data(args):
@@ -212,7 +242,7 @@ def load_data(args):
         mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
     else:
         mat = loadmat('dataset/dataset_connected_{}.mat'.format(args.dataset_name))
-    edges, maps, new_maps = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), 'Suhi_output/ego_net_{}'.format(args.dataset_name))
+    edges, maps, new_maps, thresh = load_ego('Suhi_output/edgelist_{}'.format(args.dataset_name), 'Suhi_output/ego_net_{}'.format(args.dataset_name))
     friendship_old_ori = mat['friendship_old']
     friendship_old = edges 
     friendship_new = mat["friendship_new"] 
@@ -271,7 +301,8 @@ def load_data(args):
         checkins = val_checkins[inds_checkins]
         val_user_checkins[user_id] = checkins
     # everything here is from 1
-    return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori, user_checkin
+    return train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori, user_checkin, thresh
+
 
 def sample_edges_non_edges(edges, num_samples, n_nodes):
     num_edges = edges.shape[0]
@@ -344,12 +375,15 @@ if __name__ == "__main__":
     # maps: {key: value}; key in [1,..,n], value in [1,...,m] (also new_maps)
     args = parse_args()
     if args.input_type == "persona2":
-        train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori = load_data2(args)
+        train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, \
+            val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, \
+            offset2, offset3, new_maps, maps, friendship_old_ori, user_checkin, thresh = load_data2(args)
     else:
-        train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori, user_checkin = load_data(args)
+        train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, \
+            val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, \
+            offset2, offset3, new_maps, maps, friendship_old_ori, user_checkin, thresh = load_data(args)
 
-    
-    sentences = random_walk(friendship_old, n_users, args, user_checkin)
+    sentences = random_walk(friendship_old, n_users, args, user_checkin, thresh)
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
     embs_ini = initialize_emb(args, n_nodes_total)
     save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins)
@@ -403,8 +437,6 @@ if __name__ == "__main__":
             else:
                 embs_user = map_to_old_embs(first_emb, embs_user)
             # predict link here
-            
-
             
             embs = torch.FloatTensor(embs_user)
             embs = embs.cuda()
