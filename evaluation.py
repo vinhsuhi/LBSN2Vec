@@ -122,7 +122,7 @@ def friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10,
                     target_groups[j] = []
 
         precision.append(n_relevants/k)
-        recall.append(n_relevants/len(value))
+        recall.append(n_relevants/len(friends_list))
     precision = np.mean(precision)
     recall = np.mean(recall)
     print(f"Precision@{k}: {precision:.3f}")
@@ -210,7 +210,7 @@ if __name__ == "__main__":
     embs_user = np.random.uniform(size=(4, 5))
     fo = np.array([[0,1], [2, 3]])
     fn = np.array([[0,2], [0,3], [1, 2]])
-    friendship_linkprediction(embs_user, fo, fn)
+    # friendship_linkprediction(embs_user, fo, fn)
 
     # embs_cate = loadtxt('embs_cate.txt', ',').T 
     # embs_user = loadtxt('embs_user.txt', ',').T 
