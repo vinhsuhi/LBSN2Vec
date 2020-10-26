@@ -9,6 +9,7 @@ from tqdm import trange
 from walkers import DeepWalker
 from ego_splitting import EgoNetSplitter
 import networkx as nx
+import traceback
 
 class Splitter(torch.nn.Module):
     """
@@ -107,7 +108,7 @@ class SplitterTrainer(object):
     """
     Class for training a Splitter.
     """
-    def __init__(self, graph,graph_friend,listPOI, args):
+    def __init__(self, graph,graph_friend,listPOI,mat, args):
         """
         :param graph: NetworkX graph object.
         :param args: Arguments object.
@@ -115,8 +116,19 @@ class SplitterTrainer(object):
         self.graph = graph
         self.graph_friend = graph_friend
         self.listPOI = listPOI
+        self.selected_checkins = mat['selected_checkins']
         self.args = args
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.category_POI()
+    def category_POI(self): # tạo dict để phân lớp các POI
+        self.category_POI_dict = dict()
+        for i in self.selected_checkins:
+            position = i[2]
+            category = i[3]
+            if category in self.category_POI_dict:
+                self.category_POI_dict[category].append(position)
+            else:
+                self.category_POI_dict[category] = [position]
 
     def create_noises(self):
         """
@@ -172,16 +184,17 @@ class SplitterTrainer(object):
         persona_graph_continue = nx.from_edgelist(edges_continue)
         persona_map_continue = {continue_map[n]: persona_map[n] for n in nodes_list }
         persona_reverse_map_continue = {}
-        edgelistPOI = []
+        edgelistPOI = []            # để lưu ra file, chứa cặp node (persona - POI)
         for i in persona_map_continue:
             if persona_map_continue[i] not in persona_reverse_map_continue:
                 persona_reverse_map_continue[persona_map_continue[i]] = [i]
             else:
                 persona_reverse_map_continue[persona_map_continue[i]].append(i)
-        persona_position_dict = {}
+        persona_position_dict = {}      # dictionary chứa d[persona] =[list các POI mà persona đó nối vào]
         # while len(friend_POI_graph.edges) >0:
-        print(len(friend_POI_graph.edges))
-        graph_POI_persona = nx.Graph()
+        print("checkin ban đầu  : ",len(friend_POI_graph.edges))
+        graph_POI_persona = nx.Graph()      # graph chứa các cạnh nối từ POI -> persona
+        print(" Bat dau P1 ")
         for e1,e2 in friend_POI_graph.edges:
             # print(e1,e2)
             if e1 in self.list_friend and e2 in self.listPOI:
@@ -196,39 +209,261 @@ class SplitterTrainer(object):
             node_persona_respective = persona_reverse_map_continue[e_friend]
             have_edge = False
             # Tìm node perona có chung position
+            ### Collocation
             for persona_node in node_persona_respective:
                 neighbor_nodes = persona_graph_continue.neighbors(persona_node)
                 for neighbor_node in neighbor_nodes:
                     if self.graph.has_edge(persona_map_continue[neighbor_node],e_pos) or self.graph.has_edge(e_pos,persona_map_continue[neighbor_node]):
-                        edgelistPOI.append([persona_node,e_pos])
-                        edgelistPOI.append([neighbor_node,e_pos])
+                        have_edge_1 = False
+                        have_edge_2 = False
+                        if [persona_node,e_pos] in edgelistPOI:
+                            have_edge_1 = True
+                        if [neighbor_node,e_pos] in edgelistPOI:
+                            have_edge_2 = True
+                        if not have_edge_1:
+                            edgelistPOI.append([persona_node,e_pos])
+                            graph_POI_persona.add_edge(persona_node, e_pos)
+                            if persona_node not in persona_position_dict:
+                                persona_position_dict[persona_node] = [e_pos]
+                            else:
+                                persona_position_dict[persona_node].append(e_pos)
+
+                        if not have_edge_2:
+                            edgelistPOI.append([neighbor_node,e_pos])
+                            graph_POI_persona.add_edge(neighbor_node, e_pos)
+                            if neighbor_node not in persona_position_dict:
+                                persona_position_dict[neighbor_node] = [e_pos]
+                            else:
+                                persona_position_dict[neighbor_node].append(e_pos)
                         # print("Xoa cạnh  :  ", e1,e2)
-                        friend_POI_graph.remove_edges_from([(e_friend,e_pos)])
-                        friend_POI_graph.remove_edges_from([(persona_map_continue[neighbor_node],e_pos)])
-                        have_edge = True
-                        graph_POI_persona.add_edge(persona_node,e_pos)
-                        graph_POI_persona.add_edge(neighbor_node,e_pos)
-                        if persona_node not in persona_position_dict:
-                            persona_position_dict[persona_node] = [e_pos]
-                        else:
-                            persona_position_dict[persona_node].append(e_pos)
-                        if neighbor_node not in persona_position_dict:
-                            persona_position_dict[neighbor_node] = [e_pos]
-                        else:
-                            persona_position_dict[neighbor_node].append(e_pos)
-                        continue
-                    if have_edge:
-                        continue
-                if have_edge:
-                    continue
-        graph_POI_POI = nx.Graph()
+                        # have_edge = True
+                    # if have_edge:
+                    #     continue
+                # if have_edge:
+                #     continue
+        ## Xóa cạnh friend - pos đã được nối với nhau
+        print(" Xoa  ",len(edgelistPOI),"  da ton tai")
+        for del_edge in edgelistPOI:
+            e_friend, e_pos = del_edge[0],del_edge[1]
+            friend_POI_graph.remove_edges_from([(e_friend, e_pos)])
+        print(" Xong P1 ")
+        #######################################
+        # Tạo graph các POI ở chung với nhau
+        #  For P2
+        """
+        graph_POI_POI = nx.Graph()      # graph nối các POI ở cùng 1 persona
         for persona_node in persona_position_dict:
             e_poses = persona_position_dict[persona_node]
             for e1 in range(len(e_poses)):
                 for e2 in range(e1+1,len(e_poses)):
-                    graph_POI_POI.add_edge(e1,e2)
+                    if graph_POI_POI.has_edge(e1,e2):
+                        w = graph_POI_POI.get_edge_data(e1,e2)['weight']
+                        # print(w)
+                        graph_POI_POI.add_edge(e1, e2, weight=w+1)
+                    else:
+                        graph_POI_POI.add_edge(e1,e2,weight = 1)
 
+        print("tạo xong graph POI-POI begin")
+
+        #########################################
+        ## Tạo graph các POI cùng lớp
+        ## For P3
+        graph_POI_class = nx.Graph()  # graph nối các POI ở cùng 1 class
+        # print(len(self.category_POI_dict))
+        for cls in self.category_POI_dict:
+            e_poses = self.category_POI_dict[cls]
+            # print(len(e_poses))
+            # continue
+            for e1 in range(len(e_poses)):
+                for e2 in range(e1 + 1, len(e_poses)):
+                    if graph_POI_class.has_edge(e1, e2):
+                        w = graph_POI_class.get_edge_data(e1, e2)['weight']
+                        # print(w)
+                        graph_POI_class.add_edge(e1, e2, weight=w + 1)
+                    else:
+                        graph_POI_class.add_edge(e1, e2, weight=1)
+        print("tạo xong graph POI-class begin")
+        print("sau khi ghép các component  : ", len(friend_POI_graph.edges))
+        ########################################
+        # P2 & P3
         # Ghép các position hay ở chung với nhau
+        # Ghép các position cùng class
+
+        print("Bat dau P2 P3 ")
+        new_num_edges_friend_POI_edges = 0
+        old_num_edges_friend_POI_edges = len(friend_POI_graph.edges)
+        not_change = False
+        while len(friend_POI_graph.edges) >0:
+            print(old_num_edges_friend_POI_edges, new_num_edges_friend_POI_edges)
+            if old_num_edges_friend_POI_edges == new_num_edges_friend_POI_edges:
+                not_change = True
+            old_num_edges_friend_POI_edges = len(friend_POI_graph.edges)
+            ### P2 ghép các position đã từng ở chung với nhau
+            for e1, e2 in friend_POI_graph.edges:
+                if e1 in self.list_friend and e2 in self.listPOI:
+                    e_friend = e1
+                    e_pos = e2
+                elif e2 in self.list_friend and e1 in self.listPOI:
+                    e_friend = e2
+                    e_pos = e1
+                else:
+                    print("cạnh này bị lỗi e1 : ",e1,"   , e2:  ",e2)
+                    continue
+                try:
+                    # node_pos_friend = list(graph_POI_POI.neighbors(e_pos)).copy()
+                    ## Tìm tất cả các position ở chung
+                    node_pos_friend =  sorted(graph_POI_POI[e_pos].items(), key=lambda edge: edge[1]['weight'],reverse=True)
+
+                except Exception as e:
+                    # Random make persona-checkpoint
+                    # Nếu không có position ở chung nào thì nối bừa
+                    # continue
+                    # traceback.print_tb(e.__traceback__)
+                    persona_node = random.choice(persona_reverse_map_continue[e_friend])    # chọn bừa 1 persona node
+                    edgelistPOI.append([persona_node, e_pos])                               # nối position-persona
+                    friend_POI_graph.remove_edges_from([(e_friend, e_pos)])
+
+                    graph_POI_persona.add_edge(persona_node, e_pos)
+                    if persona_node not in persona_position_dict:                           # Thêm các edge position-position cùng nối với persona đó
+                        persona_position_dict[persona_node] = [e_pos]
+                    else:
+                        persona_position_dict[persona_node].append(e_pos)
+                    for e_pos_in_this_persona in persona_position_dict[persona_node]:
+                        # graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona)
+                        if e_pos_in_this_persona == e_pos:
+                            continue
+                        if graph_POI_POI.has_edge(e_pos,e_pos_in_this_persona):
+                            w = graph_POI_POI.get_edge_data(e_pos, e_pos_in_this_persona)['weight']
+                            # print(w)
+                            graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona, weight=w+1)
+                        else:
+                            graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona,weight = 1)
+                    continue
+                # Tất cả node persona tương ứng với node user e_friend
+                node_persona_respective = persona_reverse_map_continue[e_friend]
+                have_edge = False
+                for persona_node in node_persona_respective:                                #duyệt qua các persona node
+                    for pos,_ in node_pos_friend:                                           # duyệt qua các position hay đi cùng
+                        # print("weight :  ", graph_POI_POI.get_edge_data(e_pos, pos))
+                        if graph_POI_persona.has_edge(pos,persona_node):
+                            # Nếu có 1 persona nối với 1 position hay đi
+                            # thì nối luôn e_pos kia vào
+                            # print("có cạnh nè weight :  ",graph_POI_POI.get_edge_data(e_pos,pos))
+                            edgelistPOI.append([persona_node, e_pos])
+                            friend_POI_graph.remove_edges_from([(e_friend,e_pos)])
+                            have_edge = True
+                            graph_POI_persona.add_edge(persona_node, e_pos)
+                            # thêm cái POI mới vào danh sách
+                            if persona_node not in persona_position_dict:
+                                persona_position_dict[persona_node] = [e_pos]
+                            else:
+                                persona_position_dict[persona_node].append(e_pos)
+
+                            for e_pos_in_this_persona in persona_position_dict[persona_node]:
+                                # graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona)
+                                if e_pos_in_this_persona == e_pos:
+                                    continue
+                                if graph_POI_POI.has_edge(e_pos, e_pos_in_this_persona):
+                                    w = graph_POI_POI.get_edge_data(e_pos, e_pos_in_this_persona)['weight']
+                                    # print(w)
+                                    graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona, weight=w + 1)
+                                else:
+                                    graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona, weight=1)
+                            break
+                        if have_edge:
+                            continue
+                    if have_edge:
+                        continue
+
+                ################################
+                ### Ghép bừa POI vào persona
+                if not_change and not have_edge:
+                    # Nếu ko ghép được cái gì
+                    #Thì ghép bừa
+                    persona_node = random.choice(persona_reverse_map_continue[e_friend])  # chọn bừa 1 persona node
+                    edgelistPOI.append([persona_node, e_pos])  # nối position-persona
+                    friend_POI_graph.remove_edges_from([(e_friend, e_pos)])
+
+                    graph_POI_persona.add_edge(persona_node, e_pos)
+                    if persona_node not in persona_position_dict:  # Thêm các edge position-position cùng nối với persona đó
+                        persona_position_dict[persona_node] = [e_pos]
+                    else:
+                        persona_position_dict[persona_node].append(e_pos)
+
+                    for e_pos_in_this_persona in persona_position_dict[persona_node]:
+                        # graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona)
+                        if e_pos_in_this_persona == e_pos:
+                            continue
+                        if graph_POI_POI.has_edge(e_pos, e_pos_in_this_persona):
+                            w = graph_POI_POI.get_edge_data(e_pos, e_pos_in_this_persona)['weight']
+                            # print(w)
+                            graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona, weight=w + 1)
+                        else:
+                            graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona, weight=1)
+            print("xong P2")
+            ###############################
+            # P3 Ghép các POI có cùng cls
+            for e1, e2 in friend_POI_graph.edges:
+                if e1 in self.list_friend and e2 in self.listPOI:
+                    e_friend = e1
+                    e_pos = e2
+                elif e2 in self.list_friend and e1 in self.listPOI:
+                    e_friend = e2
+                    e_pos = e1
+                try:
+                    # node_pos_friend = list(graph_POI_POI.neighbors(e_pos)).copy()
+                    node_pos_friend =  sorted(graph_POI_class[e_pos].items(), key=lambda edge: edge[1]['weight'],reverse=True)
+                    # print(node_pos_friend)
+                    # if node_pos_friend[0]['weight'] > 1:
+                    #     exit()
+                    # if len(node_pos_friend) == 0:
+                    #     raise
+                except Exception as e:
+                    continue
+                # Tất cả node persona tương ứng với node user e_friend
+                node_persona_respective = persona_reverse_map_continue[e_friend]
+                have_edge = False
+                for persona_node in node_persona_respective:    #duyệt qua các persona node
+                    for pos,_ in node_pos_friend:               # duyệt qua các position hay đi cùng
+                        # print("weight :  ", graph_POI_POI.get_edge_data(e_pos, pos))
+                        if graph_POI_persona.has_edge(pos,persona_node):
+                            # Nếu có 1 persona nối với 1 position hay đi
+                            # thì nối luôn e_pos kia vào
+                            # print("có cạnh nè weight :  ",graph_POI_POI.get_edge_data(e_pos,pos))
+                            edgelistPOI.append([persona_node, e_pos])
+                            friend_POI_graph.remove_edges_from([(e_friend,e_pos)])
+                            have_edge = True
+                            graph_POI_persona.add_edge(persona_node, e_pos)
+                            # thêm cái POI mới vào danh sách
+                            if persona_node not in persona_position_dict:
+                                persona_position_dict[persona_node] = [e_pos]
+                            else:
+                                persona_position_dict[persona_node].append(e_pos)
+
+                            for e_pos_in_this_persona in persona_position_dict[persona_node]:
+                                # graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona)
+                                if e_pos_in_this_persona == e_pos:
+                                    continue
+                                if graph_POI_POI.has_edge(e_pos, e_pos_in_this_persona):
+                                    w = graph_POI_POI.get_edge_data(e_pos, e_pos_in_this_persona)['weight']
+                                    # print(w)
+                                    graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona, weight=w + 1)
+                                else:
+                                    graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona, weight=1)
+                            continue
+                        if have_edge:
+                            continue
+                    if have_edge:
+                        continue
+
+            print("xong P3")
+
+            new_num_edges_friend_POI_edges = len(friend_POI_graph.edges)
+        """
+        ########################################################
+        ### Khi vẫn còn dư   poi
+        ### Nối bừa : random
+        print(" Bat dau gan random")
         for e1, e2 in friend_POI_graph.edges:
             if e1 in self.list_friend and e2 in self.listPOI:
                 e_friend = e1
@@ -237,37 +472,18 @@ class SplitterTrainer(object):
                 e_friend = e2
                 e_pos = e1
             else:
-                print("cạnh này bị lỗi e1 : ",e1,"   , e2:  ",e2)
+                print("cạnh này bị lỗi e1 : ", e1, "   , e2:  ", e2)
                 continue
-            try:
-                node_pos_friend = graph_POI_POI.neighbors(e_pos).copy()
-            except:
-                # print(persona_reverse_map_continue[e_friend])
-                # print("Node position",persona_position_dict[persona_reverse_map_continue[e_friend][0]])
-                persona_node = random.choice(persona_reverse_map_continue[e_friend])
-                edgelistPOI.append([persona_node, e_pos])
-                friend_POI_graph.remove_edges_from([(e_friend, e_pos)])
-                if persona_node in persona_position_dict:
-                    for e_pos_in_this_persona in persona_position_dict[persona_node]:
-                        graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona)
+            persona_node = random.choice(persona_reverse_map_continue[e_friend])  # chọn bừa 1 persona node
+            edgelistPOI.append([persona_node, e_pos])  # nối position-persona
+            friend_POI_graph.remove_edges_from([(e_friend, e_pos)])
 
-                continue
-            node_persona_respective = persona_reverse_map_continue[e_friend]
-            have_edge = False
-            for persona_node in node_persona_respective:
-                for pos in node_pos_friend:
-                    if graph_POI_persona.has_edge(pos,persona_node):
-                        edgelistPOI.append([persona_node, e_pos])
-                        friend_POI_graph.remove_edges_from([(e_friend,e_pos)])
-                        have_edge = True
-                        if persona_node in persona_position_dict:
-                            for e_pos_in_this_persona in persona_position_dict[persona_node]:
-                                graph_POI_POI.add_edge(e_pos, e_pos_in_this_persona)
-                        continue
-                    if have_edge:
-                        continue
-                if have_edge:
-                    continue
+            graph_POI_persona.add_edge(persona_node, e_pos)
+            if persona_node not in persona_position_dict:  # Thêm các edge position-position cùng nối với persona đó
+                persona_position_dict[persona_node] = [e_pos]
+            else:
+                persona_position_dict[persona_node].append(e_pos)
+
         print(len(friend_POI_graph.edges))
         # exit()
         print("Number node of persona graph  : ",len(persona_graph_continue.nodes))
