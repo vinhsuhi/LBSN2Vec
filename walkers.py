@@ -20,6 +20,8 @@ class BasicWalker:
         self.bias = bias
         self.center_ori_maps = center_ori_maps
         self.alpha = alpha
+        import pdb
+        pdb.set_trace()
 
 
     def build_neibs_dict(self):
@@ -68,8 +70,6 @@ def deepwalk_walk(params):
     neibs = params["neibs"]
     nodes = params["nodes"]
     center_ori_maps = params["center_ori_maps"]
-    import pdb
-    pdb.set_trace()
     alpha = params["alpha"]
     # if args["iter"] % 5 == 0:
     print("Iter:", params["iter"]) # keep printing, avoid moving process to swap
