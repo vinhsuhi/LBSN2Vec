@@ -118,5 +118,5 @@ def bias_walk(cur, cur_nbrs, user_poi_dict, center_ori_maps,alpha=0.1):
         prob *= (1 - alpha)
         prob[center] = alpha
         prob /= prob.sum()
-        print(prob, prob[center])
+        # print(prob, prob[center])
     return np.random.choice(cur_nbrs, p=prob)
