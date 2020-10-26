@@ -10,7 +10,7 @@ import pdb
 import math
 import os
 import multiprocessing
-from evaluation import friendship_pred_persona
+from evaluation import friendship_pred_persona, friendship_pred_ori
 import argparse
 import learn
 from utils import save_info, sample_neg, read_embs, initialize_emb, random_walk, renumber_checkins
@@ -281,7 +281,29 @@ if __name__ == "__main__":
     embs = read_embs(embs_file)
     embs_user = embs[:offset1]
 
+    print("Current ACC")
     friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10, maps_OritP=maps_OritP, maps_PtOri=maps_PtOri)
+
+    def friendship_to_center_friendship(friends, center_ori_maps, center_id2dix):
+        ori_center_map = {v:k for k,v in center_ori_maps.items()}
+        center_friends = []
+        for i in range(friends.shape[0]):
+            new_friend = [ori_center_map[friends[i,0]], ori_center_map[friends[i, 1]]]
+            center_friends.append([center_id2dix[ele] for ele in new_friend])
+        return np.array(center_friends)
+
+    center = list(center_ori_maps.keys())
+    center_id2dix = {cen: i + 1 for i, cen in enumerate(center)}
+    center_embs = embs_user[center - 1]
+
+    friendship_old_center = friendship_to_center_friendship(friendship_old_ori, center_ori_maps, center_id2dix)
+    friendship_new_center = friendship_to_center_friendship(friendship_new, center_ori_maps, center_id2dix)
+
+    print("Center ACC")
+    friendship_pred_ori(center_embs, friendship_old_center, friendship_new_center)
+    
+
+
 
     """
     scripts:
