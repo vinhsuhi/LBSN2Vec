@@ -220,7 +220,7 @@ class SplitterTrainer(object):
                             have_edge_1 = True
                         if [neighbor_node,e_pos] in edgelistPOI:
                             have_edge_2 = True
-                        if have_edge_1:
+                        if not have_edge_1:
                             edgelistPOI.append([persona_node,e_pos])
                             graph_POI_persona.add_edge(persona_node, e_pos)
                             if persona_node not in persona_position_dict:
@@ -228,7 +228,7 @@ class SplitterTrainer(object):
                             else:
                                 persona_position_dict[persona_node].append(e_pos)
 
-                        if have_edge_2:
+                        if not have_edge_2:
                             edgelistPOI.append([neighbor_node,e_pos])
                             graph_POI_persona.add_edge(neighbor_node, e_pos)
                             if neighbor_node not in persona_position_dict:
@@ -250,6 +250,7 @@ class SplitterTrainer(object):
         #######################################
         # Tạo graph các POI ở chung với nhau
         #  For P2
+        """
         graph_POI_POI = nx.Graph()      # graph nối các POI ở cùng 1 persona
         for persona_node in persona_position_dict:
             e_poses = persona_position_dict[persona_node]
@@ -458,10 +459,11 @@ class SplitterTrainer(object):
             print("xong P3")
 
             new_num_edges_friend_POI_edges = len(friend_POI_graph.edges)
-
+        """
         ########################################################
         ### Khi vẫn còn dư   poi
         ### Nối bừa : random
+        print(" Bat dau gan random")
         for e1, e2 in friend_POI_graph.edges:
             if e1 in self.list_friend and e2 in self.listPOI:
                 e_friend = e1
