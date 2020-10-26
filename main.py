@@ -73,7 +73,6 @@ def learn_emb(sentences, n_nodes, emb_dim, n_epochs, win_size, \
             loss2s = []
             loss3s = []
             for j in range(sentence_length):
-                
                 words = this_sentences[:, j]
                 edges = []
                 for k in range(1, win_size + 1):

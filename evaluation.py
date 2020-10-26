@@ -10,6 +10,62 @@ def normalize_embedding(emb):
     return emb / normalize_factor.reshape(-1, 1)
 
 
+def linkpred(embs, friendship_old, friendship_new, k=10):
+    """
+    Simplest Linkprediction Evaluation
+    embs: user embeddings
+    friendship_old: old friendship: node_id >= 0
+    friendship_new: new friendship: node_id >= 0
+    """
+    ################# compute simi matrix #################
+    num_users = embs.shape[0]
+    normalize_embs = normalize_embedding(embs)
+    simi_matrix = normalize_embs.dot(normalize_embs.T)
+    #######################################################
+    
+
+    ################# preprocess simi matrix #########################
+    for i in range(num_users):
+        simi_matrix[i, i] = -2
+    
+    for i in range(friendship_old.shape[0]):
+        simi_matrix[friendship_old[i, 0], friendship_old[i, 1]] = -2
+    ################################################################
+    
+    # argsort
+    arg_sorted_simi = simi_matrix.argsort(axis=1)
+    
+    ################# create friend_dict: node-> set of fiends #############
+    friend_dict = dict()
+    for i in range(friendship_new.shape[0]):
+        source, target = friendship_new[i][0], friendship_new[i][1]
+        if source not in friend_dict:
+            friend_dict[source] = set([target])
+        else:
+            friend_dict[source].add(target)
+    ########################################################################
+
+    ###################### evaluate #########################
+    precision = []
+    recall = []
+    for key, value in friend_dict.items():
+        n_relevants = 0
+        arg_simi_key = arg_sorted_simi[key][-k:]
+        for target_node in value:
+            if target_node in arg_simi_key:
+                n_relevants += 1
+        precision.append(n_relevants/k)
+        recall.append(n_relevants/len(value))
+
+    precision = np.mean(precision)
+    recall = np.mean(recall)
+    print(f"Precision@{k}: {precision:.3f}")
+    print(f"Recall@{k}: {recall:.3f}")
+    #########################################################
+
+
+
+
 def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, new_maps=None, maps=None, friendship_old_ori=None, simi=None):
     if simi is not None:
         simi_matrix = simi
@@ -31,7 +87,6 @@ def friendship_linkprediction(embs_user, friendship_old, friendship_new, k=10, n
             for eles in group_source:
                 for elet in group_target:
                     if eles == 0 or elet == 0:
-                        print("LOL")
                         exit()
                     simi_matrix[eles - 1, elet - 1] = -2
                     simi_matrix[elet - 1, eles - 1] = -2
