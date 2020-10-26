@@ -7,8 +7,6 @@ import multiprocessing
 class BasicWalker:
     def __init__(self, G, start_nodes=None, user_poi_dict={}, bias=False, center_ori_maps=None, alpha=0.1):
         self.G = G
-        import pdb
-        pdb.set_trace()
         if hasattr(G, 'neibs'):
             self.neibs = G.neibs
         else:
@@ -99,8 +97,8 @@ def bias_walk(cur, cur_nbrs, user_poi_dict, center_ori_maps,alpha=0.1):
     center = None
     for i in range(len(cur_nbrs)):
         nb = cur_nbrs[i]
-        nb_poi = user_poi_dict[nb]
-        if nb >= thresh:
+        nb_poi = user_poi_dict[nb + 1]
+        if nb + 1 >= thresh:
             center = i
             prob.append(0)
             continue
