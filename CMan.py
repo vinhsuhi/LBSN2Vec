@@ -228,10 +228,11 @@ def load_data(args):
     
     ############## Train Test split for POI prediction ##################
     n_data = persona_checkins.shape[0]
-    if args.mode == "friend":
-        n_train = n_data
-    else:
-        n_train = int(n_data * 0.8)
+    # if args.mode == "friend":
+    #     n_train = n_data
+    # else:
+    #     n_train = int(n_data * 0.8)
+    n_train = n_data
     
     sorted_checkins = persona_checkins[np.argsort(persona_checkins[:,1])]
     train_checkins = sorted_checkins[:n_train]
