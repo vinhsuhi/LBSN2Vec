@@ -13,9 +13,6 @@ import multiprocessing
 from evaluation import *
 import argparse
 import learn
-import torch
-import torch.nn.functional as F
-import torch.nn as nn
 from utils import save_info, sample_neg, read_embs, initialize_emb, random_walk
 from link_pred_model import StructMLP
 from sklearn.metrics import f1_score, accuracy_score
@@ -287,7 +284,7 @@ if __name__ == "__main__":
     embs = read_embs(embs_file)
     embs_user = embs[:offset1]
 
-    friendship_linkprediction(embs_user, friendship_old_persona, friendship_new, k=10, new_maps=maps_OritP, maps=maps_PtOri, friendship_old_ori=friendship_old_ori)
+    friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10, maps_OritP=maps_OritP, maps_PtOri=maps_PtOri)
 
     """
     scripts:
