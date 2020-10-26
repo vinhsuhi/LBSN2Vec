@@ -5,7 +5,7 @@ import multiprocessing
 
 
 class BasicWalker:
-    def __init__(self, G, start_nodes=None, user_poi_dict={}, bias=False, center_ori_maps=None):
+    def __init__(self, G, start_nodes=None, user_poi_dict={}, bias=False, center_ori_maps=None, alpha=0.1):
         self.G = G
         if hasattr(G, 'neibs'):
             self.neibs = G.neibs
@@ -19,6 +19,7 @@ class BasicWalker:
         self.user_poi_dict = user_poi_dict
         self.bias = bias
         self.center_ori_maps = center_ori_maps
+        self.alpha = alpha
 
 
     def build_neibs_dict(self):
@@ -37,7 +38,9 @@ class BasicWalker:
             _ns = nodes.copy()
             np.random.shuffle(_ns)
             nodess.append(_ns)
-        params = list(map(lambda x: {'walk_length': walk_length, 'neibs': self.neibs, 'iter': x, 'nodes': nodess[x], 'bias': self.bias, 'user_poi_dict': self.user_poi_dict, 'center_ori_maps': self.center_ori_maps},
+        params = list(map(lambda x: {'walk_length': walk_length, 'neibs': self.neibs, 'iter': x, \
+                'nodes': nodess[x], 'bias': self.bias, 'user_poi_dict': self.user_poi_dict, \
+                'center_ori_maps': self.center_ori_maps, 'alpha': self.alpha},
             list(range(1, num_walks+1))))
         
         walks = pool.map(deepwalk_walk, params)
@@ -65,6 +68,7 @@ def deepwalk_walk(params):
     neibs = params["neibs"]
     nodes = params["nodes"]
     center_ori_maps = params["center_ori_maps"]
+    alpha = params["alpha"]
     # if args["iter"] % 5 == 0:
     print("Iter:", params["iter"]) # keep printing, avoid moving process to swap
 
@@ -79,7 +83,6 @@ def deepwalk_walk(params):
             cur_nbrs = neibs[cur]
             if len(cur_nbrs) == 0: break
             if not bias:
-                # print("lol")
                 walk.append(np.random.choice(cur_nbrs))
             else:
                 walk.append(bias_walk(cur, cur_nbrs, user_poi_dict, center_ori_maps))
@@ -87,14 +90,16 @@ def deepwalk_walk(params):
     return walks
 
 
-def bias_walk(cur, cur_nbrs, user_poi_dict, center_ori_maps):
+def bias_walk(cur, cur_nbrs, user_poi_dict, center_ori_maps,alpha=0.1):
     thresh = min(list(center_ori_maps.keys()))
     this_poi = user_poi_dict[cur]
     prob = []
+    center = None
     for i in range(len(cur_nbrs)):
         nb = cur_nbrs[i]
         nb_poi = user_poi_dict[nb]
         if nb_poi >= thresh:
+            center = i
             prob.append(0)
             continue
         common = nb_poi.intersection(this_poi)
@@ -107,4 +112,12 @@ def bias_walk(cur, cur_nbrs, user_poi_dict, center_ori_maps):
     prob += np.max(prob) / 10
     if np.max(prob) == 0:
         prob += 1
-    return np.random.choice(cur_nbrs, p=prob/prob.sum())
+    if center is not None:
+        prob[center] = 0
+        prob /= prob.sum()
+        prob *= (1 - alpha)
+        prob[center] = alpha
+        prob /= prob.sum()
+        import pdb
+        pdb.set_trace()
+    return np.random.choice(cur_nbrs, p=prob)
