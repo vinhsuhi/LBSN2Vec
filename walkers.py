@@ -20,8 +20,6 @@ class BasicWalker:
         self.bias = bias
         self.center_ori_maps = center_ori_maps
         self.alpha = alpha
-        import pdb
-        pdb.set_trace()
 
 
     def build_neibs_dict(self):
@@ -87,7 +85,7 @@ def deepwalk_walk(params):
             if not bias:
                 walk.append(np.random.choice(cur_nbrs))
             else:
-                walk.append(bias_walk(cur, cur_nbrs, user_poi_dict, center_ori_maps))
+                walk.append(bias_walk(cur, cur_nbrs, user_poi_dict, center_ori_maps, alpha))
         walks.append(walk)
     return walks
 
@@ -100,7 +98,7 @@ def bias_walk(cur, cur_nbrs, user_poi_dict, center_ori_maps,alpha=0.1):
     for i in range(len(cur_nbrs)):
         nb = cur_nbrs[i]
         nb_poi = user_poi_dict[nb]
-        if nb_poi >= thresh:
+        if nb >= thresh:
             center = i
             prob.append(0)
             continue
