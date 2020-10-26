@@ -305,9 +305,9 @@ if __name__ == "__main__":
     args = parse_args()
     train_checkins, val_checkins, n_users, n_nodes_total, train_user_checkins, val_user_checkins, friendship_old, friendship_new, selected_checkins, offset1, offset2, offset3, new_maps, maps, friendship_old_ori = load_data(args)
 
-    if not args.load:
-        sentences = random_walk(friendship_old, n_users, args)
-        if not args.py:
+    if not args.load or 1:
+        sentences = random_walk(friendship_old, n_users, args, {}, 0)
+        if not args.py or 1:
             neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)
             embs_ini = initialize_emb(args, n_nodes_total)
             save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins)
