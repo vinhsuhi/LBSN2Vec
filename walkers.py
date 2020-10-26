@@ -68,6 +68,8 @@ def deepwalk_walk(params):
     neibs = params["neibs"]
     nodes = params["nodes"]
     center_ori_maps = params["center_ori_maps"]
+    import pdb
+    pdb.set_trace()
     alpha = params["alpha"]
     # if args["iter"] % 5 == 0:
     print("Iter:", params["iter"]) # keep printing, avoid moving process to swap
