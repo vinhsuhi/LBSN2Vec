@@ -79,7 +79,7 @@ def deepwalk_walk(params):
             cur_nbrs = neibs[cur]
             if len(cur_nbrs) == 0: break
             if not bias:
-                print("lol")
+                # print("lol")
                 walk.append(np.random.choice(cur_nbrs))
             else:
                 walk.append(bias_walk(cur, cur_nbrs, user_poi_dict, thresh))
