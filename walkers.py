@@ -7,6 +7,8 @@ import multiprocessing
 class BasicWalker:
     def __init__(self, G, start_nodes=None, user_poi_dict={}, bias=False, center_ori_maps=None, alpha=0.1):
         self.G = G
+        import pdb
+        pdb.set_trace()
         if hasattr(G, 'neibs'):
             self.neibs = G.neibs
         else:
