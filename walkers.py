@@ -92,7 +92,7 @@ def deepwalk_walk(params):
 
 def bias_walk(cur, cur_nbrs, user_poi_dict, center_ori_maps,alpha=0.1):
     thresh = min(list(center_ori_maps.keys()))
-    this_poi = user_poi_dict[cur]
+    this_poi = user_poi_dict[cur + 1]
     prob = []
     center = None
     for i in range(len(cur_nbrs)):
