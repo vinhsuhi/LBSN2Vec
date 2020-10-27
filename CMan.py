@@ -34,6 +34,7 @@ def parse_args():
     parser.add_argument('--alpha', type=float, default=0.1)
     parser.add_argument('--input_type', type=str, default="persona_ori", help="persona_ori or persona_POI") 
     parser.add_argument('--bias_randomwalk', action='store_true')
+    parser.add_argument('--connect_center', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -131,7 +132,11 @@ def load_ego(path1, path2, path3=None, path4=None, friendship_old_ori=None):
     """
     maps_PtOri, maps_OritP, max_node = load_ego_ori_dict(path2)
     additional_edges, center_ori_maps, maps_OritP, maps_PtOri = create_pseudo_edges(maps_OritP, maps_PtOri, max_node)
-    center_friends = friendship_to_center_friendship(friendship_old_ori, center_ori_maps).tolist()
+    if args.connect_center:
+        center_friends = friendship_to_center_friendship(friendship_old_ori, center_ori_maps).tolist()
+    else:
+        center_friends = []
+
     persona_edges = load_persona_graph(path1)
     print("Number of edges before: {}".format(len(persona_edges)))
     persona_edges += additional_edges + center_friends
@@ -313,14 +318,21 @@ if __name__ == "__main__":
     """
     scripts:
 
+    try to use connect_center
+
     for data in NYC hongzhi TKY
     do 
         for alpha in 0 0.000001 0.00001 0.0001 0.001 0.01 0.1
         do 
-            python -u CMan.py --input_type persona_ori --dataset_name ${data} --bias_randomwalk --alpha ${alpha} > output/data${data}_alpha${alpha}
+            python -u CMan.py --input_type persona_POI --dataset_name ${data} --bias_randomwalk --alpha ${alpha} > output/data${data}_alpha${alpha}
         done 
     done
 
+
+    for data in NYC hongzhi TKY
+    do 
+        python -u CMan.py --input_type persona_POI --dataset_name ${data}  > output/data${data}_POI_nobias
+    done
 
     """
 
