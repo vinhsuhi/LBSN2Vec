@@ -230,7 +230,7 @@ def load_data(args):
     location_map_path = 'Suhi_output/location_dict_{}'.format(args.dataset_name)
 
     if args.input_type == "persona_ori":
-        friendship_old_persona, maps_PtOri, maps_OritP, center_ori_maps  = load_ego(edgelist_path, persona_to_ori_path)
+        friendship_old_persona, maps_PtOri, maps_OritP, center_ori_maps  = load_ego(edgelist_path, persona_to_ori_path, friendship_old_ori)
         persona_checkins = create_persona_checkins(mat['selected_checkins'], maps_OritP)
     elif args.input_type == "persona_POI":
         friendship_old_persona, maps_PtOri, persona_POI, POI_maps, maps_OritP, center_ori_maps = load_ego(edgelist_path, persona_to_ori_path, edgelistPOI_path, location_map_path)
@@ -318,7 +318,7 @@ if __name__ == "__main__":
     """
     scripts:
 
-    try to use connect_center
+    try to use --connect_center
 
     for data in NYC hongzhi TKY
     do 
@@ -329,10 +329,10 @@ if __name__ == "__main__":
     done
 
 
-    for data in NYC hongzhi TKY
-    do 
-        python -u CMan.py --input_type persona_POI --dataset_name ${data}  > output/data${data}_POI_nobias
-    done
+for data in NYC hongzhi TKY
+do 
+    python -u CMan.py --input_type persona_POI --dataset_name ${data} --connect_center > output/data${data}_POI_nobias_connect_center
+done
 
     """
 
