@@ -22,26 +22,30 @@ def read_input(path):
     return friendship_old
 
 
-def save_deepwalk(edges, model_name):
+def save_deepwalk(edges, dataset_name):
     out_dir = "edgelist_graph"
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
-    np.savetxt("{}/{}.edgeslist".format(out_dir, model_name), edges, delimiter='\t')
+    # np.savetxt("{}/{}.edgeslist".format(out_dir, model_name), edges, delimiter='\t')
+    with open("{}/{}.edgelist".format(out_dir, dataset_name), 'w', encoding='utf-8') as file:
+        for i in range(edges.shape[0]):
+            file.write("{}\t{}\n".format(int(edges[i, 0]), int(edges[i, 1])))
+    file.close()
     print("Done!")
 
 
-def save_line(edges, model_name):
+def save_line(edges, dataset_name):
     out_dir = "line_graph"
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
-    with open("{}/{}.edgeslist".format(out_dir, model_name), 'w', encoding='utf-8') as file:
+    with open("{}/{}.edgeslist".format(out_dir, dataset_name), 'w', encoding='utf-8') as file:
         for i in range(edges.shape[0]):
-            file.write("{}\t{}\t1\n".format(edges[i, 0], edges[i, 1]))
-            file.write("{}\t{}\t1\n".format(edges[i, 1], edges[i, 0]))
+            file.write("{}\t{}\t1\n".format(int(edges[i, 0]), int(edges[i, 1])))
+            file.write("{}\t{}\t1\n".format(int(edges[i, 1]), int(edges[i, 0])))
     print("Done!")
 
 
-def save_hebe(edges, model_name):
+def save_hebe(edges, dataset_name):
     out_dir = "hebe_graph"
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
@@ -49,7 +53,7 @@ def save_hebe(edges, model_name):
     pass
 
 
-def save_dhne(edges, model_name):
+def save_dhne(edges, dataset_name):
     out_dir = "dhne_graph"
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
