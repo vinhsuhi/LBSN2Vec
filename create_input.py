@@ -17,7 +17,7 @@ def read_input(path):
     friendship_old = mat['friendship_old']
     friendship_old -= 1
     nodes = np.unique(friendship_old)
-    print("Min: {}, Max: {}, Len: {}".format(np.min(nodes), np.max(nodes), np.len(nodes)))
+    print("Min: {}, Max: {}, Len: {}".format(np.min(nodes), np.max(nodes), len(nodes)))
     friendship_old = friendship_old[np.argsort(friendship_old[:, 0])]
     return friendship_old
 
@@ -62,6 +62,7 @@ print(args)
 
 model = args.model 
 friendship = read_input(args.dataset_name)
+friendship = friendship.astype(int)
 
 if model.lower() == "deepwalk":
     save_deepwalk(friendship, args.dataset_name)
