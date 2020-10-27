@@ -109,7 +109,18 @@ def read_poi_map(path4):
     return POI_dict
 
 
-def load_ego(path1, path2, path3=None, path4=None):
+def friendship_to_center_friendship(friends, center_ori_maps, center_id2dix=None):
+    if center_id2dix is None:
+        center_id2dix = {center: center for center in center_ori_maps.keys()}
+    ori_center_map = {v:k for k,v in center_ori_maps.items()}
+    center_friends = []
+    for i in range(friends.shape[0]):
+        new_friend = [ori_center_map[friends[i,0]], ori_center_map[friends[i, 1]]]
+        center_friends.append([center_id2dix[ele] for ele in new_friend])
+    return np.array(center_friends)
+
+
+def load_ego(path1, path2, path3=None, path4=None, friendship_old_ori=None):
     """
     load ego graph
     parameters:
@@ -120,9 +131,10 @@ def load_ego(path1, path2, path3=None, path4=None):
     """
     maps_PtOri, maps_OritP, max_node = load_ego_ori_dict(path2)
     additional_edges, center_ori_maps, maps_OritP, maps_PtOri = create_pseudo_edges(maps_OritP, maps_PtOri, max_node)
+    center_friends = friendship_to_center_friendship(friendship_old_ori, center_ori_maps).tolist()
     persona_edges = load_persona_graph(path1)
     print("Number of edges before: {}".format(len(persona_edges)))
-    persona_edges += additional_edges
+    persona_edges += additional_edges + center_friends
     print("Number of edges after: {}".format(len(persona_edges)))
     persona_edges = np.array(persona_edges)
 
@@ -285,14 +297,6 @@ if __name__ == "__main__":
     print("Current ACC")
     friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10, maps_OritP=maps_OritP, maps_PtOri=maps_PtOri)
 
-    def friendship_to_center_friendship(friends, center_ori_maps, center_id2dix):
-        ori_center_map = {v:k for k,v in center_ori_maps.items()}
-        center_friends = []
-        for i in range(friends.shape[0]):
-            new_friend = [ori_center_map[friends[i,0]], ori_center_map[friends[i, 1]]]
-            center_friends.append([center_id2dix[ele] for ele in new_friend])
-        return np.array(center_friends)
-
     center = list(center_ori_maps.keys())
     center_id2dix = {cen: i + 1 for i, cen in enumerate(center)}
     center_embs = embs_user[center - 1]
@@ -309,9 +313,12 @@ if __name__ == "__main__":
     """
     scripts:
 
-    for data in NYC 
+    for data in NYC hongzhi TKY
     do 
-        python -u CMan.py --input_type persona_ori --dataset_name ${data} 
+        for alpha in 0 0.000001 0.00001 0.0001 0.001 0.01 0.1
+        do 
+            python -u CMan.py --input_type persona_ori --dataset_name ${data} --bias_randomwalk --alpha ${alpha} > output/data${data}_alpha${alpha}
+        done 
     done
 
 
