@@ -247,6 +247,8 @@ class SplitterTrainer(object):
             e_friend, e_pos = del_edge[0],del_edge[1]
             friend_POI_graph.remove_edges_from([(e_friend, e_pos)])
         print(" Xong P1 ")
+        print("Số lượng  cạnh graph ban đầu  friend_POI_graph sau P1 : ", len(friend_POI_graph.edges))
+
         #######################################
         # Tạo graph các POI ở chung với nhau trong graph ban đầu
         ## Du lieu tu graph ban dau
