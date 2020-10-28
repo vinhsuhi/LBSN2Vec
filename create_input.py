@@ -60,8 +60,8 @@ def save_dhne(selected_checkins, dataset_name):
         os.mkdir(out_dir)
     if not os.path.exists("{}/{}".format(out_dir, dataset_name)):
         os.mkdir("{}/{}".format(out_dir, dataset_name))
-    num_types = np.array([len(np.unique(selectec_checkins[:, i])) for i in range(selectec_checkins.shape[1])])
-    np.savez('{}/{}/train_data.npz'.format(out_dir, dataset_name), train_data=selectec_checkins, nums_type=num_types)
+    num_types = np.array([len(np.unique(selected_checkins[:, i])) for i in range(selected_checkins.shape[1])])
+    np.savez('{}/{}/train_data.npz'.format(out_dir, dataset_name), train_data=selected_checkins, nums_type=num_types)
     print("Done!")
     pass
 
@@ -87,7 +87,8 @@ def preprocess_selected_checkins(selected_checkins):
             additional_checkins.append([i, new_location, new_cate])
             new_location += 1
             new_cate += 1
-
+    additional_checkins = np.array(additional_checkins)
+    selected_checkins = np.concatenate((selected_checkins, additional_checkins), axis=0)
     return selected_checkins
 
 # if __name__ == "__main__":
@@ -97,7 +98,7 @@ print(args)
 model = args.model 
 friendship, selected_checkins = read_input(args.dataset_name)
 friendship = friendship.astype(int)
-selectec_checkins = preprocess_selected_checkins(selected_checkins)
+selected_checkins = preprocess_selected_checkins(selected_checkins)
 
 
 if model.lower() == "deepwalk":
@@ -109,7 +110,7 @@ elif model.lower() == "line":
 elif model.lower() == "hebe":
     save_hebe(friendship, args.dataset_name)
 elif model.lower() == "dhne":
-    save_dhne(selectec_checkins, args.dataset_name)
+    save_dhne(selected_checkins, args.dataset_name)
 else:
     print("Have not implement yet...")
 
