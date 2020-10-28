@@ -16,7 +16,7 @@ def parse_args():
 
 def read_emb(path, model):
     embs = None
-    if model == "node2vec":
+    if model == "node2vec" or model == "deepwalk":
         file = open(path, 'r', encoding='utf-8')
         count = 0
         embs = []
@@ -49,3 +49,10 @@ print(args)
 embs = read_emb(args.emb_path, args.model)
 friendship_old, friendship_new = read_input(args.dataset_name)
 friendship_pred_ori(embs, friendship_old, friendship_new)
+
+"""
+
+
+python eval_models.py --emb_path egdgelist_graph/hongzhi.edgelist --dataset_name hongzhi --model deepwalk
+
+"""
