@@ -54,7 +54,24 @@ friendship_pred_ori(embs, friendship_old, friendship_new)
 
 for data in hongzhi NYC TKY
 do
-python eval_models.py --emb_path line_emb/${data}.embedding --dataset_name ${data} --model line
+python eval_models.py --emb_path line_emb/${data}.embeddings --dataset_name ${data} --model line
 done 
+
+
+
+for data in NYC TKY hongzhi 
+do     
+deepwalk --format edgelist --input ../LBSN2Vec/edgelist_graph/${data}.edgelist     --max-memory-data-size 0 --number-walks 10 --representation-size 128 --walk-length 80 --window-size 10     --workers 16 --output ../LBSN2Vec/deepwalk_emb/${data}.embeddings
+done
+
+for data in NYC TKY hongzhi
+do 
+python run_node2vec --dataset_name ${data}
+done
+
+for data in NYC TKY hongzhi
+do
+python -m openne --method line --input ../../LBSN2Vec/edgelist_graph/${data}.edgelist --graph-format edgelist --output ../../LBSN2Vec/line_emb/${data}.embeddings 
+done
 
 """
