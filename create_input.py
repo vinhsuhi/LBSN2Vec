@@ -61,7 +61,7 @@ def save_dhne(selected_checkins, dataset_name):
     if not os.path.exists("{}/{}".format(out_dir, dataset_name)):
         os.mkdir("{}/{}".format(out_dir, dataset_name))
     num_types = np.array([len(np.unique(selectec_checkins[:, i])) for i in range(selectec_checkins.shape[1])])
-    np.savez('{}/{}/train_data.npz'.format(out_dir, dataset_name), train_data=selectec_checkins, num_types=num_types)
+    np.savez('{}/{}/train_data.npz'.format(out_dir, dataset_name), train_data=selectec_checkins, nums_type=num_types)
     print("Done!")
     pass
 
@@ -115,7 +115,7 @@ else:
 
 """
 
-for dataset in NYC
+for dataset in NYC hongzhi TKY
 do
     for model in dhne
     do 
