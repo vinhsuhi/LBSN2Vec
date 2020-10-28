@@ -277,12 +277,14 @@ class SplitterTrainer(object):
             e_poses = friend_position_dict[friend_node]
             for e1 in range(len(e_poses)):
                 for e2 in range(e1+1,len(e_poses)):
-                    if graph_POI_POI.has_edge(e1,e2):
-                        w = graph_POI_POI.get_edge_data(e1,e2)['weight']
+                    node1 = e_poses[e1]
+                    node2 = e_poses[e2]
+                    if graph_POI_POI.has_edge(node1,node2):
+                        w = graph_POI_POI.get_edge_data(node1,node2)['weight']
                         # print(w)
-                        graph_POI_POI.add_edge(e1, e2, weight=w+1)
+                        graph_POI_POI.add_edge(node1,node2, weight=w+1)
                     else:
-                        graph_POI_POI.add_edge(e1,e2,weight = 1)
+                        graph_POI_POI.add_edge(node1,node2,weight = 1)
         del friend_position_dict
         print("tạo xong graph POI-POI")
 
