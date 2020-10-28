@@ -38,7 +38,7 @@ def save_line(edges, dataset_name):
     out_dir = "line_graph"
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
-    with open("{}/{}.edgeslist".format(out_dir, dataset_name), 'w', encoding='utf-8') as file:
+    with open("{}/{}.edgelist".format(out_dir, dataset_name), 'w', encoding='utf-8') as file:
         for i in range(edges.shape[0]):
             file.write("{}\t{}\t1\n".format(int(edges[i, 0]), int(edges[i, 1])))
             file.write("{}\t{}\t1\n".format(int(edges[i, 1]), int(edges[i, 0])))
