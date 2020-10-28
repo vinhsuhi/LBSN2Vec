@@ -16,7 +16,7 @@ def parse_args():
 
 def read_emb(path, model):
     embs = None
-    if model == "node2vec" or model == "deepwalk":
+    if model == "node2vec" or model == "deepwalk" or model == "line":
         file = open(path, 'r', encoding='utf-8')
         count = 0
         embs = []
@@ -52,7 +52,9 @@ friendship_pred_ori(embs, friendship_old, friendship_new)
 
 """
 
-
-python eval_models.py --emb_path egdgelist_graph/hongzhi.edgelist --dataset_name hongzhi --model deepwalk
+for data in hongzhi NYC TKY
+do
+python eval_models.py --emb_path line_emb/${data}.embedding --dataset_name ${data} --model line
+done 
 
 """
