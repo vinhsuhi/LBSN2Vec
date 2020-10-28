@@ -260,8 +260,10 @@ class SplitterTrainer(object):
         ## Xóa cạnh friend - pos đã được nối với nhau
         print(" Xoa  ",len(edgelistPOI),"  da ton tai")
         for del_edge in edgelistPOI:
-            e_friend, e_pos = del_edge[0],del_edge[1]
+            persona, e_pos = del_edge[0],del_edge[1]
+            e_friend = persona_map_continue[persona]
             friend_POI_graph.remove_edges_from([(e_friend, e_pos)])
+            friend_POI_graph.remove_edges_from([(e_pos, e_friend)])
         print(" Xong P1 ")
         print("Số lượng  cạnh graph ban đầu  friend_POI_graph sau P1 : ", len(friend_POI_graph.edges))
 
