@@ -2,7 +2,9 @@ import argparse
 from scipy.io import loadmat
 import os
 import numpy as np
-from utils import friendship_pred_ori
+from evaluation import friendship_pred_persona, friendship_pred_ori
+
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="LBSN configurations")
