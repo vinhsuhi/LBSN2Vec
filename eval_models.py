@@ -52,12 +52,20 @@ friendship_old, friendship_new = read_input(args.dataset_name)
 friendship_pred_ori(embs, friendship_old, friendship_new)
 
 """
-
+####################### eval ###############################
 for data in hongzhi NYC TKY
 do
 python eval_models.py --emb_path line_emb/${data}.embeddings --dataset_name ${data} --model line
 done 
 
+
+for data in hongzhi NYC TKY
+do
+python eval_models.py --emb_path line_emb/${data}.embeddings --dataset_name ${data} --model line
+done 
+#############################################################3
+
+######################## gen embedding #########################
 
 
 for data in NYC TKY hongzhi 
@@ -80,4 +88,5 @@ do
 python src/hypergraph_embedding.py --data_path ../LBSN2Vec/dhne_graph/${data} --save_path ../LBSN2Vec/dhne_emb/${data} -s 16 16 16
 done
 
+#################################################################
 """
