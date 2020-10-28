@@ -88,7 +88,9 @@ def preprocess_selected_checkins(selected_checkins):
             new_location += 1
             new_cate += 1
     additional_checkins = np.array(additional_checkins)
-    selected_checkins = np.concatenate((selected_checkins, additional_checkins), axis=0)
+    if len(additional_checkins) > 0:
+        selected_checkins = np.concatenate((selected_checkins, additional_checkins), axis=0)
+    
     return selected_checkins
 
 # if __name__ == "__main__":
@@ -116,7 +118,7 @@ else:
 
 """
 
-for dataset in NYC hongzhi TKY
+for dataset in hongzhi 
 do
     for model in dhne
     do 
