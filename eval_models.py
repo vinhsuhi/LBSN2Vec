@@ -49,6 +49,9 @@ args = parse_args()
 print(args)
 embs = read_emb(args.emb_path, args.model)
 friendship_old, friendship_new = read_input(args.dataset_name)
+n_users = max(np.max(friendship_old), np.max(friendship_new))
+embs = embs[:n_users]
+
 friendship_pred_ori(embs, friendship_old, friendship_new)
 
 """
