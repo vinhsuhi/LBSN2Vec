@@ -116,10 +116,27 @@ class SplitterTrainer(object):
         self.graph = graph
         self.graph_friend = graph_friend
         self.listPOI = listPOI
-        self.selected_checkins = mat['selected_checkins']
+        self.selected_checkins = renumber_checkins(mat['selected_checkins'])
         self.args = args
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.category_POI()
+
+    def renumber_checkins(self,checkins_matrix):
+        offset1 = max(checkins_matrix[:, 0])
+        _, n = np.unique(checkins_matrix[:, 1], return_inverse=True)  #
+        checkins_matrix[:, 1] = n + offset1 + 1
+        offset2 = max(checkins_matrix[:, 1])
+        _, n = np.unique(checkins_matrix[:, 2], return_inverse=True)
+        checkins_matrix[:, 2] = n + offset2 + 1
+        offset3 = max(checkins_matrix[:, 2])
+        _, n = np.unique(checkins_matrix[:, 3], return_inverse=True)
+        checkins_matrix[:, 3] = n + offset3 + 1
+        n_nodes_total = np.max(checkins_matrix)
+        n_users = checkins_matrix[:, 0].max()
+
+        print(f"""Number of users: {n_users}
+            Number of nodes total: {n_nodes_total}""")
+        return checkins_matrix
     def category_POI(self): # tạo dict để phân lớp các POI
         self.category_POI_dict = dict()
         selected_checkins_sort = self.selected_checkins[self.selected_checkins[:,1].argsort()]
@@ -136,7 +153,7 @@ class SplitterTrainer(object):
         for i in range(int(0.8*len(selected_checkins_sort)),len(selected_checkins_sort)):
             friend = selected_checkins_sort[i][0]
             location = selected_checkins_sort[i][2]
-            self.choose_20_per_del.append((friend,location))
+            self.choose_20_per_del.append((friend,self.listPOI[location]))
         #print(self.choose_20_per_del)
 
     def create_noises(self):
