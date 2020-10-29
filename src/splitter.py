@@ -122,6 +122,9 @@ class SplitterTrainer(object):
         self.category_POI()
     def category_POI(self): # tạo dict để phân lớp các POI
         self.category_POI_dict = dict()
+        selected_checkins_sort = self.selected_checkins[self.selected_checkins[:,1].argsort()]
+
+        #print(self.selected_checkins)
         for i in self.selected_checkins:
             position = i[2]
             category = i[3]
@@ -129,6 +132,12 @@ class SplitterTrainer(object):
                 self.category_POI_dict[category].append(position)
             else:
                 self.category_POI_dict[category] = [position]
+        self.choose_20_per_del = []
+        for i in range(int(0.8*len(selected_checkins_sort)),len(selected_checkins_sort)):
+            friend = selected_checkins_sort[i][0]
+            location = selected_checkins_sort[i][2]
+            self.choose_20_per_del.append((friend,location))
+        #print(self.choose_20_per_del)
 
     def create_noises(self):
         """
@@ -172,6 +181,11 @@ class SplitterTrainer(object):
         # còn lại là graph giữa friend- Position
         friend_POI_graph = self.graph.copy()
         friend_POI_graph.remove_edges_from([i for i in self.graph_friend.edges])
+        
+        print("Số lượng  cạnh graph ban đầu  friend_POI_graph full: ", len(friend_POI_graph.edges))
+
+        friend_POI_graph.remove_edges_from(self.choose_20_per_del)
+        print("Số lượng  cạnh graph ban đầu  friend_POI_graph lay 80% : ", len(friend_POI_graph.edges))
 
         edges_list = friend_subgraph.edges
         nodes_list = friend_subgraph.nodes
