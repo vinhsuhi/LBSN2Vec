@@ -31,6 +31,7 @@ def parse_args():
     parser.add_argument('--dim_emb', type=int, default=128)
     # often change parameters
     parser.add_argument('--dataset_name', type=str, default='NYC')
+    parser.add_argument('--bias_randomwalk', action='store_true')
 
     args = parser.parse_args()
     return args
@@ -52,7 +53,7 @@ def load_data(args):
     
     ############## Train Test split for POI prediction ##################
     n_data = selected_checkins.shape[0]
-    n_train = n_data * 0.8
+    n_train = int(n_data * 0.8)
     
     sorted_checkins = selected_checkins[np.argsort(selected_checkins[:,1])]
     train_checkins = sorted_checkins[:n_train]
