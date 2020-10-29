@@ -172,18 +172,27 @@ def mat_to_numpy_array(matt):
     return np.array([[int(matt[i, 0]), int(matt[i, 1])] for i in range(len(matt))])
 
 
-def create_persona_checkins(ori_checkins, maps_OritP):
+def create_persona_checkins(ori_checkins, maps_OritP, train_indices):
     persona_checkins = []
+    count = 0
+    new_train_indices = []
+    new_test_indices = []
     for i in range(len(ori_checkins)):
         checkins_i = ori_checkins[i]
         user = checkins_i[0]
         for persona_user in maps_OritP[user]:
             persona_checkins.append([persona_user, checkins_i[1], checkins_i[2], checkins_i[3]])
+            if i in train_indices:
+                new_train_indices.append(count)
+            else:
+                new_test_indices.append(count)
+            count += 1
+
     persona_checkins = np.array(persona_checkins)
-    return persona_checkins
+    return persona_checkins, new_train_indices, new_test_indices
 
 
-def create_personaPOI_checkins(old_checkins, maps_OritP, persona_POI, POI_maps, center_ori_dict):
+def create_personaPOI_checkins(old_checkins, maps_OritP, persona_POI, POI_maps, center_ori_dict, train_indices):
     """
     center_ori_dict: center_node --> ori_node (> 1)
     persona_POI: persona_node --> location_of_splitter (> 1)
@@ -192,11 +201,19 @@ def create_personaPOI_checkins(old_checkins, maps_OritP, persona_POI, POI_maps, 
     """
     ori_center_dict = {v:k for k,v in center_ori_dict.items()}
     personaPOI_checkins = []
+    count = 0
+    new_train_indices = []
+    new_test_indices = []
     for i in tqdm(range(len(old_checkins))):
         old_checkini = old_checkins[i]
         user_ori = old_checkini[0]
         center_user = ori_center_dict[user_ori] # center user will have all checkins
         personaPOI_checkins.append([center_user, old_checkini[1], old_checkini[2], old_checkini[3]])
+        if i in train_indices:
+            new_train_indices.append(count)
+        else:
+            new_test_indices.append(count)
+        count += 1
         location_ori = old_checkini[2]
         location_index = POI_maps[location_ori]
         for persona_user in maps_OritP[user_ori]:
@@ -204,8 +221,14 @@ def create_personaPOI_checkins(old_checkins, maps_OritP, persona_POI, POI_maps, 
                 continue
             if location_index in persona_POI[persona_user]:
                 personaPOI_checkins.append([persona_user, old_checkini[1], old_checkini[2], old_checkini[3]])
+                if i in train_indices:
+                    new_train_indices.append(count)
+                else:
+                    new_test_indices.append(count)
+                count += 1
+
     personaPOI_checkins = np.array(personaPOI_checkins)
-    return personaPOI_checkins
+    return personaPOI_checkins, new_train_indices, new_test_indices
 
 
 
@@ -229,27 +252,32 @@ def load_data(args):
     edgelistPOI_path = 'Suhi_output/edgelistPOI_{}'.format(args.dataset_name)
     location_map_path = 'Suhi_output/location_dict_{}'.format(args.dataset_name)
 
+    before_selected_checkins = mat['selected_checkins']
+    n_train = int(len(before_selected_checkins) * 0.8)
+    # before_selected_checkins = before_selected_checkins[np.argsort(before_selected_checkins[:, 1])]
+    sorted_time = np.argsort(before_selected_checkins[:, 1])
+    train_indices = sorted_time[:n_train]
+
+
     if args.input_type == "persona_ori":
         friendship_old_persona, maps_PtOri, maps_OritP, center_ori_maps  = load_ego(edgelist_path, persona_to_ori_path, friendship_old_ori)
-        persona_checkins = create_persona_checkins(mat['selected_checkins'], maps_OritP)
+        persona_checkins, new_train_indices, new_test_indices = create_persona_checkins(mat['selected_checkins'], maps_OritP, train_indices)
     elif args.input_type == "persona_POI":
         friendship_old_persona, maps_PtOri, persona_POI, POI_maps, maps_OritP, center_ori_maps = load_ego(edgelist_path, persona_to_ori_path, edgelistPOI_path, location_map_path)
-        persona_checkins = create_personaPOI_checkins(mat['selected_checkins'], maps_OritP, persona_POI, POI_maps, center_ori_maps)
+        persona_checkins, new_train_indices, new_test_indices = create_personaPOI_checkins(mat['selected_checkins'], maps_OritP, persona_POI, POI_maps, center_ori_maps, train_indices)
 
     persona_checkins, offset1, offset2, offset3, n_nodes_total, n_users = renumber_checkins(persona_checkins)
     
     ############## Train Test split for POI prediction ##################
-    n_data = persona_checkins.shape[0]
-    # if args.mode == "friend":
-    #     n_train = n_data
-    # else:
-    #     n_train = int(n_data * 0.8)
-    n_train = n_data * 0.8
+    # n_data = persona_checkins.shape[0]
+    # n_train = int(n_data * 0.8)
     
     # sorted_checkins = persona_checkins[np.argsort(persona_checkins[:,1])]
-    sorted_checkins = persona_checkins
-    train_checkins = sorted_checkins[:n_train]
-    val_checkins = sorted_checkins[n_train:]
+    # # sorted_checkins = persona_checkins
+    # train_checkins = sorted_checkins[:n_train]
+    # val_checkins = sorted_checkins[n_train:]
+    train_checkins = persona_checkins[new_train_indices]
+    val_checkins = persona_checkins[new_test_indices]
     #####################################################################
     
     print("Build user checkins dictionary...")
