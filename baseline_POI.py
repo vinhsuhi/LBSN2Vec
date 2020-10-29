@@ -10,7 +10,7 @@ import pdb
 import math
 import os
 import multiprocessing
-from evaluation import friendship_pred_persona, friendship_pred_ori
+from evaluation import friendship_pred_persona, friendship_pred_ori, location_prediction
 import argparse
 import learn
 from utils import save_info, sample_neg, read_embs, initialize_emb, random_walk, renumber_checkins
@@ -52,7 +52,7 @@ def load_data(args):
     
     ############## Train Test split for POI prediction ##################
     n_data = selected_checkins.shape[0]
-    n_train = n_data
+    n_train = n_data * 0.8
     
     sorted_checkins = selected_checkins[np.argsort(selected_checkins[:,1])]
     train_checkins = sorted_checkins[:n_train]
@@ -103,15 +103,22 @@ if __name__ == "__main__":
     embs_file = "temp/processed/embs.txt"
     embs = read_embs(embs_file)
     embs_user = embs[:offset1]
+    embs_time = embs[offset1:offset2]
+    embs_venue = embs[offset2:offset3]
 
-    friendship_pred_ori(embs_user, friendship_old, friendship_new)
+    val_checkins[:, 2] -= (offset2 + 1) # checkins to check in range (0 -- num_venues)
+    val_checkins[:, 0] -= 1
+
+    location_prediction(val_checkins, embs, embs_venue, k=10)
+
+    # friendship_pred_ori(embs_user, friendship_old, friendship_new)
 
     """
     scripts:
 
     for data in hongzhi 
     do 
-        python -u baseline.py --dataset_name ${data} 
+        python -u baseline_POI.py --dataset_name ${data} 
     done
 
 

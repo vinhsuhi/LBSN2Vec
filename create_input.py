@@ -118,7 +118,7 @@ else:
 
 """
 
-for dataset in hongzhi 
+for dataset in hongzhi TKY NYC
 do
     for model in dhne
     do 

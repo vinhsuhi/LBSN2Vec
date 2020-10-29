@@ -179,8 +179,24 @@ def location_prediction(test_checkin, embs, poi_embs, k=10):
     """
     test_checkin: np array shape Nx3, containing a user, time slot and a POI
     """
-    embs = normalize_embedding(embs)
-    poi_embs = normalize_embedding(poi_embs)
+    embs = normalize_embedding(embs) # N x d
+    poi_embs = normalize_embedding(poi_embs) # Np x d
+    user_time = test_checkin[:, :2]
+    user_time_emb = embs[user_time] # n x 2 x d
+    user_time_with_poi = np.dot(user_time_emb, poi_embs.T) # nx2x(np)
+    user_time_with_poi = np.sum(user_time_with_poi, axis=1) # nxnp
+    argptt = np.argpartition(user_time_with_poi, -k, axis=1)[:, -k:] # nx10
+    correct_array = argptt - test_checkin[:, 2].reshape(-1, 1)
+    correct = np.count_nonzero(correct_array == 0)
+    try:
+        acc = correct / len(test_checkin)
+        print(f"Accuracy@{k}: {acc:.3f}")
+        return acc
+    except:
+        import pdb
+        pdb.set_trace()
+    
+
     correct = 0
     for user, timeslot, poi in tqdm(test_checkin):
         user_emb = embs[user]

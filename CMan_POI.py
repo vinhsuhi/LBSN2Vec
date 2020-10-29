@@ -336,10 +336,10 @@ if __name__ == "__main__":
     done
 
 
-    for data in NYC hongzhi TKY
-    do 
-        python -u CMan.py --input_type persona_POI --dataset_name ${data} --connect_center > output/data${data}_POI_nobias_connect_center
-    done
+for data in NYC 
+do 
+    python -u CMan_POI.py --input_type persona_POI --dataset_name ${data} --connect_center 
+done
 
     """
 

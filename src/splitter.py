@@ -116,7 +116,7 @@ class SplitterTrainer(object):
         self.graph = graph
         self.graph_friend = graph_friend
         self.listPOI = listPOI
-        self.selected_checkins = renumber_checkins(mat['selected_checkins'])
+        self.selected_checkins = self.renumber_checkins(mat['selected_checkins'])
         self.args = args
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.category_POI()
