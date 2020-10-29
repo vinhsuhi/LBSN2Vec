@@ -342,7 +342,7 @@ class SplitterTrainer(object):
 
         print("xong P2")
         print("Số lượng  cạnh graph ban đầu  friend_POI_graph sau P2 : ", len(friend_POI_graph.edges))
-
+        """
         #########################################
         ## Tạo graph các POI cùng lớp
         ## For P3
@@ -419,7 +419,7 @@ class SplitterTrainer(object):
 
         print("xong P3")
         print("Số lượng  cạnh graph ban đầu  friend_POI_graph sau P3 : ", len(friend_POI_graph.edges))
-
+        """
 
         ########################################################
         ### Khi vẫn còn dư  poi
