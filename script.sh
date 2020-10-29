@@ -291,16 +291,81 @@ done
 
 
 ######################## location prediction #####################
-    # copy POI
+    # copy POI (WAIT)
         # normal randomwalk
+
+mode="persona_ori"
+
+for data in NYC 
+do 
+    python -u CMan_POI.py --input_type ${mode} --dataset_name ${data} 
+done
+
+mode="persona_ori"
+
+for data in NYC hongzhi TKY Istanbul Jakarta KualaLampur SaoPaulo
+do 
+    python -u CMan_POI.py --input_type ${mode} --dataset_name ${data} > output/normalrw_sepPOI_${data}_POI
+done
 
 
 
     # tach POI (wait)
         # normal random walk
 
+mode="persona_POI"
+
+for data in NYC 
+do 
+    python -u CMan_POI.py --input_type ${mode} --dataset_name ${data} 
+done
+
+mode="persona_POI"
+
+for data in NYC hongzhi TKY Istanbul Jakarta KualaLampur SaoPaulo
+do 
+    python -u CMan_POI.py --input_type ${mode} --dataset_name ${data} > output/normalrw_sepPOI_${data}_POI
+done
+
+
+
         # new random walk 
+
+mode="persona_POI"
+
+for data in NYC 
+do 
+    python -u CMan_POI.py --input_type ${mode} --dataset_name ${data} --bias_randomwalk --alpha 0.1
+done
+
+mode="persona_POI"
+
+for data in NYC hongzhi TKY Istanbul Jakarta KualaLampur SaoPaulo
+do 
+    for alpha in 0.1 0.11 0.15 0.2
+        python -u CMan_POI.py --input_type ${mode} --dataset_name ${data} --bias_randomwalk --alpha ${alpha} > output/biasrw${alpha}_sepPOI_${data}_POI
+    done
+done
+
+
+
 
     # Original_version
 
+
+for data in NYC 
+do 
+    python -u baseline_POI.py --dataset_name ${data} 
+done
+
+
+for data in NYC hongzhi TKY Istanbul Jakarta KualaLampur SaoPaulo
+do 
+    python -u baseline_POI.py --dataset_name ${data} > output/original_${data}_POI
+done
+
+
     # other baselines
+
+#TODO: how to eval ????
+# create_data --> embedding --> eval
