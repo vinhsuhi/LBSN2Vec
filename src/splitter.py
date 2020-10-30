@@ -332,16 +332,13 @@ class SplitterTrainer(object):
             except Exception as e:
                 # Random make persona-checkpoint
                 # Nếu không có position ở chung nào thì bỏ
-                # traceback.print_tb(e.__traceback__)
+                traceback.print_tb(e.__traceback__)
                 continue
             # Duyệt Tất cả node persona tương ứng với node user e_friend
             node_persona_respective = persona_reverse_map_continue[e_friend]
             have_edge = False
-            # weight_max = 0                  # Chọn cái cặp persona - e_pos có weight lớn nhất
-            # pos_choose = None               #
-            # perona_node_choose = None       #
-            for persona_node in node_persona_respective:                                #duyệt qua các persona node
-                for pos,weight in node_pos_friend:                                      # duyệt qua các position hay đi cùng
+            for pos, weight in node_pos_friend:                                 # duyệt qua các position hay đi cùng
+                for persona_node in node_persona_respective:                    #duyệt qua các persona node
                     # print("weight :  ", graph_POI_POI.get_edge_data(e_pos, pos))
                     if graph_POI_persona.has_edge(pos,persona_node):
                         # Nếu có 1 persona nối với 1 position hay đi
