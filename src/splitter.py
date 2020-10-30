@@ -332,7 +332,7 @@ class SplitterTrainer(object):
             except Exception as e:
                 # Random make persona-checkpoint
                 # Nếu không có position ở chung nào thì bỏ
-                traceback.print_tb(e.__traceback__)
+                # traceback.print_tb(e.__traceback__)
                 continue
             # Duyệt Tất cả node persona tương ứng với node user e_friend
             node_persona_respective = persona_reverse_map_continue[e_friend]
