@@ -108,7 +108,7 @@ class SplitterTrainer(object):
     """
     Class for training a Splitter.
     """
-    def __init__(self, graph,graph_friend,listPOI,mat, args):
+    def __init__(self, graph,graph_friend,listPOI,mat,location_Dict, args):
         """
         :param graph: NetworkX graph object.
         :param args: Arguments object.
@@ -116,7 +116,8 @@ class SplitterTrainer(object):
         self.graph = graph
         self.graph_friend = graph_friend
         self.listPOI = listPOI
-        self.selected_checkins = self.renumber_checkins(mat['selected_checkins'])
+        self.selected_checkins = mat['selected_checkins']
+        self.location_Dict = location_Dict
         self.args = args
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.category_POI()
@@ -139,7 +140,7 @@ class SplitterTrainer(object):
         return checkins_matrix
     def category_POI(self): # tạo dict để phân lớp các POI
         self.category_POI_dict = dict()
-        selected_checkins_sort = self.selected_checkins[self.selected_checkins[:,1].argsort()]
+        selected_checkins_sort = self.selected_checkins[self.selected_checkins[:, 1].argsort()]
 
         #print(self.selected_checkins)
         for i in self.selected_checkins:
@@ -150,10 +151,10 @@ class SplitterTrainer(object):
             else:
                 self.category_POI_dict[category] = [position]
         self.choose_20_per_del = []
-        for i in range(int(0.8*len(selected_checkins_sort)),len(selected_checkins_sort)):
+        for i in range(int(0.8*len(selected_checkins_sort)), len(selected_checkins_sort)):
             friend = selected_checkins_sort[i][0]
             location = selected_checkins_sort[i][2]
-            self.choose_20_per_del.append((friend,self.listPOI[location]))
+            self.choose_20_per_del.append((friend,self.location_Dict[location]))
         #print(self.choose_20_per_del)
 
     def create_noises(self):
