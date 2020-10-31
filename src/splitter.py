@@ -339,6 +339,8 @@ class SplitterTrainer(object):
             have_edge = False
             for pos, weight in node_pos_friend:                                 # duyệt qua các position hay đi cùng
                 for persona_node in node_persona_respective:                    #duyệt qua các persona node
+                    if have_edge:
+                        continue
                     # print("weight :  ", graph_POI_POI.get_edge_data(e_pos, pos))
                     if graph_POI_persona.has_edge(pos,persona_node):
                         # Nếu có 1 persona nối với 1 position hay đi
@@ -350,10 +352,6 @@ class SplitterTrainer(object):
                         graph_POI_persona.add_edge(persona_node, e_pos)
                         # thêm cái POI mới vào danh sách
                         break
-                    if have_edge:
-                        continue
-                if have_edge:
-                    continue
 
         print("xong P2")
         print("Số lượng  cạnh graph ban đầu  friend_POI_graph sau P2 : ", len(friend_POI_graph.edges))
@@ -409,7 +407,7 @@ class SplitterTrainer(object):
                             persona_node_choose = persona_node
             if persona_node_choose != None:
                 edgelistPOI.append([persona_node_choose, e_pos])
-                friend_POI_graph.remove_edges_from([(e_friend,e_pos)])
+                friend_POI_graph.remove_edges_from([(e1,e2)])
                 graph_POI_persona.add_edge(persona_node_choose, e_pos)
         print("xong P3")
         print("Số lượng  cạnh graph ban đầu  friend_POI_graph sau P3 : ", len(friend_POI_graph.edges))
