@@ -10,6 +10,10 @@ def parameter_parser():
     """
     parser = argparse.ArgumentParser(description="Run Splitter.")
 
+    parser.add_argument("--phase",
+                        default=3,
+                        type=int,
+                        help="Num phase to split embeding")
     parser.add_argument("--edge-path",
                         nargs="?",
                         default="./input/hongzhi_friendPOI.csv",
@@ -26,10 +30,7 @@ def parameter_parser():
                         nargs="?",
                         default="./input/location_hongzhi",
                         help="list Location node.")
-    parser.add_argument("--lbsn",
-                        nargs="?",
-                        default="hongzhi",
-	                help="Name of output file suhi")
+    _not_norm
 
     parser.add_argument("--embedding-output-path",
                         nargs="?",
