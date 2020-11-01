@@ -30,7 +30,10 @@ def parameter_parser():
                         nargs="?",
                         default="./input/location_hongzhi",
                         help="list Location node.")
-    _not_norm
+    parser.add_argument("--lbsn",
+                        nargs="?",
+                        default="hongzhi",
+	                help="Name of output file suhi")
 
     parser.add_argument("--embedding-output-path",
                         nargs="?",
