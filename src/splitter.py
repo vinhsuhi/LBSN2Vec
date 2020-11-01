@@ -307,7 +307,7 @@ class SplitterTrainer(object):
             friend_POI_graph.remove_edges_from([(e_pos, e_friend)])
         print(" Xong P1 ")
         print("Số lượng  cạnh graph ban đầu  friend_POI_graph sau P1 : ", len(friend_POI_graph.edges))
-
+        print("edgelistPOI   : ",len(edgelistPOI))
 
         ########################################
         # P2
@@ -360,6 +360,7 @@ class SplitterTrainer(object):
 
             print("xong P2")
             print("Số lượng  cạnh graph ban đầu  friend_POI_graph sau P2 : ", len(friend_POI_graph.edges))
+            print("edgelistPOI   : ", len(edgelistPOI))
         #########################################
         ## Tạo graph các POI cùng lớp
         ## For P3
@@ -417,7 +418,7 @@ class SplitterTrainer(object):
                     graph_POI_persona.add_edge(persona_node_choose, e_pos)
             print("xong P3")
             print("Số lượng  cạnh graph ban đầu  friend_POI_graph sau P3 : ", len(friend_POI_graph.edges))
-
+            print("edgelistPOI   : ", len(edgelistPOI))
         ########################################################
         ### Khi vẫn còn dư  poi
         ### Nối bừa : random POI vào persona
@@ -439,6 +440,8 @@ class SplitterTrainer(object):
 
         print("Xong gán  random ")
         print("Số lượng  cạnh graph ban đầu  friend_POI_graph sau gán random  : ", len(friend_POI_graph.edges))
+        print("edgelistPOI   : ", len(edgelistPOI))
+        print("graph_POI_persona num edges   : ", len(graph_POI_persona.edges))
         # exit()
         print("Number node of persona graph  : ",len(persona_graph_continue.nodes))
         print("splitter number_connected_cmponents continue graph   :  ", nx.number_connected_components(persona_graph_continue))
