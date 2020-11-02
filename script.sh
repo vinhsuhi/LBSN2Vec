@@ -48,7 +48,7 @@ python src/main.py --edge-path input/hongzhi_friendPOI.csv --edge-path-friend in
 
 for DATA in hongzhi NYC TKY Istanbul Jakarta KualaLampur
 do
-python src/main.py --edge-path input/${DATA}_friendPOI.csv --edge-path-friend input/${DATA}_friends.csv --lbsn ${DATA} --listPOI input/location_${DATA}
+python src/main.py --edge-path input/${DATA}_friendPOI.csv --location-dict Suhi_output/location_dict_${DATA} --edge-path-friend input/${DATA}_friends.csv --lbsn ${DATA} --listPOI input/location_${DATA}
 done
 
 ################################## ORIGRAPH C++ ######################################

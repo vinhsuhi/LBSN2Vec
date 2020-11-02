@@ -25,9 +25,15 @@ def main():
         reader = csv.reader(f)
         # print(reader)
         listPOI = [int(i[0]) for i in reader]
+    location_Dict = dict()
+    with open(args.location_dict) as f:
+        for line in f:
+            a,b = line.split("\n")[0].split(("\t"))
+            a,b = int(a),int(b)
+            location_Dict[a] = b
     # print(listPOI)
     # exit()
-    trainer = SplitterTrainer(graph,graph_friend,listPOI,mat, args)
+    trainer = SplitterTrainer(graph,graph_friend,listPOI,mat,location_Dict, args)
     trainer.fit()
     trainer.save_embedding()
     trainer.save_persona_graph_mapping()

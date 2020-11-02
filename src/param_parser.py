@@ -10,10 +10,18 @@ def parameter_parser():
     """
     parser = argparse.ArgumentParser(description="Run Splitter.")
 
+    parser.add_argument("--phase",
+                        default=3,
+                        type=int,
+                        help="Num phase to split embeding")
     parser.add_argument("--edge-path",
                         nargs="?",
                         default="./input/hongzhi_friendPOI.csv",
 	                help="Edge list csv.")
+    parser.add_argument("--location-dict",
+                        nargs="?",
+                        default="./Suhi_output/location_dict_hongzhi",
+                        help="Edge list csv.")
     parser.add_argument("--edge-path-friend",
                         nargs="?",
                         default="./input/hongzhi_friendPOI.csv",
