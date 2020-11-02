@@ -447,17 +447,17 @@ class SplitterTrainer(object):
         print("Number node of persona graph  : ",len(persona_graph_continue.nodes))
         print("splitter number_connected_cmponents continue graph   :  ", nx.number_connected_components(persona_graph_continue))
 
-        with open('Suhi_output/edgelistPOI_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
+        with open('Suhi_output/edgelistPOI_{}_{}'.format(self.args.lbsn,self.phase), 'w', encoding='utf-8') as file:
             for e1, e2 in edgelistPOI:
                 # e1 persona node
                 # e2 position node
                 file.write('{},{}\n'.format(e1, e2))
-        with open('Suhi_output/ego_net_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
+        with open('Suhi_output/ego_net_{}_{}'.format(self.args.lbsn,self.phase), 'w', encoding='utf-8') as file:
             for key, value in persona_map_continue.items():
                 file.write('{},{}\n'.format(key, value))
 
         # nx.write_edgelist(self.egonet_splitter.persona_graph, 'Suhi_output/edgelist_{}'.format(self.args.lbsn))
-        nx.write_edgelist(persona_graph_continue, 'Suhi_output/edgelist_{}'.format(self.args.lbsn))
+        nx.write_edgelist(persona_graph_continue, 'Suhi_output/edgelist_{}_{}'.format(self.args.lbsn,self.phase))
 
         print("DONE!, I'm in spliter.py, line 147")
         exit()
