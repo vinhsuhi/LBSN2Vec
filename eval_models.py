@@ -30,6 +30,7 @@ def read_emb(path, model):
         embs = embs[np.argsort(embs[:, 0])][:, 1:]
     elif model == "dhne":
         embs = np.load(path)
+        embs = embs[0]
     return embs 
 
 

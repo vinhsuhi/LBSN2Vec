@@ -144,8 +144,8 @@ def preprocess_selected_checkins2(selected_checkins):
     cate_id2idx = {unique_cate[i]: i for i in range(len(unique_cate))}
     for i in range(len(selected_checkins)):
         selected_checkins[i, 0] = selected_checkins[i, 0] - 1
-        selected_checkins[i, 2] = location_id2idx[selected_checkins[i, 1]]
-        selected_checkins[i, 3] = cate_id2idx[selected_checkins[i, 2]]
+        selected_checkins[i, 2] = location_id2idx[selected_checkins[i, 2]]
+        selected_checkins[i, 3] = cate_id2idx[selected_checkins[i, 3]]
     new_location = len(unique_location)
     new_cate = len(cate_id2idx)
     new_time = len(unique_time)
