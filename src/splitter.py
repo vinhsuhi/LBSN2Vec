@@ -264,39 +264,40 @@ class SplitterTrainer(object):
             del friend_position_dict
 
         graph_POI_persona = nx.Graph()      # graph chứa các cạnh nối từ POI -> persona
-        print(" Bat dau P1 ")
-        for e1,e2 in friend_POI_graph.edges:
-            # print(e1,e2)
-            if e1 in self.list_friend and e2 in self.listPOI:
-                e_friend = e1
-                e_pos = e2
-            elif e2 in self.list_friend and e1 in self.listPOI:
-                e_friend = e2
-                e_pos = e1
-            else:
-                print("cạnh này bị lỗi e1 : ",e1,"   , e2:  ",e2)
-                continue
-            node_persona_respective = persona_reverse_map_continue[e_friend]
-            have_edge = False
-            # Tìm node perona có chung position
-            ### Collocation
-            for persona_node in node_persona_respective:
-                neighbor_nodes = persona_graph_continue.neighbors(persona_node)
-                for neighbor_node in neighbor_nodes:
-                    if self.graph.has_edge(persona_map_continue[neighbor_node],e_pos) or self.graph.has_edge(e_pos,persona_map_continue[neighbor_node]):
-                        have_edge_1 = False
-                        have_edge_2 = False
-                        if [persona_node,e_pos] in edgelistPOI:
-                            have_edge_1 = True
-                        if [neighbor_node,e_pos] in edgelistPOI:
-                            have_edge_2 = True
-                        if not have_edge_1:
-                            edgelistPOI.append([persona_node,e_pos])
-                            graph_POI_persona.add_edge(persona_node, e_pos)
+        if self.phase >= 1:
+            print(" Bat dau P1 ")
+            for e1,e2 in friend_POI_graph.edges:
+                # print(e1,e2)
+                if e1 in self.list_friend and e2 in self.listPOI:
+                    e_friend = e1
+                    e_pos = e2
+                elif e2 in self.list_friend and e1 in self.listPOI:
+                    e_friend = e2
+                    e_pos = e1
+                else:
+                    print("cạnh này bị lỗi e1 : ",e1,"   , e2:  ",e2)
+                    continue
+                node_persona_respective = persona_reverse_map_continue[e_friend]
+                have_edge = False
+                # Tìm node perona có chung position
+                ### Collocation
+                for persona_node in node_persona_respective:
+                    neighbor_nodes = persona_graph_continue.neighbors(persona_node)
+                    for neighbor_node in neighbor_nodes:
+                        if self.graph.has_edge(persona_map_continue[neighbor_node],e_pos) or self.graph.has_edge(e_pos,persona_map_continue[neighbor_node]):
+                            have_edge_1 = False
+                            have_edge_2 = False
+                            if [persona_node,e_pos] in edgelistPOI:
+                                have_edge_1 = True
+                            if [neighbor_node,e_pos] in edgelistPOI:
+                                have_edge_2 = True
+                            if not have_edge_1:
+                                edgelistPOI.append([persona_node,e_pos])
+                                graph_POI_persona.add_edge(persona_node, e_pos)
 
-                        if not have_edge_2:
-                            edgelistPOI.append([neighbor_node,e_pos])
-                            graph_POI_persona.add_edge(neighbor_node, e_pos)
+                            if not have_edge_2:
+                                edgelistPOI.append([neighbor_node,e_pos])
+                                graph_POI_persona.add_edge(neighbor_node, e_pos)
 
         ## Xóa cạnh friend - pos đã được nối với nhau
         print(" Xoa  ",len(edgelistPOI),"  da ton tai")
@@ -446,17 +447,17 @@ class SplitterTrainer(object):
         print("Number node of persona graph  : ",len(persona_graph_continue.nodes))
         print("splitter number_connected_cmponents continue graph   :  ", nx.number_connected_components(persona_graph_continue))
 
-        with open('Suhi_output/edgelistPOI_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
+        with open('Suhi_output/edgelistPOI_{}_{}'.format(self.args.lbsn,self.phase), 'w', encoding='utf-8') as file:
             for e1, e2 in edgelistPOI:
                 # e1 persona node
                 # e2 position node
                 file.write('{},{}\n'.format(e1, e2))
-        with open('Suhi_output/ego_net_{}'.format(self.args.lbsn), 'w', encoding='utf-8') as file:
+        with open('Suhi_output/ego_net_{}_{}'.format(self.args.lbsn,self.phase), 'w', encoding='utf-8') as file:
             for key, value in persona_map_continue.items():
                 file.write('{},{}\n'.format(key, value))
 
         # nx.write_edgelist(self.egonet_splitter.persona_graph, 'Suhi_output/edgelist_{}'.format(self.args.lbsn))
-        nx.write_edgelist(persona_graph_continue, 'Suhi_output/edgelist_{}'.format(self.args.lbsn))
+        nx.write_edgelist(persona_graph_continue, 'Suhi_output/edgelist_{}_{}'.format(self.args.lbsn,self.phase))
 
         print("DONE!, I'm in spliter.py, line 147")
         exit()
