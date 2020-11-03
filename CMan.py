@@ -22,7 +22,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="LBSN configurations")
     parser.add_argument('--num_walks', type=int, default=10)
     parser.add_argument('--walk_length', type=int, default=80)
-    parser.add_argument('--workers', type=int, default=32)
+    parser.add_argument('--workers', type=int, default=8)
     parser.add_argument('--num_epochs', type=int, default=1)
     parser.add_argument('--mobility_ratio', type=float, default=0.2)
     parser.add_argument('--K_neg', type=int, default=10)
