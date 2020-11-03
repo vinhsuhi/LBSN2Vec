@@ -22,7 +22,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="LBSN configurations")
     parser.add_argument('--num_walks', type=int, default=10)
     parser.add_argument('--walk_length', type=int, default=80)
-    parser.add_argument('--workers', type=int, default=32)
+    parser.add_argument('--workers', type=int, default=8)
     parser.add_argument('--num_epochs', type=int, default=1)
     parser.add_argument('--mobility_ratio', type=float, default=0.2)
     parser.add_argument('--K_neg', type=int, default=10)
@@ -230,10 +230,10 @@ def load_data(args):
     location_map_path = 'Suhi_output/location_dict_{}'.format(args.dataset_name)
 
     if args.input_type == "persona_ori":
-        friendship_old_persona, maps_PtOri, maps_OritP, center_ori_maps  = load_ego(edgelist_path, persona_to_ori_path, friendship_old_ori)
+        friendship_old_persona, maps_PtOri, maps_OritP, center_ori_maps  = load_ego(edgelist_path, persona_to_ori_path, friendship_old_ori = friendship_old_ori)
         persona_checkins = create_persona_checkins(mat['selected_checkins'], maps_OritP)
     elif args.input_type == "persona_POI":
-        friendship_old_persona, maps_PtOri, persona_POI, POI_maps, maps_OritP, center_ori_maps = load_ego(edgelist_path, persona_to_ori_path, edgelistPOI_path, location_map_path)
+        friendship_old_persona, maps_PtOri, persona_POI, POI_maps, maps_OritP, center_ori_maps = load_ego(edgelist_path, persona_to_ori_path, edgelistPOI_path, location_map_path, friendship_old_ori)
         persona_checkins = create_personaPOI_checkins(mat['selected_checkins'], maps_OritP, persona_POI, POI_maps, center_ori_maps)
 
     persona_checkins, offset1, offset2, offset3, n_nodes_total, n_users = renumber_checkins(persona_checkins)
