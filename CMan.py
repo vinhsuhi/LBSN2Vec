@@ -31,6 +31,7 @@ def parse_args():
     parser.add_argument('--dim_emb', type=int, default=128)
     # often change parameters
     parser.add_argument('--dataset_name', type=str, default='NYC')
+    parser.add_argument('--POI_level', type=str, default='3')
     parser.add_argument('--alpha', type=float, default=0.1)
     parser.add_argument('--input_type', type=str, default="persona_ori", help="persona_ori or persona_POI") 
     parser.add_argument('--bias_randomwalk', action='store_true')
@@ -224,10 +225,10 @@ def load_data(args):
     friendship_old_ori = mat_to_numpy_array(mat['friendship_old'])
     friendship_new = mat_to_numpy_array(mat["friendship_new"]) 
 
-    edgelist_path = 'Suhi_output/edgelist_{}'.format(args.dataset_name)
-    persona_to_ori_path = 'Suhi_output/ego_net_{}'.format(args.dataset_name)
-    edgelistPOI_path = 'Suhi_output/edgelistPOI_{}'.format(args.dataset_name)
-    location_map_path = 'Suhi_output/location_dict_{}'.format(args.dataset_name)
+    edgelist_path = 'Suhi_output/edgelist_{}_{}'.format(args.dataset_name, args.POI_level)
+    persona_to_ori_path = 'Suhi_output/ego_net_{}_{}'.format(args.dataset_name, args.POI_level)
+    edgelistPOI_path = 'Suhi_output/edgelistPOI_{}_{}'.format(args.dataset_name, args.POI_level)
+    location_map_path = 'Suhi_output/location_dict_{}_{}'.format(args.dataset_name, args.POI_level)
 
     if args.input_type == "persona_ori":
         friendship_old_persona, maps_PtOri, maps_OritP, center_ori_maps  = load_ego(edgelist_path, persona_to_ori_path, friendship_old_ori = friendship_old_ori)
@@ -302,15 +303,15 @@ if __name__ == "__main__":
     print("Current ACC")
     friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10, maps_OritP=maps_OritP, maps_PtOri=maps_PtOri)
 
-    center = list(center_ori_maps.keys())
-    center_id2dix = {cen: i + 1 for i, cen in enumerate(center)}
-    center_embs = embs_user[np.array(center) - 1]
+    # center = list(center_ori_maps.keys())
+    # center_id2dix = {cen: i + 1 for i, cen in enumerate(center)}
+    # center_embs = embs_user[np.array(center) - 1]
 
-    friendship_old_center = friendship_to_center_friendship(friendship_old_ori, center_ori_maps, center_id2dix)
-    friendship_new_center = friendship_to_center_friendship(friendship_new, center_ori_maps, center_id2dix)
+    # friendship_old_center = friendship_to_center_friendship(friendship_old_ori, center_ori_maps, center_id2dix)
+    # friendship_new_center = friendship_to_center_friendship(friendship_new, center_ori_maps, center_id2dix)
 
-    print("Center ACC")
-    friendship_pred_ori(center_embs, friendship_old_center, friendship_new_center)
+    # print("Center ACC")
+    # friendship_pred_ori(center_embs, friendship_old_center, friendship_new_center)
     
 
 

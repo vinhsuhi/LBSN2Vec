@@ -32,6 +32,7 @@ def parse_args():
     # often change parameters
     parser.add_argument('--dataset_name', type=str, default='NYC')
     parser.add_argument('--alpha', type=float, default=0.1)
+    parser.add_argument('--POI_level', type=str, default='3')
     parser.add_argument('--input_type', type=str, default="persona_ori", help="persona_ori or persona_POI") 
     parser.add_argument('--bias_randomwalk', action='store_true')
     parser.add_argument('--connect_center', action='store_true')
@@ -247,10 +248,11 @@ def load_data(args):
     friendship_old_ori = mat_to_numpy_array(mat['friendship_old'])
     friendship_new = mat_to_numpy_array(mat["friendship_new"]) 
 
-    edgelist_path = 'Suhi_output/edgelist_{}'.format(args.dataset_name)
-    persona_to_ori_path = 'Suhi_output/ego_net_{}'.format(args.dataset_name)
-    edgelistPOI_path = 'Suhi_output/edgelistPOI_{}'.format(args.dataset_name)
-    location_map_path = 'Suhi_output/location_dict_{}'.format(args.dataset_name)
+    
+    edgelist_path = 'Suhi_output/edgelist_{}_{}'.format(args.dataset_name, args.POI_level)
+    persona_to_ori_path = 'Suhi_output/ego_net_{}_{}'.format(args.dataset_name, args.POI_level)
+    edgelistPOI_path = 'Suhi_output/edgelistPOI_{}_{}'.format(args.dataset_name, args.POI_level)
+    location_map_path = 'Suhi_output/location_dict_{}_{}'.format(args.dataset_name, args.POI_level)
 
     before_selected_checkins = mat['selected_checkins']
     n_train = int(len(before_selected_checkins) * 0.8)
@@ -278,7 +280,11 @@ def load_data(args):
     # val_checkins = sorted_checkins[n_train:]
     train_checkins = persona_checkins[new_train_indices]
     val_checkins = persona_checkins[new_test_indices]
-    #####################################################################
+    ###############################################
+    edgelist_path = 'Suhi_output/edgelist_{}_{}'.format(args.dataset_name, args.POI_level)
+    persona_to_ori_path = 'Suhi_output/ego_net_{}_{}'.format(args.dataset_name, args.POI_level)
+    edgelistPOI_path = 'Suhi_output/edgelistPOI_{}_{}'.format(args.dataset_name, args.POI_level)
+    location_map_path = 'Suhi_output/location_dict_{}_{}'.format(args.dataset_name, args.POI_level)######################
     
     print("Build user checkins dictionary...")
     train_user_checkins = {}
