@@ -70,7 +70,7 @@ def deepwalk_walk(params):
     nodes = params["nodes"]
     center_ori_maps = params["center_ori_maps"]
     alpha = params["alpha"]
-    alpha = params["beta"]
+    beta = params["beta"]
     # if args["iter"] % 5 == 0:
     print("Iter:", params["iter"]) # keep printing, avoid moving process to swap
 
