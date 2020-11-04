@@ -32,6 +32,7 @@ def parse_args():
     # often change parameters
     parser.add_argument('--dataset_name', type=str, default='NYC')
     parser.add_argument('--alpha', type=float, default=0.1)
+    parser.add_argument('--beta', type=float, default=0.1)
     parser.add_argument('--POI_level', type=str, default='3')
     parser.add_argument('--input_type', type=str, default="persona_ori", help="persona_ori or persona_POI") 
     parser.add_argument('--bias_randomwalk', action='store_true')
@@ -252,7 +253,7 @@ def load_data(args):
     edgelist_path = 'Suhi_output/edgelist_{}_{}'.format(args.dataset_name, args.POI_level)
     persona_to_ori_path = 'Suhi_output/ego_net_{}_{}'.format(args.dataset_name, args.POI_level)
     edgelistPOI_path = 'Suhi_output/edgelistPOI_{}_{}'.format(args.dataset_name, args.POI_level)
-    location_map_path = 'Suhi_output/location_dict_{}_{}'.format(args.dataset_name, args.POI_level)
+    location_map_path = 'Suhi_output/location_dict_{}'.format(args.dataset_name)
 
     before_selected_checkins = mat['selected_checkins']
     n_train = int(len(before_selected_checkins) * 0.8)

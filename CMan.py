@@ -33,6 +33,7 @@ def parse_args():
     parser.add_argument('--dataset_name', type=str, default='NYC')
     parser.add_argument('--POI_level', type=str, default='3')
     parser.add_argument('--alpha', type=float, default=0.1)
+    parser.add_argument('--beta', type=float, default=0.1)
     parser.add_argument('--input_type', type=str, default="persona_ori", help="persona_ori or persona_POI") 
     parser.add_argument('--bias_randomwalk', action='store_true')
     parser.add_argument('--connect_center', action='store_true')
@@ -228,7 +229,7 @@ def load_data(args):
     edgelist_path = 'Suhi_output/edgelist_{}_{}'.format(args.dataset_name, args.POI_level)
     persona_to_ori_path = 'Suhi_output/ego_net_{}_{}'.format(args.dataset_name, args.POI_level)
     edgelistPOI_path = 'Suhi_output/edgelistPOI_{}_{}'.format(args.dataset_name, args.POI_level)
-    location_map_path = 'Suhi_output/location_dict_{}_{}'.format(args.dataset_name, args.POI_level)
+    location_map_path = 'Suhi_output/location_dict_{}'.format(args.dataset_name)
 
     if args.input_type == "persona_ori":
         friendship_old_persona, maps_PtOri, maps_OritP, center_ori_maps  = load_ego(edgelist_path, persona_to_ori_path, friendship_old_ori = friendship_old_ori)
@@ -241,10 +242,6 @@ def load_data(args):
     
     ############## Train Test split for POI prediction ##################
     n_data = persona_checkins.shape[0]
-    # if args.mode == "friend":
-    #     n_train = n_data
-    # else:
-    #     n_train = int(n_data * 0.8)
     n_train = n_data
     
     sorted_checkins = persona_checkins[np.argsort(persona_checkins[:,1])]
@@ -261,12 +258,6 @@ def load_data(args):
         train_user_checkins[user_id] = checkins
         user_location[user_id] = set(np.unique(checkins[:, 2]).tolist())
     
-    # val_user_checkins = {}
-    # for user_id in range(1, n_users+1): 
-    #     inds_checkins = np.argwhere(val_checkins[:,0] == user_id).flatten()
-    #     checkins = val_checkins[inds_checkins]
-    #     val_user_checkins[user_id] = checkins
-    # everything here is from 1
 
     offsets = [offset1, offset2, offset3]
     checkins = [train_checkins, val_checkins, train_user_checkins, user_location]
@@ -290,7 +281,13 @@ if __name__ == "__main__":
     maps_PtOri, maps_OritP = maps
     ###############################################################################################
 
+
+    # --------------------------------------------- #
     sentences = random_walk(friendship_old_persona, n_users, args, user_location, center_ori_maps)
+    # --------------------------------------------- #
+
+
+
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old_persona, persona_checkins)
     embs_ini = initialize_emb(args, n_nodes_total)
     save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins)
@@ -302,18 +299,6 @@ if __name__ == "__main__":
 
     print("Current ACC")
     friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10, maps_OritP=maps_OritP, maps_PtOri=maps_PtOri)
-
-    # center = list(center_ori_maps.keys())
-    # center_id2dix = {cen: i + 1 for i, cen in enumerate(center)}
-    # center_embs = embs_user[np.array(center) - 1]
-
-    # friendship_old_center = friendship_to_center_friendship(friendship_old_ori, center_ori_maps, center_id2dix)
-    # friendship_new_center = friendship_to_center_friendship(friendship_new, center_ori_maps, center_id2dix)
-
-    # print("Center ACC")
-    # friendship_pred_ori(center_embs, friendship_old_center, friendship_new_center)
-    
-
 
 
     """
