@@ -25,6 +25,8 @@ def parse_args():
     parser.add_argument('--workers', type=int, default=32)
     parser.add_argument('--num_epochs', type=int, default=1)
     parser.add_argument('--mobility_ratio', type=float, default=0.2)
+    parser.add_argument('--q_n2v', type=float, default=0.2)
+    parser.add_argument('--p_n2v', type=float, default=0.2)
     parser.add_argument('--K_neg', type=int, default=10)
     parser.add_argument('--win_size', type=int, default=10)
     parser.add_argument('--learning_rate', type=float, default=0.001) # 0.001 for code c

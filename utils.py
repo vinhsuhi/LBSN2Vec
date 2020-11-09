@@ -6,6 +6,7 @@ from collections import Counter
 from tqdm import tqdm
 from walkers import BasicWalker
 from scipy.sparse import csr_matrix
+from random_walks import RandomWalk
 
 
 def load_ego(path1, path2):
@@ -31,10 +32,14 @@ def random_walk(friendship_old, n_users, args, user_checkins=None, center_ori_ma
     adj = adj + adj.T
     G = nx.from_scipy_sparse_matrix(adj)
     if args.bias_randomwalk:
-        walker = BasicWalker(G, bias=True, user_poi_dict=user_checkins, center_ori_maps=center_ori_maps, alpha=args.alpha, beta=args.beta)
+        # walker = BasicWalker(G, bias=True, user_poi_dict=user_checkins, center_ori_maps=center_ori_maps, alpha=args.alpha, beta=args.beta)
+        print("using Node2vec walk...")
+        random_walk = RandomWalk(G, walk_length=args.walk_length, num_walks=args.num_walks, p=args.p_n2v, q=args.q_n2v, workers=args.workers)
+
+
     else:
         walker = BasicWalker(G)
-    sentences = walker.simulate_walks(num_walks=args.num_walks, walk_length=args.walk_length, num_workers=args.workers)
+        sentences = walker.simulate_walks(num_walks=args.num_walks, walk_length=args.walk_length, num_workers=args.workers)
     for i in range(len(sentences)):
         sentences[i] = [x+1 for x in sentences[i]]
     # sentences: args.walk_length of each walk may be different
