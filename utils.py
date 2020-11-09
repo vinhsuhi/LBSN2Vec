@@ -35,6 +35,7 @@ def random_walk(friendship_old, n_users, args, user_checkins=None, center_ori_ma
         # walker = BasicWalker(G, bias=True, user_poi_dict=user_checkins, center_ori_maps=center_ori_maps, alpha=args.alpha, beta=args.beta)
         print("using Node2vec walk...")
         random_walk = RandomWalk(G, walk_length=args.walk_length, num_walks=args.num_walks, p=args.p_n2v, q=args.q_n2v, workers=args.workers)
+        sentences = random_walk.walks
 
 
     else:
