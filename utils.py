@@ -31,7 +31,28 @@ def random_walk(friendship_old, n_users, args, user_checkins=None, center_ori_ma
     adj = csr_matrix((np.ones(len(friendship_old)), (friendship_old[:,0]-1, friendship_old[:,1]-1)), shape=(n_users, n_users), dtype=int)
     adj = adj + adj.T
     G = nx.from_scipy_sparse_matrix(adj)
+    commons, nunis = [], []
     if args.bias_randomwalk:
+        def add_edge_weights(G, user_poi_dict, center_ori_maps):
+            for source, target in G.edges():
+                source_poi = user_poi_dict[source + 1]
+                target_poi = user_poi_dict[target + 1]
+                common = source_poi.intersection(target_poi)
+                uni = source_poi.union(target_poi)
+                commons.append(commons)
+                nunis.append(uni)
+                if source_poi < center_ori_maps.min() and target_poi < center_ori_maps.min():
+                    print(common, uni)
+                G[source][target]['weight'] = 0
+
+            print("Common: Mean, Std: {}, {}".format(np.mean(commons), np.std(commons)))
+            print("Nunis: Mean, Std: {}, {}".format(np.mean(nunis), np.std(nunis)))
+            
+            return G
+        G = add_edge_weights(G, user_poi_dict=user_checkins, center_ori_maps=center_ori_maps)
+        exit()
+
+
         # walker = BasicWalker(G, bias=True, user_poi_dict=user_checkins, center_ori_maps=center_ori_maps, alpha=args.alpha, beta=args.beta)
         print("using Node2vec walk...")
         random_walk = RandomWalk(G, walk_length=args.walk_length, num_walks=args.num_walks, p=args.p_n2v, q=args.q_n2v, workers=args.workers)
