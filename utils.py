@@ -36,6 +36,7 @@ def random_walk(friendship_old, n_users, args, user_checkins=None, center_ori_ma
     if args.bias_randomwalk:
         def add_edge_weights(G, user_poi_dict, center_ori_maps):
             for source, target in tqdm(G.edges()):
+                this_score = 1
                 source_poi = user_poi_dict[source + 1]
                 target_poi = user_poi_dict[target + 1]
                 common = len(source_poi.intersection(target_poi))
@@ -43,15 +44,21 @@ def random_walk(friendship_old, n_users, args, user_checkins=None, center_ori_ma
                 # commons.append(common)
                 # nunis.append(uni)
                 if source < min(list(center_ori_maps.keys())) and target < min(list(center_ori_maps.keys())):
-                    print(common, uni)
+                    # print(common, uni)
+                    if uni == 0:
+                        this_score = 1
+                    else:
+                        this_score = 1 + common / uni
                     commons_x.append(common)
                     nunis_x.append(uni)
                 elif source > min(list(center_ori_maps.keys())) or target > min(list(center_ori_maps.keys())):
                     # print(common, uni)
                     commons_y.append(common)
                     nunis_y.append(uni)
+                    this_score = 1
+                print(this_score)
 
-                G[source][target]['weight'] = 0
+                G[source][target]['weight'] = this_score
 
             print("X")
             print("Common: Mean, Std: {}, {}".format(np.mean(commons_x), np.std(commons_x)))
@@ -59,13 +66,11 @@ def random_walk(friendship_old, n_users, args, user_checkins=None, center_ori_ma
             print("Center")
             print("Common: Mean, Std: {}, {}".format(np.mean(commons_y), np.std(commons_y)))
             print("Nunis: Mean, Std: {}, {}".format(np.mean(nunis_y), np.std(nunis_y)))
-
-            
             return G
+        
         G = add_edge_weights(G, user_poi_dict=user_checkins, center_ori_maps=center_ori_maps)
+
         exit()
-
-
         # walker = BasicWalker(G, bias=True, user_poi_dict=user_checkins, center_ori_maps=center_ori_maps, alpha=args.alpha, beta=args.beta)
         print("using Node2vec walk...")
         random_walk = RandomWalk(G, walk_length=args.walk_length, num_walks=args.num_walks, p=args.p_n2v, q=args.q_n2v, workers=args.workers)
