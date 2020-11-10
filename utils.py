@@ -31,7 +31,8 @@ def random_walk(friendship_old, n_users, args, user_checkins=None, center_ori_ma
     adj = csr_matrix((np.ones(len(friendship_old)), (friendship_old[:,0]-1, friendship_old[:,1]-1)), shape=(n_users, n_users), dtype=int)
     adj = adj + adj.T
     G = nx.from_scipy_sparse_matrix(adj)
-    commons, nunis = [], []
+    commons_x, nunis_x = [], []
+    commons_y, nunis_y = [], []
     if args.bias_randomwalk:
         def add_edge_weights(G, user_poi_dict, center_ori_maps):
             for source, target in tqdm(G.edges()):
@@ -39,14 +40,26 @@ def random_walk(friendship_old, n_users, args, user_checkins=None, center_ori_ma
                 target_poi = user_poi_dict[target + 1]
                 common = len(source_poi.intersection(target_poi))
                 uni = len(source_poi.union(target_poi))
-                commons.append(common)
-                nunis.append(uni)
+                # commons.append(common)
+                # nunis.append(uni)
                 if source < min(list(center_ori_maps.keys())) and target < min(list(center_ori_maps.keys())):
                     print(common, uni)
+                    commons_x.append(common)
+                    nunis_x.append(uni)
+                elif source > min(list(center_ori_maps.keys())) or target > min(list(center_ori_maps.keys())):
+                    # print(common, uni)
+                    commons_y.append(common)
+                    nunis_y.append(uni)
+
                 G[source][target]['weight'] = 0
 
-            print("Common: Mean, Std: {}, {}".format(np.mean(commons), np.std(commons)))
-            print("Nunis: Mean, Std: {}, {}".format(np.mean(nunis), np.std(nunis)))
+            print("X")
+            print("Common: Mean, Std: {}, {}".format(np.mean(commons_x), np.std(commons_x)))
+            print("Nunis: Mean, Std: {}, {}".format(np.mean(nunis_x), np.std(nunis_x)))
+            print("Center")
+            print("Common: Mean, Std: {}, {}".format(np.mean(commons_y), np.std(commons_y)))
+            print("Nunis: Mean, Std: {}, {}".format(np.mean(nunis_y), np.std(nunis_y)))
+
             
             return G
         G = add_edge_weights(G, user_poi_dict=user_checkins, center_ori_maps=center_ori_maps)
