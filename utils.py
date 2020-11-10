@@ -39,13 +39,12 @@ def random_walk(friendship_old, n_users, args, user_checkins=None, center_ori_ma
                 target_poi = user_poi_dict[target + 1]
                 common = len(source_poi.intersection(target_poi))
                 uni = len(source_poi.union(target_poi))
-                commons.append(commons)
+                commons.append(common)
                 nunis.append(uni)
                 if source < min(list(center_ori_maps.keys())) and target < min(list(center_ori_maps.keys())):
                     print(common, uni)
                 G[source][target]['weight'] = 0
 
-            print("what the fuck1")
             print("Common: Mean, Std: {}, {}".format(np.mean(commons), np.std(commons)))
             print("Nunis: Mean, Std: {}, {}".format(np.mean(nunis), np.std(nunis)))
             
