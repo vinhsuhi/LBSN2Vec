@@ -34,7 +34,7 @@ def random_walk(friendship_old, n_users, args, user_checkins=None, center_ori_ma
     commons, nunis = [], []
     if args.bias_randomwalk:
         def add_edge_weights(G, user_poi_dict, center_ori_maps):
-            for source, target in G.edges():
+            for source, target in tqdm(G.edges()):
                 source_poi = user_poi_dict[source + 1]
                 target_poi = user_poi_dict[target + 1]
                 common = len(source_poi.intersection(target_poi))
