@@ -45,6 +45,7 @@ def random_walk(friendship_old, n_users, args, user_checkins=None, center_ori_ma
                     print(common, uni)
                 G[source][target]['weight'] = 0
 
+            print("what the fuck1")
             print("Common: Mean, Std: {}, {}".format(np.mean(commons), np.std(commons)))
             print("Nunis: Mean, Std: {}, {}".format(np.mean(nunis), np.std(nunis)))
             
