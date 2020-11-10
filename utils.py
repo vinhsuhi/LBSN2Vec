@@ -37,8 +37,8 @@ def random_walk(friendship_old, n_users, args, user_checkins=None, center_ori_ma
             for source, target in G.edges():
                 source_poi = user_poi_dict[source + 1]
                 target_poi = user_poi_dict[target + 1]
-                common = source_poi.intersection(target_poi)
-                uni = source_poi.union(target_poi)
+                common = len(source_poi.intersection(target_poi))
+                uni = len(source_poi.union(target_poi))
                 commons.append(commons)
                 nunis.append(uni)
                 if source < min(list(center_ori_maps.keys())) and target < min(list(center_ori_maps.keys())):
