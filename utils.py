@@ -41,7 +41,7 @@ def random_walk(friendship_old, n_users, args, user_checkins=None, center_ori_ma
                 uni = source_poi.union(target_poi)
                 commons.append(commons)
                 nunis.append(uni)
-                if source_poi < min(list(center_ori_maps.keys())) and target_poi < min(list(center_ori_maps.keys())):
+                if source < min(list(center_ori_maps.keys())) and target < min(list(center_ori_maps.keys())):
                     print(common, uni)
                 G[source][target]['weight'] = 0
 
