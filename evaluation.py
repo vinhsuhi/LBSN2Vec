@@ -218,7 +218,7 @@ def rank_matrix(matrix, k=10):
     arg_max_index = []
     while len(arg_max_index) < 10:
         arg_max = np.argmax(matrix)
-        column = arg_max % matrix.shape(1)
+        column = arg_max % matrix.shape[1]
         arg_max_index.append(column)
         matrix[:, column] -= 2
     return arg_max_index
