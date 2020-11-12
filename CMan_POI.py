@@ -283,6 +283,23 @@ def load_data(args):
     # val_checkins = sorted_checkins[n_train:]
     train_checkins = persona_checkins[new_train_indices]
     val_checkins = persona_checkins[new_test_indices]
+    new_val_checkins = []
+    user_checkins = dict()
+    for i in range(len(val_checkins)):
+        checkin_i = val_checkins[i]
+        user = checkin_i[0]
+        time = checkin_i[1]
+        location = checkin_i[2]
+        ori_user = maps_PtOri[user]
+        key = "{}_{}_{}".format(ori_user, time, location)
+        if key not in user_checkins:
+            user_checkins[key] = 0
+            new_val_checkins.append([checkin_i.tolist()])
+    
+    print("Num val checkins before: {}".format(len(val_checkins)))
+    val_checkins = np.array(new_val_checkins)
+    print("Num val checkins after: {}".format(len(val_checkins)))
+
     ###############################################
     edgelist_path = 'Suhi_output/edgelist_{}_{}'.format(args.dataset_name, args.POI_level)
     persona_to_ori_path = 'Suhi_output/ego_net_{}_{}'.format(args.dataset_name, args.POI_level)
@@ -326,7 +343,7 @@ if __name__ == "__main__":
     friendship_old_ori, friendship_old_persona, friendship_new = friendships
     maps_PtOri, maps_OritP = maps
     ###############################################################################################
-
+    """
     sentences = random_walk(friendship_old_persona, n_users, args, user_location, center_ori_maps)
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old_persona, persona_checkins)
     embs_ini = initialize_emb(args, n_nodes_total)
@@ -335,9 +352,12 @@ if __name__ == "__main__":
     learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
     embs_file = "temp/processed/embs.txt"
     embs = read_embs(embs_file)
+    """
+    embs = np.random.rand(n_nodes_total, 128)
     embs_user = embs[:offset1]
     embs_time = embs[offset1:offset2]
     embs_venue = embs[offset2:offset3]
+
     val_checkins[:, 2] -= (offset2 + 1) # checkins to check in range (0 -- num_venues)
     val_checkins[:, 0] -= 1
 
