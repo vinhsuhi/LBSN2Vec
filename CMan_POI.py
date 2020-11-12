@@ -10,7 +10,7 @@ import pdb
 import math
 import os
 import multiprocessing
-from evaluation import location_prediction, location_prediction_Persona
+from evaluation import location_prediction, location_prediction_Persona, location_prediction_Persona2
 import argparse
 import learn
 from utils import save_info, sample_neg, read_embs, initialize_emb, random_walk, renumber_checkins
