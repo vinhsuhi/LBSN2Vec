@@ -181,7 +181,7 @@ def location_prediction(test_checkin, embs, poi_embs, k=10):
     """
     embs = normalize_embedding(embs) # N x d
     poi_embs = normalize_embedding(poi_embs) # Np x d
-    user_time = test_checkin[:, :2]
+    user_time = test_checkin[:, :2] # user and time 
     user_time_emb = embs[user_time] # n x 2 x d
     user_time_with_poi = np.dot(user_time_emb, poi_embs.T) # nx2x(np)
     user_time_with_poi = np.sum(user_time_with_poi, axis=1) # nxnp
@@ -211,6 +211,84 @@ def location_prediction(test_checkin, embs, poi_embs, k=10):
         import pdb
         pdb.set_trace()
     print(f"Accuracy@{k}: {acc:.3f}")
+
+
+
+def rank_matrix(matrix, k=10):
+    arg_max_index = []
+    while len(arg_max_index) < 10:
+        arg_max = np.argmax(matrix)
+        column = arg_max % matrix.shape(1)
+        arg_max_index.append(column)
+        matrix[:, column] -= 2
+    return arg_max_index
+
+
+def location_prediction_Persona(test_checkin, embs, poi_embs, k=10, user_persona_dict=None, persona_user_dict=None):
+    """
+    test_checkin: np array shape Nx3, containing a user, time slot and a POI
+    """
+    embs = normalize_embedding(embs) # N x d
+    poi_embs = normalize_embedding(poi_embs) # Np x d
+    users = test_checkin[:, 0]
+    times = test_checkin[:, 1]
+    
+    hit = 0
+    for i, user in enumerate(users):
+        this_user_persona = user_persona_dict[user + 1]
+        this_user_persona = [ele - 1 for ele in this_user_persona]
+        this_user_time = times[i]
+        time_emb = embs[this_user_time].reshape(1, -1)
+        time_ranking = time_emb.dot(poi_embs.T).reshape(1, -1)
+        this_user_persona_emb = embs[this_user_persona]
+        this_user_persona_ranking = this_user_persona_emb.dot(poi_embs.T).reshape(len(this_user_persona), -1)
+        final_ranking = time_ranking + this_user_persona_ranking
+        top_k = rank_matrix(final_ranking, k)
+        target = test_checkin[i, 2]
+        if target in top_k:
+            hit += 1
+
+    try:
+        acc = hit / len(test_checkin)
+        print(f"Accuracy@{k}: {acc:.3f}")
+        return acc
+    except:
+        import pdb
+        pdb.set_trace()
+    
+
+
+def location_prediction_Persona2(test_checkin, embs, poi_embs, k=10, user_persona_dict=None, persona_user_dict=None):
+    """
+    test_checkin: np array shape Nx3, containing a user, time slot and a POI
+    """
+    embs = normalize_embedding(embs) # N x d
+    poi_embs = normalize_embedding(poi_embs) # Np x d
+    users = test_checkin[:, 0]
+    times = test_checkin[:, 1]
+    
+    hit = 0
+    for i, user in enumerate(users):
+        this_user_persona = user_persona_dict[user + 1]
+        this_user_persona = [ele - 1 for ele in this_user_persona]
+        this_user_time = times[i]
+        time_emb = embs[this_user_time].reshape(1, -1)
+        time_ranking = time_emb.dot(poi_embs.T).reshape(1, -1)
+        this_user_persona_emb = embs[this_user_persona]
+        this_user_persona_ranking = this_user_persona_emb.dot(poi_embs.T).reshape(len(this_user_persona), -1)
+        final_ranking = time_ranking + this_user_persona_ranking
+        argptt = np.argpartition(final_ranking, -k, axis=1)[:, -k:] # nx10
+        target = test_checkin[i, 2]
+        if target in argptt:
+            hit += 1
+    try:
+        acc = hit / len(test_checkin)
+        print(f"Trick Accuracy@{k}: {acc:.3f}")
+        return acc
+    except:
+        import pdb
+        pdb.set_trace()
+    
 
 
 def loadtxt(path, separator):

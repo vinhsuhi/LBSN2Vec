@@ -10,7 +10,7 @@ import pdb
 import math
 import os
 import multiprocessing
-from evaluation import location_prediction
+from evaluation import location_prediction, location_prediction_Persona
 import argparse
 import learn
 from utils import save_info, sample_neg, read_embs, initialize_emb, random_walk, renumber_checkins
@@ -341,7 +341,9 @@ if __name__ == "__main__":
     val_checkins[:, 2] -= (offset2 + 1) # checkins to check in range (0 -- num_venues)
     val_checkins[:, 0] -= 1
 
-    location_prediction(val_checkins, embs, embs_venue, k=10)
+    # location_prediction(val_checkins, embs, embs_venue, k=10)
+    location_prediction_Persona(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
+    location_prediction_Persona2(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
 
     # print("Current ACC")
     # friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10, maps_OritP=maps_OritP, maps_PtOri=maps_PtOri)

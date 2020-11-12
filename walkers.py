@@ -3,6 +3,15 @@ import networkx as nx
 import torch 
 import multiprocessing
 
+from random_walks import RandomWalk
+
+# karate_g = nx.read_edgelist('../Random-Walk/graph/karate.edgelist')
+
+# random_walk = RandomWalk(karate_g, walk_length=3, num_walks=10, p=1, q=1, workers=6)
+
+# walklist = random_walk.walks
+
+
 
 class BasicWalker:
     def __init__(self, G, start_nodes=None, user_poi_dict={}, bias=False, center_ori_maps=None, alpha=0.1, beta=0.1):
