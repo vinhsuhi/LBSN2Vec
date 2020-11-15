@@ -265,7 +265,7 @@ def load_data(args):
 
 
     if args.input_type == "persona_ori":
-        friendship_old_persona, maps_PtOri, maps_OritP, center_ori_maps  = load_ego(edgelist_path, persona_to_ori_path, friendship_old_ori)
+        friendship_old_persona, maps_PtOri, maps_OritP, center_ori_maps  = load_ego(edgelist_path, persona_to_ori_path, friendship_old_ori=friendship_old_ori)
         persona_checkins, new_train_indices, new_test_indices = create_persona_checkins(mat['selected_checkins'], maps_OritP, train_indices)
     elif args.input_type == "persona_POI":
         friendship_old_persona, maps_PtOri, persona_POI, POI_maps, maps_OritP, center_ori_maps = load_ego(edgelist_path, persona_to_ori_path, edgelistPOI_path, location_map_path)
