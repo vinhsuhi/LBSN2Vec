@@ -30,6 +30,7 @@ def parse_args():
     parser.add_argument('--K_neg', type=int, default=10)
     parser.add_argument('--win_size', type=int, default=10)
     parser.add_argument('--learning_rate', type=float, default=0.001) # 0.001 for code c
+    parser.add_argument('--add_flag', type=float, default=0.7)
     parser.add_argument('--dim_emb', type=int, default=128)
     # often change parameters
     parser.add_argument('--dataset_name', type=str, default='NYC')
@@ -148,7 +149,7 @@ def load_ego(path1, path2, path3=None, path4=None, friendship_old_ori=None):
     persona_edges = np.array(persona_edges)
 
     if path3 is not None:
-        persona_POI = allocate_poi_to_user(path3)
+        persona_POI = allocate_poi_to_user(path3, maps_PtOri, maps_OritP)
 
     if path4 is not None:
         POI_maps = read_poi_map(path4)
@@ -157,7 +158,7 @@ def load_ego(path1, path2, path3=None, path4=None, friendship_old_ori=None):
         return persona_edges, maps_PtOri, persona_POI, POI_maps, maps_OritP, center_ori_maps
     return persona_edges, maps_PtOri, maps_OritP, center_ori_maps
 
-def allocate_poi_to_user(path3):
+def allocate_poi_to_user(path3, maps_PtOri, maps_OritP):
     user_POI = dict()
     with open(path3, 'r', encoding='utf-8') as file:
         for line in file:
@@ -220,10 +221,13 @@ def create_personaPOI_checkins(old_checkins, maps_OritP, persona_POI, POI_maps, 
         count += 1
         location_ori = old_checkini[2]
         location_index = POI_maps[location_ori]
+        add_flag = False 
+        if np.random.rand() < args.add_flag:
+            add_flag = True
         for persona_user in maps_OritP[user_ori]:
             if persona_user not in persona_POI:
                 continue
-            if location_index in persona_POI[persona_user]:
+            if (location_index in persona_POI[persona_user]) or add_flag:
                 personaPOI_checkins.append([persona_user, old_checkini[1], old_checkini[2], old_checkini[3]])
                 if i in train_indices:
                     new_train_indices.append(count)
