@@ -16,6 +16,7 @@ import learn
 from utils import save_info, sample_neg, read_embs, initialize_emb, random_walk, renumber_checkins
 from link_pred_model import StructMLP
 from sklearn.metrics import f1_score, accuracy_score
+np.random.seed(12345)
 
 
 def parse_args():
