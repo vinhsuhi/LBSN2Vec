@@ -250,8 +250,10 @@ def save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples,
             fp.write("\n".join(map(str, neg_table)) + "\n")
 
 
-def renumber_checkins(checkins_matrix):
+def renumber_checkins(checkins_matrix, maps_PtOri=None):
     offset1 = max(checkins_matrix[:,0])
+    if maps_PtOri is not None:
+        offset1 = max(offset1, len(maps_PtOri))
     _, n = np.unique(checkins_matrix[:,1], return_inverse=True) # 
     checkins_matrix[:,1] = n + offset1 + 1
     offset2 = max(checkins_matrix[:,1])

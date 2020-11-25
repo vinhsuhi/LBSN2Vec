@@ -240,7 +240,7 @@ def load_data(args):
         friendship_old_persona, maps_PtOri, persona_POI, POI_maps, maps_OritP, center_ori_maps = load_ego(edgelist_path, persona_to_ori_path, edgelistPOI_path, location_map_path, friendship_old_ori)
         persona_checkins = create_personaPOI_checkins(mat['selected_checkins'], maps_OritP, persona_POI, POI_maps, center_ori_maps)
 
-    persona_checkins, offset1, offset2, offset3, n_nodes_total, n_users = renumber_checkins(persona_checkins)
+    persona_checkins, offset1, offset2, offset3, n_nodes_total, n_users = renumber_checkins(persona_checkins, maps_PtOri)
     
     ############## Train Test split for POI prediction ##################
     n_data = persona_checkins.shape[0]
