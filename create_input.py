@@ -9,6 +9,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="LBSN configurations")
     parser.add_argument('--dataset_name', type=str, default="")
     parser.add_argument('--model', type=str, default="")
+    parser.add_argument('--POI', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -17,6 +18,12 @@ def read_input(path):
     mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
     friendship_old = mat['friendship_old']
     selected_checkins = mat['selected_checkins']
+    if args.POI:
+        n_trains = int(0.8 * len(selected_checkins))
+        selected_checkins = selected_checkins[:n_trains]
+        sorted_time = np.argsort(selected_checkins[:, 1])
+        train_indices = sorted_time[:n_trains]
+        selected_checkins = selected_checkins[train_indices]
     friendship_old -= 1
     nodes = np.unique(friendship_old)
     print("Min: {}, Max: {}, Len: {}".format(np.min(nodes), np.max(nodes), len(nodes)))
@@ -65,7 +72,11 @@ def save_line(edges, selected_checkins, dataset_name):
             file.write("{}\t{}\n".format(int(edges[i, 1]), int(edges[i, 0])))
 
     print("Creating Mobility Graph ...")
-    with open("{}/{}_M.edgelist".format(out_dir, dataset_name), 'w', encoding='utf-8') as file:
+    M_name = "{}/{}_M.edgelist".format(out_dir, dataset_name)
+    if args.POI:
+        M_name = "{}/{}_M_POI.edgelist".format(out_dir, dataset_name)
+    
+    with open(M_name, 'w', encoding='utf-8') as file:
         for i in range(selected_checkins.shape[0]):
             for j in range(selected_checkins.shape[1] - 1):
                 for k in range(j+1, selected_checkins.shape[1]):
@@ -73,8 +84,11 @@ def save_line(edges, selected_checkins, dataset_name):
                     file.write("{}\t{}\n".format(int(selected_checkins[i, k]), int(selected_checkins[i, j])))
     file.close()
 
+    SM_name = "{}/{}_SM.edgelist".format(out_dir, dataset_name)
+    if args.POI:
+        SM_name = "{}/{}_SM_POI.edgelist".format(out_dir, dataset_name)
     print("Creating Mobility and Friend Graph...")
-    with open("{}/{}_SM.edgelist".format(out_dir, dataset_name), 'w', encoding='utf-8') as file:
+    with open(SM_name, 'w', encoding='utf-8') as file:
         for i in range(selected_checkins.shape[0]):
             for j in range(selected_checkins.shape[1] - 1):
                 for k in range(j+1, selected_checkins.shape[1]):
