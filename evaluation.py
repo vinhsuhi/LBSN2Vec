@@ -53,9 +53,9 @@ def friendship_pred_ori(embs, friendship_old, friendship_new, k=10):
         precision_k, recall_k = compute_precision_recall(friend_dict, arg_sorted_simi, kk)
         f1_k = 2 * precision_k * recall_k / (precision_k + recall_k)
 
-        print(f"Precision@{k}: {precision_k:.3f}")
-        print(f"Recall@{k}: {recall_k:.3f}")
-        print(f"F1@{k}: {f1_k:.3f}")
+        print(f"Precision@{kk}: {precision_k:.3f}")
+        print(f"Recall@{kk}: {recall_k:.3f}")
+        print(f"F1@{kk}: {f1_k:.3f}")
     #########################################################
 
 
@@ -129,15 +129,15 @@ def friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10,
                         n_relevants += 1
                         target_groups[j] = []
 
-            precision.append(n_relevants/k)
+            precision.append(n_relevants/kk)
             recall.append(n_relevants/len(friends_list))
         precision = np.mean(precision)
         recall = np.mean(recall)
         f1 = 2 * precision * recall / (precision + recall)
 
-        print(f"Precision@{k}: {precision:.3f}")
-        print(f"Recall@{k}: {recall:.3f}")
-        print(f"F1@{k}: {f1:.3f}")
+        print(f"Precision@{kk}: {precision:.3f}")
+        print(f"Recall@{kk}: {recall:.3f}")
+        print(f"F1@{kk}: {f1:.3f}")
     
     for kk in [10, 20, 50, 100, 200, 500, 1000, 2000, 5000]:
         cal_precision_recall_k(kk)
