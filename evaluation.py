@@ -49,6 +49,17 @@ def friendship_pred_ori(embs, friendship_old, friendship_new, k=10):
     ########################################################################
 
     ###################### evaluate #########################
+    for kk in [10, 20, 50, 100, 200, 500, 1000, 2000, 5000]:
+        precision_k, recall_k = compute_precision_recall(friend_dict, arg_sorted_simi, kk)
+        f1_k = 2 * precision_k * recall_k / (precision_k + recall_k)
+
+        print(f"Precision@{k}: {precision_k:.3f}")
+        print(f"Recall@{k}: {recall_k:.3f}")
+        print(f"F1@{k}: {f1_k:.3f}")
+    #########################################################
+
+
+def compute_precision_recall(friend_dict, arg_sorted_simi, k):
     precision = []
     recall = []
     for key, value in friend_dict.items():
@@ -59,13 +70,9 @@ def friendship_pred_ori(embs, friendship_old, friendship_new, k=10):
                 n_relevants += 1
         precision.append(n_relevants/k)
         recall.append(n_relevants/len(value))
-
     precision = np.mean(precision)
     recall = np.mean(recall)
-    print(f"Precision@{k}: {precision:.3f}")
-    print(f"Recall@{k}: {recall:.3f}")
-    #########################################################
-
+    return precision, recall
 
 
 def friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10, maps_OritP=None, maps_PtOri=None):
@@ -93,7 +100,7 @@ def friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10,
         else:
             friend_dict[source].add(target)
 
-    def is_match(ordered_candidates, target_gr):
+    def is_match(ordered_candidates, target_gr, kk):
         group = []
         count = 0
         for i in range(1, len(ordered_candidates)):
@@ -102,32 +109,39 @@ def friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10,
             if group_target_index not in group:
                 group.append(group_target_index)
                 count += 1
-                if count == k + 1:
+                if count == kk + 1:
                     break
             if target_index in target_gr:
                 return 1
         return 0
 
-    precision = []
-    recall = []
-    for user, friends_list in friend_dict.items():
-        n_relevants = 0
-        source_group = maps_OritP[user]
-        target_groups = [maps_OritP[fr] for fr in friends_list]
-        for persona_s in source_group:
-            ordered_candidates = arg_sorted_simi[persona_s - 1]
-            for j in range(len(target_groups)):
-                if is_match(ordered_candidates, target_groups[j]):
-                    n_relevants += 1
-                    target_groups[j] = []
+    def cal_precision_recall_k(kk):
+        precision = []
+        recall = []
+        for user, friends_list in friend_dict.items():
+            n_relevants = 0
+            source_group = maps_OritP[user]
+            target_groups = [maps_OritP[fr] for fr in friends_list]
+            for persona_s in source_group:
+                ordered_candidates = arg_sorted_simi[persona_s - 1]
+                for j in range(len(target_groups)):
+                    if is_match(ordered_candidates, target_groups[j], kk):
+                        n_relevants += 1
+                        target_groups[j] = []
 
-        precision.append(n_relevants/k)
-        recall.append(n_relevants/len(friends_list))
-    precision = np.mean(precision)
-    recall = np.mean(recall)
-    print(f"Precision@{k}: {precision:.3f}")
-    print(f"Recall@{k}: {recall:.3f}")
+            precision.append(n_relevants/k)
+            recall.append(n_relevants/len(friends_list))
+        precision = np.mean(precision)
+        recall = np.mean(recall)
+        f1 = 2 * precision * recall / (precision + recall)
 
+        print(f"Precision@{k}: {precision:.3f}")
+        print(f"Recall@{k}: {recall:.3f}")
+        print(f"F1@{k}: {f1:.3f}")
+    
+    for kk in [10, 20, 50, 100, 200, 500, 1000, 2000, 5000]:
+        cal_precision_recall_k(kk)
+        
 
 def friendship_linkprediction_with_sample(embs_user, friendship_old, friendship_new, k=10):
     friendship_old_dict = {(x[0], x[1]): True for x in friendship_old}
