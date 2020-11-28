@@ -39,6 +39,7 @@ def parse_args():
     parser.add_argument('--input_type', type=str, default="persona_ori", help="persona_ori or persona_POI") 
     parser.add_argument('--bias_randomwalk', action='store_true')
     parser.add_argument('--connect_center', action='store_true')
+    parser.add_argument('--test', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -259,6 +260,8 @@ def load_data(args):
         checkins = train_checkins[inds_checkins]
         train_user_checkins[user_id] = checkins
         user_location[user_id] = set(np.unique(checkins[:, 2]).tolist())
+        if args.test:
+            break
     
 
     offsets = [offset1, offset2, offset3]
@@ -268,6 +271,9 @@ def load_data(args):
     maps = [maps_PtOri, maps_OritP]
 
     return offsets, checkins, count_nodes, friendships, maps, train_user_checkins, persona_checkins, center_ori_maps
+
+
+
 
 if __name__ == "__main__":
     args = parse_args()
@@ -282,6 +288,11 @@ if __name__ == "__main__":
     friendship_old_ori, friendship_old_persona, friendship_new = friendships
     maps_PtOri, maps_OritP = maps
     ###############################################################################################
+
+    if args.test:
+        embs_user = np.random.rand(n_users, 100)
+        friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10, maps_OritP=maps_OritP, maps_PtOri=maps_PtOri)
+        exit()
 
 
     # --------------------------------------------- #

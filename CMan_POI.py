@@ -41,6 +41,7 @@ def parse_args():
     parser.add_argument('--input_type', type=str, default="persona_ori", help="persona_ori or persona_POI") 
     parser.add_argument('--bias_randomwalk', action='store_true')
     parser.add_argument('--connect_center', action='store_true')
+    parser.add_argument('--test', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -322,6 +323,8 @@ def load_data(args):
         checkins = train_checkins[inds_checkins]
         train_user_checkins[user_id] = checkins
         user_location[user_id] = set(np.unique(checkins[:, 2]).tolist())
+        if args.test:
+            break
     
     # val_user_checkins = {}
     # for user_id in range(1, n_users+1): 
@@ -350,6 +353,19 @@ if __name__ == "__main__":
     n_users, n_nodes_total = count_nodes
     friendship_old_ori, friendship_old_persona, friendship_new = friendships
     maps_PtOri, maps_OritP = maps
+    if args.test:
+        embs = np.random.rand(n_nodes_total, 100)
+        embs_user = embs[:offset1]
+        embs_time = embs[offset1:offset2]
+        embs_venue = embs[offset2:offset3]
+
+        val_checkins[:, 2] -= (offset2 + 1) # checkins to check in range (0 -- num_venues)
+        val_checkins[:, 0] -= 1
+        location_prediction_Persona(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
+        location_prediction_Persona2(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
+        exit()
+
+
     ###############################################################################################
     sentences = random_walk(friendship_old_persona, n_users, args, user_location, center_ori_maps)
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old_persona, persona_checkins)
