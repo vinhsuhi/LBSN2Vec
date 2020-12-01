@@ -18,12 +18,6 @@ def read_input(path):
     mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
     friendship_old = mat['friendship_old']
     selected_checkins = mat['selected_checkins']
-    if args.POI:
-        n_trains = int(0.8 * len(selected_checkins))
-        selected_checkins = selected_checkins[:n_trains]
-        sorted_time = np.argsort(selected_checkins[:, 1])
-        train_indices = sorted_time[:n_trains]
-        selected_checkins = selected_checkins[train_indices]
     friendship_old -= 1
     nodes = np.unique(friendship_old)
     print("Min: {}, Max: {}, Len: {}".format(np.min(nodes), np.max(nodes), len(nodes)))
@@ -31,7 +25,7 @@ def read_input(path):
     return friendship_old, selected_checkins
 
 
-def save_deepwalk(edges, selected_checkins, dataset_name):
+def save_deepwalk(edges, selected_checkins, dataset_name, max_node):
     out_dir = "edgelist_graph"
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
@@ -42,27 +36,41 @@ def save_deepwalk(edges, selected_checkins, dataset_name):
     file.close()
 
     print("Creating Mobility Graph ...")
-    with open("{}/{}_M.edgelist".format(out_dir, dataset_name), 'w', encoding='utf-8') as file:
+    M_name = "{}/{}_M.edgelist".format(out_dir, dataset_name)
+    if args.POI:
+        M_name = "{}/{}_M_POI.edgelist".format(out_dir, dataset_name)
+    
+    with open(M_name, 'w', encoding='utf-8') as file:
         for i in range(selected_checkins.shape[0]):
             for j in range(selected_checkins.shape[1] - 1):
                 for k in range(j+1, selected_checkins.shape[1]):
                     file.write("{}\t{}\n".format(int(selected_checkins[i, j]), int(selected_checkins[i, k])))
+        for i in range(max_node):
+            if i not in selected_checkins:
+                file.write("{}\t{}\n".format(i, i))
     file.close()
 
     print("Creating Mobility and Friend Graph...")
-    with open("{}/{}_SM.edgelist".format(out_dir, dataset_name), 'w', encoding='utf-8') as file:
+    SM_name = "{}/{}_SM.edgelist".format(out_dir, dataset_name)
+    if args.POI:
+        SM_name = "{}/{}_SM_POI.edgelist".format(out_dir, dataset_name)
+    with open(SM_name, 'w', encoding='utf-8') as file:
         for i in range(selected_checkins.shape[0]):
             for j in range(selected_checkins.shape[1] - 1):
                 for k in range(j+1, selected_checkins.shape[1]):
                     file.write("{}\t{}\n".format(int(selected_checkins[i, j]), int(selected_checkins[i, k])))
         for i in range(edges.shape[0]):
             file.write("{}\t{}\n".format(int(edges[i, 0]), int(edges[i, 1])))
+        for i in range(max_node):
+            if i not in selected_checkins:
+                if i not in edges:
+                    file.write("{}\t{}\n".format(i, i))
     file.close()
     print("Done!")
 
 
 
-def save_line(edges, selected_checkins, dataset_name):
+def save_line(edges, selected_checkins, dataset_name, max_node):
     out_dir = "line_graph"
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
@@ -110,6 +118,7 @@ def save_hebe(edges, dataset_name):
 
 
 def save_dhne(selected_checkins, dataset_name):
+    max_each = np.max(selected_checkins, axis=0)
     out_dir = "dhne_graph"
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
@@ -117,6 +126,18 @@ def save_dhne(selected_checkins, dataset_name):
         os.mkdir("{}/{}".format(out_dir, dataset_name))
     num_types = np.array([len(np.unique(selected_checkins[:, i])) for i in range(selected_checkins.shape[1])])
     np.savez('{}/{}/train_data.npz'.format(out_dir, dataset_name), train_data=selected_checkins, nums_type=num_types)
+
+    if args.POI:
+        selected_checkins_train = selected_checkins[:int(0.8*len(selected_checkins))]
+        new_train_data = []
+        for i in range(len(max_each)):
+            for j in range(max_each[i]):
+                if j not in selected_checkins_train:
+                    if j not in np.array(new_train_data):
+                        new_train_data.append([j, j, j])
+        new_train_data = np.array(new_train_data)
+        selected_checkins = np.concatenate((selected_checkins_train, new_train_data), axis=0)
+        np.savez('{}_POI/{}/train_data.npz'.format(out_dir, dataset_name), train_data=selected_checkins, nums_type=num_types)
     print("Done!")
     pass
 
@@ -149,6 +170,11 @@ def preprocess_selected_checkins(selected_checkins):
     return selected_checkins
 
 def preprocess_selected_checkins2(selected_checkins):
+    """
+    What does this function do???
+    1. sort selected checkins according to user ID
+    2. renumberring phase 1
+    """
     # selected_checkins = np.delete(selected_checkins, 1, 1)
     selected_checkins = selected_checkins[np.argsort(selected_checkins[:, 0])]
     unique_location = np.unique(selected_checkins[:, 2])
@@ -156,8 +182,10 @@ def preprocess_selected_checkins2(selected_checkins):
     unique_time = np.unique(selected_checkins[:, 1])
     location_id2idx = {unique_location[i]: i for i in range(len(unique_location))}
     cate_id2idx = {unique_cate[i]: i for i in range(len(unique_cate))}
+    time_id2idx = {unique_time[i]: i for i in range(len(unique_time))}
     for i in range(len(selected_checkins)):
         selected_checkins[i, 0] = selected_checkins[i, 0] - 1
+        selected_checkins[i, 1] = time_id2idx[selected_checkins[i, 1]]
         selected_checkins[i, 2] = location_id2idx[selected_checkins[i, 2]]
         selected_checkins[i, 3] = cate_id2idx[selected_checkins[i, 3]]
     new_location = len(unique_location)
@@ -171,6 +199,7 @@ def preprocess_selected_checkins2(selected_checkins):
             additional_checkins.append([i,new_time, new_location, new_cate])
             new_location += 1
             new_cate += 1
+            new_time += 1
     additional_checkins = np.array(additional_checkins)
     if len(additional_checkins) > 0:
         selected_checkins = np.concatenate((selected_checkins, additional_checkins), axis=0)
@@ -189,13 +218,21 @@ friendship = friendship.astype(int)
 if model.lower() != "dhne":
     selected_checkins = preprocess_selected_checkins2(selected_checkins)
     selected_checkins, o1, o2, o3, nt, nu = renumber_checkins(selected_checkins)
+    max_node = selected_checkins.max()
+    if args.POI:
+        n_trains = int(0.8 * len(selected_checkins))
+        selected_checkins = selected_checkins[:n_trains]
+        sorted_time = np.argsort(selected_checkins[:, 1])
+        train_indices = sorted_time[:n_trains]
+        selected_checkins = selected_checkins[train_indices]
+    
 
 if model.lower() == "deepwalk":
-    save_deepwalk(friendship, selected_checkins, args.dataset_name)
+    save_deepwalk(friendship, selected_checkins, args.dataset_name, max_node)
 elif model.lower() == "node2vec":
-    save_deepwalk(friendship, selected_checkins, args.dataset_name)
+    save_deepwalk(friendship, selected_checkins, args.dataset_name, max_node)
 elif model.lower() == "line":
-    save_line(friendship, selected_checkins, args.dataset_name)
+    save_line(friendship, selected_checkins, args.dataset_name, max_node)
 elif model.lower() == "hebe":
     save_hebe(friendship, args.dataset_name)
 elif model.lower() == "dhne":
