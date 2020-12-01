@@ -3,7 +3,7 @@ from scipy.io import loadmat
 import os
 import numpy as np
 from evaluation import friendship_pred_persona, friendship_pred_ori, location_prediction
-from create_input import *
+
 
 def parse_args2():
     parser = argparse.ArgumentParser(description="LBSN configurations")
@@ -28,8 +28,6 @@ def read_emb(path, model):
             embs.append([float(ele) for ele in data_line])
         embs = np.array(embs)
         embs = embs[np.argsort(embs[:, 0])][:, 1:]
-        import pdb
-        pdb.set_trace()
     elif model == "dhne":
         embs = np.load(path, allow_pickle=True)
         if not args.POI:
@@ -45,15 +43,93 @@ def read_input2(path):
     friendship_old = friendship_old[np.argsort(friendship_old[:, 0])]
     return friendship_old, friendship_new
 
+
+
+def read_input(path):
+    mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
+    friendship_old = mat['friendship_old']
+    selected_checkins = mat['selected_checkins']
+    friendship_old -= 1
+    nodes = np.unique(friendship_old)
+    print("Min: {}, Max: {}, Len: {}".format(np.min(nodes), np.max(nodes), len(nodes)))
+    friendship_old = friendship_old[np.argsort(friendship_old[:, 0])]
+    return friendship_old, selected_checkins
+
+
+def preprocess_selected_checkins(selected_checkins):
+    selected_checkins = np.delete(selected_checkins, 1, 1)
+    selected_checkins = selected_checkins[np.argsort(selected_checkins[:, 0])]
+    unique_location = np.unique(selected_checkins[:, 1])
+    unique_cate = np.unique(selected_checkins[:, 2])
+    location_id2idx = {unique_location[i]: i for i in range(len(unique_location))}
+    cate_id2idx = {unique_cate[i]: i for i in range(len(unique_cate))}
+    for i in range(len(selected_checkins)):
+        selected_checkins[i, 0] = selected_checkins[i, 0] - 1
+        selected_checkins[i, 1] = location_id2idx[selected_checkins[i, 1]]
+        selected_checkins[i, 2] = cate_id2idx[selected_checkins[i, 2]]
+    new_location = len(unique_location)
+    new_cate = len(cate_id2idx)
+    num_user = np.max(selected_checkins[:, 0]) + 1
+    unique_user = np.unique(selected_checkins[:, 0]).tolist()
+    additional_checkins = []
+    for i in range(num_user):
+        if i not in unique_user:
+            additional_checkins.append([i, new_location, new_cate])
+            new_location += 1
+            new_cate += 1
+    additional_checkins = np.array(additional_checkins)
+    if len(additional_checkins) > 0:
+        selected_checkins = np.concatenate((selected_checkins, additional_checkins), axis=0)
     
+    return selected_checkins
+
+
+
+def preprocess_selected_checkins2(selected_checkins):
+    """
+    What does this function do???
+    1. sort selected checkins according to user ID
+    2. renumberring phase 1
+    """
+    # selected_checkins = np.delete(selected_checkins, 1, 1)
+    selected_checkins = selected_checkins[np.argsort(selected_checkins[:, 0])]
+    unique_location = np.unique(selected_checkins[:, 2])
+    unique_cate = np.unique(selected_checkins[:, 3])
+    unique_time = np.unique(selected_checkins[:, 1])
+    location_id2idx = {unique_location[i]: i for i in range(len(unique_location))}
+    cate_id2idx = {unique_cate[i]: i for i in range(len(unique_cate))}
+    time_id2idx = {unique_time[i]: i for i in range(len(unique_time))}
+    for i in range(len(selected_checkins)):
+        selected_checkins[i, 0] = selected_checkins[i, 0] - 1
+        selected_checkins[i, 1] = time_id2idx[selected_checkins[i, 1]]
+        selected_checkins[i, 2] = location_id2idx[selected_checkins[i, 2]]
+        selected_checkins[i, 3] = cate_id2idx[selected_checkins[i, 3]]
+    new_location = len(unique_location)
+    new_cate = len(cate_id2idx)
+    new_time = len(unique_time)
+    num_user = np.max(selected_checkins[:, 0]) + 1
+    unique_user = np.unique(selected_checkins[:, 0]).tolist()
+    additional_checkins = []
+    for i in range(num_user):
+        if i not in unique_user:
+            additional_checkins.append([i,new_time, new_location, new_cate])
+            new_location += 1
+            new_cate += 1
+            new_time += 1
+    additional_checkins = np.array(additional_checkins)
+    if len(additional_checkins) > 0:
+        selected_checkins = np.concatenate((selected_checkins, additional_checkins), axis=0)
     
+    return selected_checkins
+
+
 
 if __name__ == "__main__":
     args = parse_args2()
     print(args)
+    model = args.model 
     if args.POI:
         embs = read_emb(args.emb_path, args.model)
-        
         friendship, selected_checkins = read_input(args.dataset_name)
         friendship = friendship.astype(int)
         if model.lower() != "dhne":
@@ -89,7 +165,7 @@ if __name__ == "__main__":
 ####################### eval ###############################
 for data in Istanbul
 do
-python eval_models.py --emb_path line_emb/${data}_M_POI.embeddings --dataset_name ${data} --model line 
+python eval_models.py --emb_path line_emb/${data}_M_POI.embeddings --dataset_name ${data} --model line --POI
 done 
 
 
