@@ -208,38 +208,38 @@ def preprocess_selected_checkins2(selected_checkins):
 
 
 
-# if __name__ == "__main__":
-args = parse_args()
-print(args)
+if __name__ == "__main__":
+    args = parse_args()
+    print(args)
 
-model = args.model 
-friendship, selected_checkins = read_input(args.dataset_name)
-friendship = friendship.astype(int)
-if model.lower() != "dhne":
-    selected_checkins = preprocess_selected_checkins2(selected_checkins)
-    selected_checkins, o1, o2, o3, nt, nu = renumber_checkins(selected_checkins)
-    max_node = selected_checkins.max()
-    if args.POI:
-        n_trains = int(0.8 * len(selected_checkins))
-        selected_checkins = selected_checkins[:n_trains]
-        sorted_time = np.argsort(selected_checkins[:, 1])
-        train_indices = sorted_time[:n_trains]
-        selected_checkins = selected_checkins[train_indices]
-    
+    model = args.model 
+    friendship, selected_checkins = read_input(args.dataset_name)
+    friendship = friendship.astype(int)
+    if model.lower() != "dhne":
+        selected_checkins = preprocess_selected_checkins2(selected_checkins)
+        selected_checkins, o1, o2, o3, nt, nu = renumber_checkins(selected_checkins)
+        max_node = selected_checkins.max()
+        if args.POI:
+            n_trains = int(0.8 * len(selected_checkins))
+            selected_checkins = selected_checkins[:n_trains]
+            sorted_time = np.argsort(selected_checkins[:, 1])
+            train_indices = sorted_time[:n_trains]
+            selected_checkins = selected_checkins[train_indices]
+        
 
-if model.lower() == "deepwalk":
-    save_deepwalk(friendship, selected_checkins, args.dataset_name, max_node)
-elif model.lower() == "node2vec":
-    save_deepwalk(friendship, selected_checkins, args.dataset_name, max_node)
-elif model.lower() == "line":
-    save_line(friendship, selected_checkins, args.dataset_name, max_node)
-elif model.lower() == "hebe":
-    save_hebe(friendship, args.dataset_name)
-elif model.lower() == "dhne":
-    selected_checkins = preprocess_selected_checkins(selected_checkins)
-    save_dhne(selected_checkins, args.dataset_name)
-else:
-    print("Have not implement yet...")
+    if model.lower() == "deepwalk":
+        save_deepwalk(friendship, selected_checkins, args.dataset_name, max_node)
+    elif model.lower() == "node2vec":
+        save_deepwalk(friendship, selected_checkins, args.dataset_name, max_node)
+    elif model.lower() == "line":
+        save_line(friendship, selected_checkins, args.dataset_name, max_node)
+    elif model.lower() == "hebe":
+        save_hebe(friendship, args.dataset_name)
+    elif model.lower() == "dhne":
+        selected_checkins = preprocess_selected_checkins(selected_checkins)
+        save_dhne(selected_checkins, args.dataset_name)
+    else:
+        print("Have not implement yet...")
 
 """
 
