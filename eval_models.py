@@ -3,7 +3,7 @@ from scipy.io import loadmat
 import os
 import numpy as np
 from evaluation import friendship_pred_persona, friendship_pred_ori, location_prediction
-
+from utils import renumber_checkins
 
 def parse_args2():
     parser = argparse.ArgumentParser(description="LBSN configurations")
