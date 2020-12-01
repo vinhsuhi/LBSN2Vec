@@ -110,6 +110,32 @@ do
 done
 
 
+mode="persona_ori"
+
+for p in 0.8
+do
+for q in 0.6 0.8 1
+do
+for lr in 0.0005 0.001
+do
+for dim in 256 300
+do
+for Kneg in 5 10
+do
+for data in Jakarta KualaLampur SaoPaulo NYC TKY hongzhi Istanbul
+do
+python -u CMan_POI.py --input_type ${mode} --dim_emb ${dim} \
+--dataset_name ${data} --p_n2v ${p} --q_n2v ${q} \
+--workers 12 --learning_rate ${lr} --K_neg ${Kneg} --mobility_ratio 0.7 --add_flag 0.9 > location_pred2/model2_${data}_${dim}_${lr}_${Kneg}_p${p}_q${q}m0.7
+done
+done
+done
+done
+done
+done
+
+
+
 mode="persona_POI"
 
 for p in 0.8
@@ -125,14 +151,16 @@ do
 for data in Jakarta KualaLampur SaoPaulo
 do
 python -u CMan_POI.py --input_type ${mode} --dim_emb ${dim} \
---dataset_name ${data} --bias_randomwalk --p_n2v ${p} --q_n2v ${q} \
---workers 12 --learning_rate ${lr} --K_neg ${Kneg} --mobility_ratio 0.7 --add_flag 0.9 > location_pred2/${data}_${dim}_${lr}_${Kneg}_p${p}_q${q}m0.7
-done
-done 
+--dataset_name ${data} --p_n2v ${p} --q_n2v ${q} \
+--workers 12 --learning_rate ${lr} --K_neg ${Kneg} --mobility_ratio 0.7 --add_flag 0.9 > location_pred2/model2_${data}_${dim}_${lr}_${Kneg}_p${p}_q${q}m0.7
 done
 done
 done
 done
+done
+done
+
+
 
 
 mode="persona_POI"

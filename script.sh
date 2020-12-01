@@ -149,6 +149,6 @@ done
 for DATA in TKY
 do
     # python -u main.py --dataset_name ${DATA} --mode POI --input_type mat --py > results/POI_ori_${DATA}
-    python -u main.py --dataset_name ${DATA} --mode friend --input_type mat --py > results/friend_ori_${DATA}
+    python -u main.py --dataset_name ${DATA} --mode friend --input_type mat --py >
 done
       

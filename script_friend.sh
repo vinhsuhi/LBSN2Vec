@@ -64,33 +64,34 @@ mode="persona_POI"
 
 for data in NYC
 do 
-
-    do 
-        python -u CMan.py --input_type ${mode} --dataset_name ${data} --bias_randomwalk --q_n2v 0.8 --p_n2v 0.8 > output
-    done 
+        python -u CMan.py --input_type ${mode} --dataset_name ${data} --bias_randomwalk --q_n2v 0.8 --p_n2v 0.8 --test
 done
 
 
 
 mode="persona_POI"
 
-
-for p in 0.8 1 1.2 0.6 
+for p in 0.8  
 do 
-for q in 0.8 1 1.2 0.6 
+for q in 0.6 
 do 
 for lr in 0.0005 0.001
 do
 for Neg in 5 10
 do 
+for dim in 256 300
+do 
 for data in NYC hongzhi TKY Jakarta KualaLampur SaoPaulo Istanbul
 do
-        python -u CMan.py --input_type ${mode} --dataset_name ${data} --bias_randomwalk --q_n2v ${q} --p_n2v ${p} --K_neg ${Neg}> output/model4_${data}_friend_p${p}_q${q}_lr${lr}_N${Neg}
+        python -u CMan.py --input_type ${mode} --dataset_name ${data} --bias_randomwalk --q_n2v ${q} --p_n2v ${p} --K_neg ${Neg} --dim_emb ${dim} > output/model4_${data}_friend_p${p}_q${q}_lr${lr}_N${Neg}_dim${dim}
 done
 done 
+done
 done 
 done
 done
+
+
 
     # Original_version
 
@@ -138,13 +139,22 @@ python run_node2vec --dataset_name ${data}_M
 python run_node2vec --dataset_name ${data}_SM
 done
 
-for data in Istanbul Jakarta KualaLampur SaoPaulo
+for data in Istanbul KualaLampur SaoPaulo NYC
+do 
+python run_node2vec --dataset_name ${data}
+python run_node2vec --dataset_name ${data}_M
+python run_node2vec --dataset_name ${data}_SM
+done
+
+
+
+for data in Istanbul KualaLampur SaoPaulo NYC
 do
-# python -m openne --method line --input ../../LBSN2Vec/edgelist_graph/${data}.edgelist --graph-format edgelist --output ../../LBSN2Vec/line_emb/${data}.embeddings 
-# python -m openne --method line --input ../../LBSN2Vec/edgelist_graph/${data}_M.edgelist --graph-format edgelist --output ../../LBSN2Vec/line_emb/${data}.embeddings 
-# python -m openne --method line --input ../../LBSN2Vec/edgelist_graph/${data}_SM.edgelist --graph-format edgelist --output ../../LBSN2Vec/line_emb/${data}.embeddings 
-python -m openne --method node2vec --input ../../LBSN2Vec/edgelist_graph/${data}_M.edgelist --graph-format edgelist --output ../../LBSN2Vec/line_emb/${data}_M.embeddings
-# python -m openne --method node2vec --input ../../LBSN2Vec/edgelist_graph/${data}_SM.edgelist --graph-format edgelist --output ../../LBSN2Vec/node2vec_emb/${data}_SM.embeddings --epochs 2
+python -m openne --method line --input ../../LBSN2Vec/edgelist_graph/${data}.edgelist --graph-format edgelist --output ../../LBSN2Vec/line_emb/${data}.embeddings 
+python -m openne --method line --input ../../LBSN2Vec/edgelist_graph/${data}_M.edgelist --graph-format edgelist --output ../../LBSN2Vec/line_emb/${data}_M.embeddings 
+python -m openne --method line --input ../../LBSN2Vec/edgelist_graph/${data}_SM.edgelist --graph-format edgelist --output ../../LBSN2Vec/line_emb/${data}_SM.embeddings 
+python -m openne --method node2vec --input ../../LBSN2Vec/edgelist_graph/${data}_M.edgelist --graph-format edgelist --output ../../LBSN2Vec/node2vec_emb/${data}_M.embeddings --epochs 2
+python -m openne --method node2vec --input ../../LBSN2Vec/edgelist_graph/${data}_SM.edgelist --graph-format edgelist --output ../../LBSN2Vec/node2vec_emb/${data}_SM.embeddings --epochs 2
 done
 
 # Just M
@@ -157,15 +167,15 @@ done
 
 for data in NYC hongzhi TKY Istanbul Jakarta KualaLampur SaoPaulo
 do
-    for model in node2vec 
+    for model in line 
     do 
-        # python -u eval_models.py --emb_path ${model}_emb/${data}.embeddings --dataset_name ${data} --model ${model} > output/${model}_${data}_friend
-        # python -u eval_models.py --emb_path ${model}_emb/${data}_M.embeddings --dataset_name ${data} --model ${model} > output/${model}_${data}_M_friend
-        python -u eval_models.py --emb_path ${model}_emb/${data}_SM.embeddings --dataset_name ${data} --model ${model} > output/${model}_${data}_SM_friend
+        python -u eval_models.py --emb_path ${model}_emb/${data}.embeddings --dataset_name ${data} --model ${model} > ori_out/${model}_${data}_friend
+        python -u eval_models.py --emb_path ${model}_emb/${data}_M.embeddings --dataset_name ${data} --model ${model} > ori_out/${model}_${data}_M_friend
+        python -u eval_models.py --emb_path ${model}_emb/${data}_SM.embeddings --dataset_name ${data} --model ${model} > ori_out/${model}_${data}_SM_friend
     done
 
     # model=dhne
-    # python -u eval_models.py --emb_path ${model}_emb/${data}.embeddings --dataset_name ${data} --model ${model} > output/${model}_${data}_friend
+    # python -u eval_models.py --emb_path ${model}_emb/${data}/model_16/embeddings.npy --dataset_name ${data} --model ${model} > ori_out/${model}_${data}_friend
 
 done 
 
