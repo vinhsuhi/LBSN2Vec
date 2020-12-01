@@ -2,15 +2,15 @@ import argparse
 from scipy.io import loadmat
 import os
 import numpy as np
-from evaluation import friendship_pred_persona, friendship_pred_ori
+from evaluation import friendship_pred_persona, friendship_pred_ori, location_prediction
+from create_input import *
 
-
-
-def parse_args():
+def parse_args2():
     parser = argparse.ArgumentParser(description="LBSN configurations")
     parser.add_argument('--emb_path', type=str, default="")
     parser.add_argument('--dataset_name', type=str, default="")
     parser.add_argument('--model', type=str, default="")
+    parser.add_argument('--POI', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -28,38 +28,68 @@ def read_emb(path, model):
             embs.append([float(ele) for ele in data_line])
         embs = np.array(embs)
         embs = embs[np.argsort(embs[:, 0])][:, 1:]
+        import pdb
+        pdb.set_trace()
     elif model == "dhne":
         embs = np.load(path, allow_pickle=True)
-        embs = embs[0]
+        if not args.POI:
+            embs = embs[0]
     return embs 
 
 
-def read_input(path):
+def read_input2(path):
     mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
     friendship_old = mat['friendship_old']
     friendship_new = mat['friendship_new']
-    # friendship_old -= 1
-    # friendship_new -= 1
-    # nodes = np.unique(friendship_old)
-    # print("Min: {}, Max: {}, Len: {}".format(np.min(nodes), np.max(nodes), np.len(nodes)))
+
     friendship_old = friendship_old[np.argsort(friendship_old[:, 0])]
     return friendship_old, friendship_new
 
+    
+    
 
-args = parse_args()
-print(args)
-embs = read_emb(args.emb_path, args.model)
-friendship_old, friendship_new = read_input(args.dataset_name)
-n_users = max(np.max(friendship_old), np.max(friendship_new))
-embs = embs[:n_users]
+if __name__ == "__main__":
+    args = parse_args2()
+    print(args)
+    if args.POI:
+        embs = read_emb(args.emb_path, args.model)
+        
+        friendship, selected_checkins = read_input(args.dataset_name)
+        friendship = friendship.astype(int)
+        if model.lower() != "dhne":
+            selected_checkins = preprocess_selected_checkins2(selected_checkins)
+            selected_checkins, o1, o2, o3, nt, nu = renumber_checkins(selected_checkins)
+            max_node = selected_checkins.max()
+            if args.POI:
+                n_trains = int(0.8 * len(selected_checkins))
+                selected_checkins = selected_checkins[:n_trains]
+                sorted_time = np.argsort(selected_checkins[:, 1])
+                train_indices = sorted_time[:n_trains]
+                test_indices = np.array([ele for ele in range(len(selected_checkins)) if ele not in train_indices])
+                train_checkins = selected_checkins[train_indices]
+                test_checkins = selected_checkins[test_indices]
 
-friendship_pred_ori(embs, friendship_old, friendship_new)
+            embs_user = embs[:o1]
+            embs_time = embs[o1:o2]
+            embs_venue = embs[o2:o3]
+
+            test_checkins[:, 2] -= o2
+
+            location_prediction(test_checkins, embs, embs_venue, k=10)
+    else:
+        # train_checkins, test_checkins = read_input_POI(args.path)
+
+        friendship_old, friendship_new = read_input(args.dataset_name)
+        n_users = max(np.max(friendship_old), np.max(friendship_new))
+        embs = embs[:n_users]
+
+        friendship_pred_ori(embs, friendship_old, friendship_new)
 
 """
 ####################### eval ###############################
-for data in hongzhi NYC TKY
+for data in Istanbul
 do
-python eval_models.py --emb_path line_emb/${data}.embeddings --dataset_name ${data} --model line
+python eval_models.py --emb_path line_emb/${data}_M_POI.embeddings --dataset_name ${data} --model line 
 done 
 
 
