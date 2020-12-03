@@ -156,12 +156,9 @@ if __name__ == "__main__":
     else:
         # train_checkins, test_checkins = read_input_POI(args.path)
 
-        friendship_old, friendship_new = read_input(args.dataset_name)
+        friendship_old, friendship_new = read_input2(args.dataset_name)
         n_users = max(np.max(friendship_old), np.max(friendship_new))
         embs = embs[:n_users]
-        import pdb
-        pdb.set_trace()
-
         friendship_pred_ori(embs, friendship_old, friendship_new)
 
 """
