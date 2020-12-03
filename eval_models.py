@@ -17,7 +17,10 @@ def parse_args2():
 def read_emb(path, model):
     embs = None
     if model == "node2vec" or model == "deepwalk" or model == "line":
-        file = open(path, 'r', encoding='utf-8')
+        try:
+            file = open(path, 'r', encoding='utf-8')
+        except:
+            file = open(path[:-1], 'r', encoding='utf-8')
         count = 0
         embs = []
         for line in file:
@@ -138,10 +141,9 @@ if __name__ == "__main__":
             max_node = selected_checkins.max()
             if args.POI:
                 n_trains = int(0.8 * len(selected_checkins))
-                selected_checkins = selected_checkins[:n_trains]
                 sorted_time = np.argsort(selected_checkins[:, 1])
                 train_indices = sorted_time[:n_trains]
-                test_indices = np.array([ele for ele in range(len(selected_checkins)) if ele not in train_indices])
+                test_indices = sorted_time[n_trains:]
                 train_checkins = selected_checkins[train_indices]
                 test_checkins = selected_checkins[test_indices]
 
