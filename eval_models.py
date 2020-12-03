@@ -131,8 +131,8 @@ if __name__ == "__main__":
     args = parse_args2()
     print(args)
     model = args.model 
+    embs = read_emb(args.emb_path, args.model)
     if args.POI:
-        embs = read_emb(args.emb_path, args.model)
         friendship, selected_checkins = read_input(args.dataset_name)
         friendship = friendship.astype(int)
         if model.lower() != "dhne":
@@ -141,11 +141,10 @@ if __name__ == "__main__":
             max_node = selected_checkins.max()
             if args.POI:
                 n_trains = int(0.8 * len(selected_checkins))
-                sorted_time = np.argsort(selected_checkins[:, 1])
+                sorted_time = np.argsort(selected_checkins[:n_trains, 1])
                 train_indices = sorted_time[:n_trains]
-                test_indices = sorted_time[n_trains:]
                 train_checkins = selected_checkins[train_indices]
-                test_checkins = selected_checkins[test_indices]
+                test_checkins = selected_checkins[n_trains:]
 
             embs_user = embs[:o1]
             embs_time = embs[o1:o2]
@@ -160,6 +159,8 @@ if __name__ == "__main__":
         friendship_old, friendship_new = read_input(args.dataset_name)
         n_users = max(np.max(friendship_old), np.max(friendship_new))
         embs = embs[:n_users]
+        import pdb
+        pdb.set_trace()
 
         friendship_pred_ori(embs, friendship_old, friendship_new)
 
