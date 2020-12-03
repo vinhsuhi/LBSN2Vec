@@ -49,7 +49,7 @@ def friendship_pred_ori(embs, friendship_old, friendship_new, k=10):
     ########################################################################
 
     ###################### evaluate #########################
-    for kk in [10, 20, 50, 100, 200, 500, 1000, 2000, 5000]:
+    for kk in [10, 20, 50, 100, 200]:
         precision_k, recall_k = compute_precision_recall(friend_dict, arg_sorted_simi, kk)
         f1_k = 2 * precision_k * recall_k / (precision_k + recall_k)
 
