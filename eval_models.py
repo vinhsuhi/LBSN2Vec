@@ -141,10 +141,11 @@ if __name__ == "__main__":
             max_node = selected_checkins.max()
             if args.POI:
                 n_trains = int(0.8 * len(selected_checkins))
-                sorted_time = np.argsort(selected_checkins[:n_trains, 1])
+                sorted_time = np.argsort(selected_checkins[:, 1])
                 train_indices = sorted_time[:n_trains]
+                test_indices = sorted_time[n_trains:]
                 train_checkins = selected_checkins[train_indices]
-                test_checkins = selected_checkins[n_trains:]
+                test_checkins = selected_checkins[test_indices]
 
             embs_user = embs[:o1]
             embs_time = embs[o1:o2]
