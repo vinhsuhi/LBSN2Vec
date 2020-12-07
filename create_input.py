@@ -180,17 +180,17 @@ def preprocess_selected_checkins(selected_checkins):
         time = selected_checkins[i, 1]
         loc = selected_checkins[i, 2]
         if user not in train_unique_user and user not in appent_users:
-            additional_checkins.append([user, new_time, new_location])
+            additional_checkins.append([all_user_id2dix[user], new_time, new_location])
             new_time += 1
             new_location += 1
             appent_users.add(user)
         if time not in train_unique_time and time not in appent_times:
-            additional_checkins.append([new_user, time, new_location])
+            additional_checkins.append([new_user, all_time_id2dix[time], new_location])
             new_user += 1
             new_location += 1
             appent_times.add(time)
         if loc not in train_unique_loc and loc not in appent_locs:
-            additional_checkins.append([new_user, new_time, loc]) 
+            additional_checkins.append([new_user, new_time, all_loc_id2dix[loc]]) 
             new_user += 1
             new_time += 1
             appent_locs.add(loc) 
