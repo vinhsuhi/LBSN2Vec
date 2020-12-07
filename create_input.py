@@ -176,9 +176,9 @@ def preprocess_selected_checkins(selected_checkins):
     appent_times = set()
     appent_locs = set()
     for i in range(len(selected_checkins)):
-        user = train_checkins[i, 0]
-        time = train_checkins[i, 1]
-        loc = train_checkins[i, 2]
+        user = selected_checkins[i, 0]
+        time = selected_checkins[i, 1]
+        loc = selected_checkins[i, 2]
         if user not in train_unique_user and user not in appent_users:
             additional_checkins.append([user, new_time, new_location])
             new_time += 1
