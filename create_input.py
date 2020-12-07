@@ -157,15 +157,6 @@ def preprocess_selected_checkins(selected_checkins):
     all_loc_id2dix = {initial_unique_loc[i]: i for i in range(len(initial_unique_loc))}
     all_user_id2dix = {initial_unique_user[i]: i for i in range(len(initial_unique_user))}
 
-    for i in range(len(train_checkins)):
-        train_checkins[i, 0] = all_user_id2dix[train_checkins[i, 0]]
-        train_checkins[i, 1] = all_time_id2dix[train_checkins[i, 1]]
-        train_checkins[i, 2] = all_loc_id2dix[train_checkins[i, 2]]
-    
-    for i in range(len(test_checkins)):
-        test_checkins[i, 0] = all_user_id2dix[test_checkins[i, 0]]
-        test_checkins[i, 1] = all_time_id2dix[test_checkins[i, 1]]
-        test_checkins[i, 2] = all_loc_id2dix[test_checkins[i, 2]]
     
     new_location = len(all_loc_id2dix)
     new_time = len(all_time_id2dix)
@@ -195,8 +186,19 @@ def preprocess_selected_checkins(selected_checkins):
             new_time += 1
             appent_locs.add(loc) 
 
-    additional_checkins = np.array(additional_checkins)
+
+    for i in range(len(train_checkins)):
+        train_checkins[i, 0] = all_user_id2dix[train_checkins[i, 0]]
+        train_checkins[i, 1] = all_time_id2dix[train_checkins[i, 1]]
+        train_checkins[i, 2] = all_loc_id2dix[train_checkins[i, 2]]
+    
+    for i in range(len(test_checkins)):
+        test_checkins[i, 0] = all_user_id2dix[test_checkins[i, 0]]
+        test_checkins[i, 1] = all_time_id2dix[test_checkins[i, 1]]
+        test_checkins[i, 2] = all_loc_id2dix[test_checkins[i, 2]]
+
     if len(additional_checkins) > 0:
+        additional_checkins = np.array(additional_checkins)
         train_checkins = np.concatenate((train_checkins, additional_checkins), axis=0)
     
     return train_checkins, test_checkins
