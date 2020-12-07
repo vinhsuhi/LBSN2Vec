@@ -30,7 +30,12 @@ def read_emb(path, model):
             data_line = line.split()
             embs.append([float(ele) for ele in data_line])
         embs = np.array(embs)
-        embs = embs[np.argsort(embs[:, 0])][:, 1:]
+        new_embs = np.zeros((int(np.max(embs[:, 0])) + 1, embs.shape[1] - 1))
+        for i in range(len(embs)):
+            new_embs[int(embs[i, 0])] = embs[i, 1:]
+        
+        #embs = embs[np.argsort(embs[:, 0])][:, 1:]
+        embs = new_embs
     elif model == "dhne":
         embs = np.load(path, allow_pickle=True)
         if not args.POI:
@@ -184,7 +189,7 @@ if __name__ == "__main__":
                 n_trains = int(0.8 * len(selected_checkins))
                 sorted_time = np.argsort(selected_checkins[:, 1])
                 train_indices = sorted_time[:n_trains]
-                test_indices = sorted_time[n_trains: -count_time]
+                test_indices = sorted_time[n_trains:]
                 train_checkins = selected_checkins[train_indices]
                 test_checkins = selected_checkins[test_indices]
 
@@ -192,11 +197,15 @@ if __name__ == "__main__":
             embs_time = embs[o1:o2]
             embs_venue = embs[o2:o3]
             test_checkins[:, 2] -= o2
+            print("x-"*50)
             print("Max checkin index: {}, min checkin index: {}".format(np.max(test_checkins[:, 2]), np.min(test_checkins[:, 2])))
             print("Len embs_venue: {}".format(len(embs_venue)))
             print("Number of adding checkins: {}".format(count_time))
-            exit()
+            print("Embedding shape: {}".format(embs.shape))
+            print("Max node: {}".format(max_node))
+            print("x-"*50)
             location_prediction(test_checkins, embs, embs_venue, k=10)
+
         else:
             friendship, selected_checkins = read_input(args.dataset_name)
             friendship = friendship.astype(int)
