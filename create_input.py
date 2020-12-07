@@ -261,6 +261,9 @@ if __name__ == "__main__":
             # selected_checkins = selected_checkins[:n_trains]
             sorted_time = np.argsort(selected_checkins[:, 1])
             train_indices = sorted_time[:n_trains]
+            test_indices = sorted_time[n_trains:]
+            test_checkins = selected_checkins[test_indices]
+            print(test_checkins)
             selected_checkins = selected_checkins[train_indices]
         
 

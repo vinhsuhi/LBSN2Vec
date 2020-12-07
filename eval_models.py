@@ -195,6 +195,7 @@ if __name__ == "__main__":
                 test_indices = sorted_time[n_trains:]
                 train_checkins = selected_checkins[train_indices]
                 test_checkins = selected_checkins[test_indices]
+                print(test_checkins)
 
             embs_user = embs[:o1]
             embs_time = embs[o1:o2]
