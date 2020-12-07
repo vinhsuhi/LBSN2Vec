@@ -69,7 +69,6 @@ def save_deepwalk(edges, selected_checkins, dataset_name, max_node):
     print("Done!")
 
 
-
 def save_line(edges, selected_checkins, dataset_name, max_node):
     out_dir = "line_graph"
     if not os.path.exists(out_dir):
@@ -118,56 +117,90 @@ def save_hebe(edges, dataset_name):
 
 
 def save_dhne(selected_checkins, dataset_name):
-    max_each = np.max(selected_checkins, axis=0)
     out_dir = "dhne_graph"
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
     if not os.path.exists("{}/{}".format(out_dir, dataset_name)):
         os.mkdir("{}/{}".format(out_dir, dataset_name))
+    if not os.path.exists("{}_POI".format(out_dir)):
+        os.mkdir("{}_POI".format(out_dir))
+    if not os.path.exists("{}_POI/{}".format(out_dir, dataset_name)):
+        os.mkdir("{}_POI/{}".format(out_dir, dataset_name))
     num_types = np.array([len(np.unique(selected_checkins[:, i])) for i in range(selected_checkins.shape[1])])
-    np.savez('{}/{}/train_data.npz'.format(out_dir, dataset_name), train_data=selected_checkins, nums_type=num_types)
-
     if args.POI:
-        selected_checkins_train = selected_checkins[:int(0.8*len(selected_checkins))]
-        new_train_data = []
-        for i in range(len(max_each)):
-            for j in range(max_each[i]):
-                if j not in selected_checkins_train:
-                    if j not in np.array(new_train_data):
-                        new_train_data.append([j, j, j])
-        new_train_data = np.array(new_train_data)
-        selected_checkins = np.concatenate((selected_checkins_train, new_train_data), axis=0)
         np.savez('{}_POI/{}/train_data.npz'.format(out_dir, dataset_name), train_data=selected_checkins, nums_type=num_types)
+    else:
+        np.savez('{}/{}/train_data.npz'.format(out_dir, dataset_name), train_data=selected_checkins, nums_type=num_types)
     print("Done!")
     pass
 
 
 def preprocess_selected_checkins(selected_checkins):
-    selected_checkins = np.delete(selected_checkins, 1, 1)
-    selected_checkins = selected_checkins[np.argsort(selected_checkins[:, 0])]
-    unique_location = np.unique(selected_checkins[:, 1])
-    unique_cate = np.unique(selected_checkins[:, 2])
-    location_id2idx = {unique_location[i]: i for i in range(len(unique_location))}
-    cate_id2idx = {unique_cate[i]: i for i in range(len(unique_cate))}
-    for i in range(len(selected_checkins)):
-        selected_checkins[i, 0] = selected_checkins[i, 0] - 1
-        selected_checkins[i, 1] = location_id2idx[selected_checkins[i, 1]]
-        selected_checkins[i, 2] = cate_id2idx[selected_checkins[i, 2]]
-    new_location = len(unique_location)
-    new_cate = len(cate_id2idx)
-    num_user = np.max(selected_checkins[:, 0]) + 1
-    unique_user = np.unique(selected_checkins[:, 0]).tolist()
+    selected_checkins = np.delete(selected_checkins, 3, 1) # delete time
+    selected_checkins = selected_checkins[np.argsort(selected_checkins[:, 1])]
+    if args.POI:
+        train_checkins = selected_checkins[:int(0.8 * len(selected_checkins))]
+        test_checkins = selected_checkins[int(0.8 * len(selected_checkins)):]
+    # unique_time = np.unique(selected_checkins[:, 1])
+    else:
+        train_checkins = selected_checkins
+        test_checkins = selected_checkins
+
+    initial_unique_time = np.unique(selected_checkins[:, 1])
+    train_unique_time = np.unique(train_checkins[:, 1])
+    initial_unique_user = np.unique(selected_checkins[:, 0])
+    train_unique_user = np.unique(train_checkins[:, 0])
+    initial_unique_loc = np.unique(selected_checkins[:, 2])
+    train_unique_loc = np.unique(train_checkins[:, 2])
+
+    all_time_id2dix = {initial_unique_time[i]: i for i in range(len(initial_unique_time))}
+    all_loc_id2dix = {initial_unique_loc[i]: i for i in range(len(initial_unique_loc))}
+    all_user_id2dix = {initial_unique_user[i]: i for i in range(len(initial_unique_user))}
+
+    for i in range(len(train_checkins)):
+        train_checkins[i, 0] = all_user_id2dix[train_checkins[i, 0]]
+        train_checkins[i, 1] = all_time_id2dix[train_checkins[i, 1]]
+        train_checkins[i, 2] = all_loc_id2dix[train_checkins[i, 2]]
+    
+    for i in range(len(test_checkins)):
+        test_checkins[i, 0] = all_user_id2dix[test_checkins[i, 0]]
+        test_checkins[i, 1] = all_time_id2dix[test_checkins[i, 1]]
+        test_checkins[i, 2] = all_loc_id2dix[test_checkins[i, 2]]
+    
+    new_location = len(all_loc_id2dix)
+    new_time = len(all_time_id2dix)
+    new_user = len(all_user_id2dix)
+
     additional_checkins = []
-    for i in range(num_user):
-        if i not in unique_user:
-            additional_checkins.append([i, new_location, new_cate])
+    appent_users = set()
+    appent_times = set()
+    appent_locs = set()
+    for i in range(len(selected_checkins)):
+        user = train_checkins[i, 0]
+        time = train_checkins[i, 1]
+        loc = train_checkins[i, 2]
+        if user not in train_unique_user and user not in appent_users:
+            additional_checkins.append([user, new_time, new_location])
+            new_time += 1
             new_location += 1
-            new_cate += 1
+            appent_users.add(user)
+        if time not in train_unique_time and time not in appent_times:
+            additional_checkins.append([new_user, time, new_location])
+            new_user += 1
+            new_location += 1
+            appent_times.add(time)
+        if loc not in train_unique_loc and loc not in appent_locs:
+            additional_checkins.append([new_user, new_time, loc]) 
+            new_user += 1
+            new_time += 1
+            appent_locs.add(loc) 
+
     additional_checkins = np.array(additional_checkins)
     if len(additional_checkins) > 0:
-        selected_checkins = np.concatenate((selected_checkins, additional_checkins), axis=0)
+        train_checkins = np.concatenate((train_checkins, additional_checkins), axis=0)
     
-    return selected_checkins
+    return train_checkins, test_checkins
+
 
 def preprocess_selected_checkins2(selected_checkins):
     """
@@ -194,6 +227,7 @@ def preprocess_selected_checkins2(selected_checkins):
     num_user = np.max(selected_checkins[:, 0]) + 1
     unique_user = np.unique(selected_checkins[:, 0]).tolist()
     additional_checkins = []
+    
     for i in range(num_user):
         if i not in unique_user:
             additional_checkins.append([i,new_time, new_location, new_cate])
@@ -201,6 +235,7 @@ def preprocess_selected_checkins2(selected_checkins):
             new_cate += 1
             new_time += 1
     additional_checkins = np.array(additional_checkins)
+    print("Num add: {}".format(len(additional_checkins)))
     if len(additional_checkins) > 0:
         selected_checkins = np.concatenate((selected_checkins, additional_checkins), axis=0)
     
@@ -236,8 +271,8 @@ if __name__ == "__main__":
     elif model.lower() == "hebe":
         save_hebe(friendship, args.dataset_name)
     elif model.lower() == "dhne":
-        selected_checkins = preprocess_selected_checkins(selected_checkins)
-        save_dhne(selected_checkins, args.dataset_name)
+        train_checkins, test_checkins = preprocess_selected_checkins(selected_checkins)
+        save_dhne(train_checkins, args.dataset_name)
     else:
         print("Have not implement yet...")
 

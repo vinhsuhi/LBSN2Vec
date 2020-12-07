@@ -214,6 +214,14 @@ if __name__ == "__main__":
             embs_time = embs[o1:o2]
             embs_venue = embs[o2:o3]
             test_checkins[:, 2] -= o2
+            print("DHNE")
+            print("x-"*100)
+            print("Test checkins index Max: {}, Min: {}".format(np.max(test_checkins), np.min(test_checkins)))
+            print("Train checkins index Max: {}, Min: {}".format(np.max(train_checkins), np.min(train_checkins)))
+            print("Num test: {}".format(len(test_checkins)))
+            print("Num train: {}".format(len(train_checkins)))
+            print("Embedding shape: {}".format(embs.shape))
+            print("x-"*100)
             location_prediction(test_checkins, embs, embs_venue, k=10)
     else:
         # train_checkins, test_checkins = read_input_POI(args.path)
