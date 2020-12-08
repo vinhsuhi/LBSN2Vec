@@ -30,9 +30,13 @@ def read_emb(path, model):
             data_line = line.split()
             embs.append([float(ele) for ele in data_line])
         embs = np.array(embs)
-        new_embs = np.zeros((int(np.max(embs[:, 0])) + 1, embs.shape[1] - 1))
+        new_embs = np.zeros((int(np.max(embs[:, 0])), embs.shape[1] - 1))
         for i in range(len(embs)):
-            new_embs[int(embs[i, 0])] = embs[i, 1:]
+            new_embs[int(embs[i, 0]) - 1] = embs[i, 1:]
+        for i in range(len(new_embs)):
+            if (new_embs[i] ** 2).sum() == 0:
+                new_embs[i] = new_embs[1]
+            
         
         #embs = embs[np.argsort(embs[:, 0])][:, 1:]
         embs = new_embs
@@ -64,118 +68,6 @@ def read_input(path):
     return friendship_old, selected_checkins
 
 
-
-def preprocess_selected_checkins(selected_checkins):
-    selected_checkins = np.delete(selected_checkins, 3, 1) # delete time
-    selected_checkins = selected_checkins[np.argsort(selected_checkins[:, 1])]
-    if args.POI:
-        train_checkins = selected_checkins[:int(0.8 * len(selected_checkins))]
-        test_checkins = selected_checkins[int(0.8 * len(selected_checkins)):]
-    # unique_time = np.unique(selected_checkins[:, 1])
-    else:
-        train_checkins = selected_checkins
-        test_checkins = selected_checkins
-
-    initial_unique_time = np.unique(selected_checkins[:, 1])
-    train_unique_time = np.unique(train_checkins[:, 1])
-    initial_unique_user = np.unique(selected_checkins[:, 0])
-    train_unique_user = np.unique(train_checkins[:, 0])
-    initial_unique_loc = np.unique(selected_checkins[:, 2])
-    train_unique_loc = np.unique(train_checkins[:, 2])
-
-    all_time_id2dix = {initial_unique_time[i]: i for i in range(len(initial_unique_time))}
-    all_loc_id2dix = {initial_unique_loc[i]: i for i in range(len(initial_unique_loc))}
-    all_user_id2dix = {initial_unique_user[i]: i for i in range(len(initial_unique_user))}
-
-    
-    new_location = len(all_loc_id2dix)
-    new_time = len(all_time_id2dix)
-    new_user = len(all_user_id2dix)
-
-    additional_checkins = []
-    appent_users = set()
-    appent_times = set()
-    appent_locs = set()
-    for i in range(len(selected_checkins)):
-        user = selected_checkins[i, 0]
-        time = selected_checkins[i, 1]
-        loc = selected_checkins[i, 2]
-        if user not in train_unique_user and user not in appent_users:
-            additional_checkins.append([all_user_id2dix[user], new_time, new_location])
-            new_time += 1
-            new_location += 1
-            appent_users.add(user)
-        if time not in train_unique_time and time not in appent_times:
-            additional_checkins.append([new_user, all_time_id2dix[time], new_location])
-            new_user += 1
-            new_location += 1
-            appent_times.add(time)
-        if loc not in train_unique_loc and loc not in appent_locs:
-            additional_checkins.append([new_user, new_time, all_loc_id2dix[loc]]) 
-            new_user += 1
-            new_time += 1
-            appent_locs.add(loc) 
-
-
-    for i in range(len(train_checkins)):
-        train_checkins[i, 0] = all_user_id2dix[train_checkins[i, 0]]
-        train_checkins[i, 1] = all_time_id2dix[train_checkins[i, 1]]
-        train_checkins[i, 2] = all_loc_id2dix[train_checkins[i, 2]]
-    
-    for i in range(len(test_checkins)):
-        test_checkins[i, 0] = all_user_id2dix[test_checkins[i, 0]]
-        test_checkins[i, 1] = all_time_id2dix[test_checkins[i, 1]]
-        test_checkins[i, 2] = all_loc_id2dix[test_checkins[i, 2]]
-
-    if len(additional_checkins) > 0:
-        additional_checkins = np.array(additional_checkins)
-        train_checkins = np.concatenate((train_checkins, additional_checkins), axis=0)
-    
-    return train_checkins, test_checkins
-
-
-
-def preprocess_selected_checkins2(selected_checkins):
-    """
-    What does this function do???
-    1. sort selected checkins according to user ID
-    2. renumberring phase 1
-    """
-    # selected_checkins = np.delete(selected_checkins, 1, 1)
-    selected_checkins = selected_checkins[np.argsort(selected_checkins[:, 0])]
-    unique_location = np.unique(selected_checkins[:, 2])
-    unique_cate = np.unique(selected_checkins[:, 3])
-    unique_time = np.unique(selected_checkins[:, 1])
-    location_id2idx = {unique_location[i]: i for i in range(len(unique_location))}
-    cate_id2idx = {unique_cate[i]: i for i in range(len(unique_cate))}
-    time_id2idx = {unique_time[i]: i for i in range(len(unique_time))}
-    for i in range(len(selected_checkins)):
-        selected_checkins[i, 0] = selected_checkins[i, 0] - 1
-        selected_checkins[i, 1] = time_id2idx[selected_checkins[i, 1]]
-        selected_checkins[i, 2] = location_id2idx[selected_checkins[i, 2]]
-        selected_checkins[i, 3] = cate_id2idx[selected_checkins[i, 3]]
-    new_location = len(unique_location)
-    new_cate = len(cate_id2idx)
-    new_time = len(unique_time)
-    num_user = np.max(selected_checkins[:, 0]) + 1
-    unique_user = np.unique(selected_checkins[:, 0]).tolist()
-    additional_checkins = []
-    count_time = 0
-    for i in range(num_user):
-        if i not in unique_user:
-            additional_checkins.append([i,new_time, new_location, new_cate])
-            new_location += 1
-            new_cate += 1
-            new_time += 1
-            count_time += 1
-    additional_checkins = np.array(additional_checkins)
-    if len(additional_checkins) > 0:
-        selected_checkins = np.concatenate((selected_checkins, additional_checkins), axis=0)
-    
-    return selected_checkins, count_time
-
-
-
 if __name__ == "__main__":
     args = parse_args2()
     print(args)
@@ -185,9 +77,7 @@ if __name__ == "__main__":
         friendship, selected_checkins = read_input(args.dataset_name)
         friendship = friendship.astype(int)
         if model.lower() != "dhne":
-            selected_checkins, count_time = preprocess_selected_checkins2(selected_checkins)
             selected_checkins, o1, o2, o3, nt, nu = renumber_checkins(selected_checkins)
-            max_node = selected_checkins.max()
             if args.POI:
                 n_trains = int(0.8 * len(selected_checkins))
                 sorted_time = np.argsort(selected_checkins[:, 1])
@@ -197,35 +87,41 @@ if __name__ == "__main__":
                 test_checkins = selected_checkins[test_indices]
                 print(test_checkins)
 
+            max_test_checkins = np.max(test_checkins)
+            if max_test_checkins > embs.shape[0]:
+                print("Max test checkins: {}, emb shape: {}".format(max_test_checkins, embs.shape))
+                to_add = embs[0: max_test_checkins - embs.shape[0]].reshape(-1, embs.shape[1])
+                embs = np.concatenate((embs, to_add), axis=0)
+
             embs_user = embs[:o1]
             embs_time = embs[o1:o2]
             embs_venue = embs[o2:o3]
-            test_checkins[:, 2] -= o2
+            test_checkins[:, 2] -= (o2 + 1)
+            test_checkins[:, 0] -= 1
             print("x-"*50)
-            print("Max checkin index: {}, min checkin index: {}".format(np.max(test_checkins[:, 2]), np.min(test_checkins[:, 2])))
             print("Len embs_venue: {}".format(len(embs_venue)))
-            print("Number of adding checkins: {}".format(count_time))
-            print("Embedding shape: {}".format(embs.shape))
-            print("Max node: {}".format(max_node))
             print("x-"*50)
             location_prediction(test_checkins, embs, embs_venue, k=10)
 
         else:
             friendship, selected_checkins = read_input(args.dataset_name)
             friendship = friendship.astype(int)
-            train_checkins, test_checkins = preprocess_selected_checkins(selected_checkins)
+            selected_checkins = np.delete(train_checkins, 3, 1)
+            unique_users = np.unique(selected_checkins[:, 0])
+            unique_times = np.unique(selected_checkins[:, 1])
+            unique_locs = np.unique(selected_checkins[:, 2])
+            user_id2idx = {unique_users[i]: i for i in range(len(unique_users))}
+            time_id2idx = {unique_times[i]: i for i in range(len(unique_times))}
+            loc_id2idx = {unique_locs[i]: i for i in range(len(unique_locs))}
+            for i in range(len(selected_checkins)):
+                selected_checkins[i, 0] = user_id2idx[selected_checkins[i, 0]]
+                selected_checkins[i, 1] = time_id2idx[selected_checkins[i, 1]]
+                selected_checkins[i, 2] = loc_id2idx[selected_checkins[i, 2]]
+
             embs_user = embs[:o1]
             embs_time = embs[o1:o2]
             embs_venue = embs[o2:o3]
             test_checkins[:, 2] -= o2
-            print("DHNE")
-            print("x-"*100)
-            print("Test checkins index Max: {}, Min: {}".format(np.max(test_checkins), np.min(test_checkins)))
-            print("Train checkins index Max: {}, Min: {}".format(np.max(train_checkins), np.min(train_checkins)))
-            print("Num test: {}".format(len(test_checkins)))
-            print("Num train: {}".format(len(train_checkins)))
-            print("Embedding shape: {}".format(embs.shape))
-            print("x-"*100)
             location_prediction(test_checkins, embs, embs_venue, k=10)
     else:
         # train_checkins, test_checkins = read_input_POI(args.path)

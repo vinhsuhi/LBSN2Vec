@@ -25,15 +25,17 @@ def read_input(path):
     return friendship_old, selected_checkins
 
 
-def save_deepwalk(edges, selected_checkins, dataset_name, max_node):
+def save_deepwalk(edges, selected_checkins, dataset_name):
+    """
+    Edge is friendship
+    """
     out_dir = "edgelist_graph"
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
-    # np.savetxt("{}/{}.edgeslist".format(out_dir, model_name), edges, delimiter='\t')
+    
     with open("{}/{}.edgelist".format(out_dir, dataset_name), 'w', encoding='utf-8') as file:
         for i in range(edges.shape[0]):
             file.write("{}\t{}\n".format(int(edges[i, 0]), int(edges[i, 1])))
-    file.close()
 
     print("Creating Mobility Graph ...")
     M_name = "{}/{}_M.edgelist".format(out_dir, dataset_name)
@@ -45,10 +47,6 @@ def save_deepwalk(edges, selected_checkins, dataset_name, max_node):
             for j in range(selected_checkins.shape[1] - 1):
                 for k in range(j+1, selected_checkins.shape[1]):
                     file.write("{}\t{}\n".format(int(selected_checkins[i, j]), int(selected_checkins[i, k])))
-        for i in range(max_node):
-            if i not in selected_checkins:
-                file.write("{}\t{}\n".format(i, i))
-    file.close()
 
     print("Creating Mobility and Friend Graph...")
     SM_name = "{}/{}_SM.edgelist".format(out_dir, dataset_name)
@@ -61,15 +59,10 @@ def save_deepwalk(edges, selected_checkins, dataset_name, max_node):
                     file.write("{}\t{}\n".format(int(selected_checkins[i, j]), int(selected_checkins[i, k])))
         for i in range(edges.shape[0]):
             file.write("{}\t{}\n".format(int(edges[i, 0]), int(edges[i, 1])))
-        for i in range(max_node):
-            if i not in selected_checkins:
-                if i not in edges:
-                    file.write("{}\t{}\n".format(i, i))
-    file.close()
     print("Done!")
 
 
-def save_line(edges, selected_checkins, dataset_name, max_node):
+def save_line(edges, selected_checkins, dataset_name):
     out_dir = "line_graph"
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
@@ -127,81 +120,13 @@ def save_dhne(selected_checkins, dataset_name):
     if not os.path.exists("{}_POI/{}".format(out_dir, dataset_name)):
         os.mkdir("{}_POI/{}".format(out_dir, dataset_name))
     num_types = np.array([len(np.unique(selected_checkins[:, i])) for i in range(selected_checkins.shape[1])])
+    
     if args.POI:
         np.savez('{}_POI/{}/train_data.npz'.format(out_dir, dataset_name), train_data=selected_checkins, nums_type=num_types)
     else:
         np.savez('{}/{}/train_data.npz'.format(out_dir, dataset_name), train_data=selected_checkins, nums_type=num_types)
     print("Done!")
     pass
-
-
-def preprocess_selected_checkins(selected_checkins):
-    selected_checkins = np.delete(selected_checkins, 3, 1) # delete time
-    selected_checkins = selected_checkins[np.argsort(selected_checkins[:, 1])]
-    if args.POI:
-        train_checkins = selected_checkins[:int(0.8 * len(selected_checkins))]
-        test_checkins = selected_checkins[int(0.8 * len(selected_checkins)):]
-    # unique_time = np.unique(selected_checkins[:, 1])
-    else:
-        train_checkins = selected_checkins
-        test_checkins = selected_checkins
-
-    initial_unique_time = np.unique(selected_checkins[:, 1])
-    train_unique_time = np.unique(train_checkins[:, 1])
-    initial_unique_user = np.unique(selected_checkins[:, 0])
-    train_unique_user = np.unique(train_checkins[:, 0])
-    initial_unique_loc = np.unique(selected_checkins[:, 2])
-    train_unique_loc = np.unique(train_checkins[:, 2])
-
-    all_time_id2dix = {initial_unique_time[i]: i for i in range(len(initial_unique_time))}
-    all_loc_id2dix = {initial_unique_loc[i]: i for i in range(len(initial_unique_loc))}
-    all_user_id2dix = {initial_unique_user[i]: i for i in range(len(initial_unique_user))}
-
-    
-    new_location = len(all_loc_id2dix)
-    new_time = len(all_time_id2dix)
-    new_user = len(all_user_id2dix)
-
-    additional_checkins = []
-    appent_users = set()
-    appent_times = set()
-    appent_locs = set()
-    for i in range(len(selected_checkins)):
-        user = selected_checkins[i, 0]
-        time = selected_checkins[i, 1]
-        loc = selected_checkins[i, 2]
-        if user not in train_unique_user and user not in appent_users:
-            additional_checkins.append([all_user_id2dix[user], new_time, new_location])
-            new_time += 1
-            new_location += 1
-            appent_users.add(user)
-        if time not in train_unique_time and time not in appent_times:
-            additional_checkins.append([new_user, all_time_id2dix[time], new_location])
-            new_user += 1
-            new_location += 1
-            appent_times.add(time)
-        if loc not in train_unique_loc and loc not in appent_locs:
-            additional_checkins.append([new_user, new_time, all_loc_id2dix[loc]]) 
-            new_user += 1
-            new_time += 1
-            appent_locs.add(loc) 
-
-
-    for i in range(len(train_checkins)):
-        train_checkins[i, 0] = all_user_id2dix[train_checkins[i, 0]]
-        train_checkins[i, 1] = all_time_id2dix[train_checkins[i, 1]]
-        train_checkins[i, 2] = all_loc_id2dix[train_checkins[i, 2]]
-    
-    for i in range(len(test_checkins)):
-        test_checkins[i, 0] = all_user_id2dix[test_checkins[i, 0]]
-        test_checkins[i, 1] = all_time_id2dix[test_checkins[i, 1]]
-        test_checkins[i, 2] = all_loc_id2dix[test_checkins[i, 2]]
-
-    if len(additional_checkins) > 0:
-        additional_checkins = np.array(additional_checkins)
-        train_checkins = np.concatenate((train_checkins, additional_checkins), axis=0)
-    
-    return train_checkins, test_checkins
 
 
 def preprocess_selected_checkins2(selected_checkins):
@@ -240,10 +165,7 @@ def preprocess_selected_checkins2(selected_checkins):
     print("Num add: {}".format(len(additional_checkins)))
     if len(additional_checkins) > 0:
         selected_checkins = np.concatenate((selected_checkins, additional_checkins), axis=0)
-    
     return selected_checkins
-
-
 
 if __name__ == "__main__":
     args = parse_args()
@@ -253,31 +175,43 @@ if __name__ == "__main__":
     friendship, selected_checkins = read_input(args.dataset_name)
     friendship = friendship.astype(int)
     if model.lower() != "dhne":
-        selected_checkins = preprocess_selected_checkins2(selected_checkins)
-        selected_checkins, o1, o2, o3, nt, nu = renumber_checkins(selected_checkins)
-        max_node = selected_checkins.max()
+        selected_checkins, o1, o2, o3, nt, nu = renumber_checkins(selected_checkins) # from 1 to the end
         if args.POI:
             n_trains = int(0.8 * len(selected_checkins))
-            # selected_checkins = selected_checkins[:n_trains]
             sorted_time = np.argsort(selected_checkins[:, 1])
             train_indices = sorted_time[:n_trains]
             test_indices = sorted_time[n_trains:]
             test_checkins = selected_checkins[test_indices]
-            print(test_checkins)
-            selected_checkins = selected_checkins[train_indices]
+            train_checkins = selected_checkins[train_indices]
+            """
+            OK! Now we've got all the material we need
+            """
+        else:
+            train_checkins = selected_checkins
         
-
+    print(train_checkins)
     if model.lower() == "deepwalk":
-        save_deepwalk(friendship, selected_checkins, args.dataset_name, max_node)
+        save_deepwalk(friendship, train_checkins, args.dataset_name)
     elif model.lower() == "node2vec":
-        save_deepwalk(friendship, selected_checkins, args.dataset_name, max_node)
+        save_deepwalk(friendship, train_checkins, args.dataset_name)
     elif model.lower() == "line":
-        save_line(friendship, selected_checkins, args.dataset_name, max_node)
+        save_line(friendship, train_checkins, args.dataset_name)
     elif model.lower() == "hebe":
         save_hebe(friendship, args.dataset_name)
     elif model.lower() == "dhne":
-        train_checkins, test_checkins = preprocess_selected_checkins(selected_checkins)
-        save_dhne(train_checkins, args.dataset_name)
+        # train_checkins, test_checkins = preprocess_selected_checkins(train_checkins)
+        selected_checkins = np.delete(train_checkins, 3, 1)
+        unique_users = np.unique(selected_checkins[:, 0])
+        unique_times = np.unique(selected_checkins[:, 1])
+        unique_locs = np.unique(selected_checkins[:, 2])
+        user_id2idx = {unique_users[i]: i for i in range(len(unique_users))}
+        time_id2idx = {unique_times[i]: i for i in range(len(unique_times))}
+        loc_id2idx = {unique_locs[i]: i for i in range(len(unique_locs))}
+        for i in range(len(selected_checkins)):
+            selected_checkins[i, 0] = user_id2idx[selected_checkins[i, 0]]
+            selected_checkins[i, 1] = time_id2idx[selected_checkins[i, 1]]
+            selected_checkins[i, 2] = loc_id2idx[selected_checkins[i, 2]]
+        save_dhne(selected_checkins, args.dataset_name)
     else:
         print("Have not implement yet...")
 
