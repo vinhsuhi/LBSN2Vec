@@ -18,7 +18,6 @@ def read_input(path):
     mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
     friendship_old = mat['friendship_old']
     selected_checkins = mat['selected_checkins']
-    friendship_old -= 1
     nodes = np.unique(friendship_old)
     print("Min: {}, Max: {}, Len: {}".format(np.min(nodes), np.max(nodes), len(nodes)))
     friendship_old = friendship_old[np.argsort(friendship_old[:, 0])]
@@ -170,10 +169,10 @@ def preprocess_selected_checkins2(selected_checkins):
 if __name__ == "__main__":
     args = parse_args()
     print(args)
-
     model = args.model 
     friendship, selected_checkins = read_input(args.dataset_name)
     friendship = friendship.astype(int)
+    
     if model.lower() != "dhne":
         selected_checkins, o1, o2, o3, nt, nu = renumber_checkins(selected_checkins) # from 1 to the end
         if args.POI:
@@ -189,7 +188,7 @@ if __name__ == "__main__":
         else:
             train_checkins = selected_checkins
         
-    print(train_checkins)
+    print(train_checkins, np.min(train_checkins), np.max(train_checkins), np.min(friendship), np.max(friendship), np.min(test_checkins), np.max(test_checkins))
     if model.lower() == "deepwalk":
         save_deepwalk(friendship, train_checkins, args.dataset_name)
     elif model.lower() == "node2vec":
