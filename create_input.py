@@ -173,7 +173,7 @@ if __name__ == "__main__":
     friendship, selected_checkins = read_input(args.dataset_name)
     friendship = friendship.astype(int)
     
-    if model.lower() != "dhne":
+    if model.lower() != "dhne" or 1:
         selected_checkins, o1, o2, o3, nt, nu = renumber_checkins(selected_checkins) # from 1 to the end
         if args.POI:
             n_trains = int(0.8 * len(selected_checkins))
