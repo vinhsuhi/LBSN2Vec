@@ -53,9 +53,10 @@ def friendship_pred_ori(embs, friendship_old, friendship_new, k=10):
         precision_k, recall_k = compute_precision_recall(friend_dict, arg_sorted_simi, kk)
         f1_k = 2 * precision_k * recall_k / (precision_k + recall_k)
 
-        print(f"Precision@{kk}: {precision_k:.3f}")
-        print(f"Recall@{kk}: {recall_k:.3f}")
-        print(f"F1@{kk}: {f1_k:.3f}")
+        # print(f"Precision@{kk}: {precision_k:.3f}")
+        # print(f"Recall@{kk}: {recall_k:.3f}")
+        print("{:.4f}|{:.4f}".format(precision_k, recall_k))
+        # print(f"F1@{kk}: {f1_k:.3f}")
     #########################################################
 
 
@@ -135,58 +136,14 @@ def friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10,
         recall = np.mean(recall)
         f1 = 2 * precision * recall / (precision + recall)
 
-        print(f"Precision@{kk}: {precision:.3f}")
-        print(f"Recall@{kk}: {recall:.3f}")
-        print(f"F1@{kk}: {f1:.3f}")
+        # print(f"Precision@{kk}: {precision:.3f}")
+        # print(f"Recall@{kk}: {recall:.3f}")
+        # print(f"F1@{kk}: {f1:.3f}")
+        print("{:.4f}|{:.4f}".format(precision, recall))
     
-    for kk in [10, 20, 50, 100, 200, 500, 1000, 2000, 5000]:
+    for kk in [10, 20, 50, 100, 200]:
         cal_precision_recall_k(kk)
         
-
-def friendship_linkprediction_with_sample(embs_user, friendship_old, friendship_new, k=10):
-    friendship_old_dict = {(x[0], x[1]): True for x in friendship_old}
-    friendship_new_dict = {(x[0], x[1]): True for x in friendship_new if (x[0], x[1]) not in friendship_old_dict 
-                            and (x[1], x[0]) not in friendship_old_dict
-                                #and x[0] in trained_user_ids and x[1] in trained_user_ids
-                        }
-    scores = embs_user.dot(embs_user.T)
-    scores = np.tril(scores, k=-1)# lower diagonal matrix
-    # scores[scores < 0.5] = 0
-    # scores[not_trained_user_ids, :] = 0
-    # scores[:, not_trained_user_ids] = 0
-    scores[friendship_old[:,0], friendship_old[:,1]] = 0 # evaluate only new friendship
-    scores[friendship_old[:,1], friendship_old[:,0]] = 0
-    # rank scores
-    inds = np.argwhere(scores > 0)
-    rank_list = np.zeros((inds.shape[0], 3))
-    rank_list[:, :2] = inds
-    rank_list[:,2] = scores[inds[:,0], inds[:, 1]]
-    rank_list = rank_list[np.argsort(-rank_list[:, 2])]
-
-    precisions = []
-    recalls = []
-    f1s = []
-
-    for i in range(10):
-        # select 1%
-        n_select = int(len(rank_list)*0.01)
-        selected_rank_list = rank_list[np.random.choice(len(rank_list), n_select)]
-        # select topk
-        selected_rank_list = selected_rank_list[:k]
-
-        n_relevants = 0
-        for src, trg, score in selected_rank_list:
-            if (src, trg) in friendship_new_dict or (trg, src) in friendship_new_dict:
-                n_relevants += 1
-        precision = n_relevants/k
-        recall = n_relevants/len(friendship_new_dict)
-    #     f1 = 2*precision*recall/(precision+recall)
-        precisions.append(precision)
-        recalls.append(recall)
-    #     f1s.append(f1)
-    print(f"Precision@{k}: {np.mean(precisions):.3f}")
-    print(f"Recall@{k}: {np.mean(recall):.3f}")
-    # print(f"F1@{k}: {np.mean(f1s):.3f}")
 
 
 def location_prediction(test_checkin, embs, poi_embs, k=10):
@@ -199,16 +156,62 @@ def location_prediction(test_checkin, embs, poi_embs, k=10):
     user_time_emb = embs[user_time] # n x 2 x d
     user_time_with_poi = np.dot(user_time_emb, poi_embs.T) # nx2x(np)
     user_time_with_poi = np.sum(user_time_with_poi, axis=1) # nxnp
-    argptt = np.argpartition(user_time_with_poi, -k, axis=1)[:, -k:] # nx10
-    correct_array = argptt - test_checkin[:, 2].reshape(-1, 1)
-    correct = np.count_nonzero(correct_array == 0)
+    # argptt = np.argpartition(user_time_with_poi, -k, axis=1)[:, -k:] # nx10
+    argptt = np.argsort(user_time_with_poi, axis=1)
+    
+    ranks = []
+    hit10s = 0
+    hit20s = 0
+    hit30s = 0
+    hit40s = 0
+    hit50s = 0
+
+    for i in range(argptt.shape[0]):
+        rank = argptt.shape[1]
+        for j in range(argptt.shape[1]):
+            if test_checkin[i, 2] == argptt[i,j]:
+                rank = j 
+                if rank < 10:
+                    hit10s += 1
+                    hit20s += 1
+                    hit30s += 1
+                    hit40s += 1
+                    hit50s += 1
+                elif rank < 20:
+                    hit20s += 1
+                    hit30s += 1
+                    hit40s += 1
+                    hit50s += 1
+                elif rank < 30:
+                    hit30s += 1
+                    hit40s += 1
+                    hit50s += 1
+                elif rank < 40:
+                    hit40s += 1
+                    hit50s += 1
+                elif rank < 50:
+                    hit50s += 1
+                break 
+        ranks.append(rank + 1)
+
     try:
-        acc = correct / len(test_checkin)
-        print(f"Accuracy@{k}: {acc:.3f}")
-        return acc
-    except:
-        import pdb
-        pdb.set_trace()
+        mean_rank = np.mean(ranks)
+        mrr = np.mean([1/ele for ele in ranks])
+        hit10s /= len(test_checkin)
+        hit20s /= len(test_checkin)
+        hit30s /= len(test_checkin)
+        hit40s /= len(test_checkin)
+        hit50s /= len(test_checkin)
+        print("Hit10: {:.4f}".format(hit10s))
+        print("Hit20: {:.4f}".format(hit20s))
+        print("Hit30: {:.4f}".format(hit30s))
+        print("Hit40: {:.4f}".format(hit40s))
+        print("Hit50: {:.4f}".format(hit50s))
+        print("MR: {:.4f}".format(mean_rank))
+        print("MRR: {:.4f}".format(mrr))
+        # return acc
+    except Exception as err:
+        print(err)
     
 
     correct = 0
@@ -281,7 +284,13 @@ def location_prediction_Persona2(test_checkin, embs, poi_embs, k=10, user_person
     users = test_checkin[:, 0]
     times = test_checkin[:, 1]
     
-    hit = 0
+    ranks = []
+    hit10s = 0
+    hit20s = 0
+    hit30s = 0
+    hit40s = 0
+    hit50s = 0
+
     for i, user in enumerate(users):
         this_user_persona = user_persona_dict[user + 1]
         this_user_persona = [ele - 1 for ele in this_user_persona]
@@ -291,14 +300,58 @@ def location_prediction_Persona2(test_checkin, embs, poi_embs, k=10, user_person
         this_user_persona_emb = embs[this_user_persona]
         this_user_persona_ranking = this_user_persona_emb.dot(poi_embs.T).reshape(len(this_user_persona), -1)
         final_ranking = time_ranking + this_user_persona_ranking
-        argptt = np.argpartition(final_ranking, -k, axis=1)[:, -k:] # nx10
+
+        # argptt = np.argpartition(final_ranking, -k, axis=1)[:, -k:] # nx10
+        argptt = np.argsort(final_ranking, axis=1)
         target = test_checkin[i, 2]
-        if target in argptt:
-            hit += 1
+        rank = argptt.shape[1]
+        flag = 0
+        for j in range(argptt.shape[1]):
+            for k in range(argptt.shape[0]):
+                if argptt[k, j] == target:
+                    rank = j 
+                    if rank < 10:
+                        hit10s += 1
+                        hit20s += 1
+                        hit30s += 1
+                        hit40s += 1
+                        hit50s += 1
+                    elif rank < 20:
+                        hit20s += 1
+                        hit30s += 1
+                        hit40s += 1
+                        hit50s += 1
+                    elif rank < 30:
+                        hit30s += 1
+                        hit40s += 1
+                        hit50s += 1
+                    elif rank < 40:
+                        hit40s += 1
+                        hit50s += 1
+                    elif rank < 50:
+                        hit50s += 1
+                    flag = 1
+                    break 
+            if flag:
+                break 
+        ranks.append(rank + 1)
     try:
-        acc = hit / len(test_checkin)
-        print(f"Trick Accuracy@{k}: {acc:.3f}")
-        return acc
+        # acc = hit / len(test_checkin)
+        hit10s /= len(test_checkin)
+        hit20s /= len(test_checkin)
+        hit30s /= len(test_checkin)
+        hit40s /= len(test_checkin)
+        hit50s /= len(test_checkin)
+        mean_rank = np.mean(ranks)
+        mrr = np.mean([1/ele for ele in ranks])
+        print("Hit10: {:.4f}".format(hit10s))
+        print("Hit20: {:.4f}".format(hit20s))
+        print("Hit30: {:.4f}".format(hit30s))
+        print("Hit40: {:.4f}".format(hit40s))
+        print("Hit50: {:.4f}".format(hit50s))
+        print("MR: {:.4f}".format(mean_rank))
+        print("MRR: {:.4f}".format(mrr))
+        # return acc
     except:
         print("lol")
     

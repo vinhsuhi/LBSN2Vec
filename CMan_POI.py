@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('--walk_length', type=int, default=80)
     parser.add_argument('--workers', type=int, default=32)
     parser.add_argument('--num_epochs', type=int, default=1)
-    parser.add_argument('--mobility_ratio', type=float, default=0.2)
+    parser.add_argument('--mobility_ratio', type=float, default=0.7)
     parser.add_argument('--q_n2v', type=float, default=0.2)
     parser.add_argument('--p_n2v', type=float, default=0.2)
     parser.add_argument('--K_neg', type=int, default=10)
@@ -375,6 +375,15 @@ if __name__ == "__main__":
     learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
     embs_file = "temp/processed/embs.txt"
     embs = read_embs(embs_file)
+    
+    if args.bias_randomwalk:
+        if args.input_type == "persona_POI":
+            np.save("Model4_{}".format(args.dataset_name), embs)
+        if args.input_type == "persona_ori":
+            np.save("Model2_{}".format(args.dataset_name), embs)
+    elif args.input_type == "persona_POI":
+        np.save("Model3_{}".format(args.dataset_name), embs)
+    
     embs_user = embs[:offset1]
     embs_time = embs[offset1:offset2]
     embs_venue = embs[offset2:offset3]
@@ -383,7 +392,7 @@ if __name__ == "__main__":
     val_checkins[:, 0] -= 1
 
     # location_prediction(val_checkins, embs, embs_venue, k=10)
-    location_prediction_Persona(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
+    # location_prediction_Persona(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
     location_prediction_Persona2(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
 
     # print("Current ACC")
