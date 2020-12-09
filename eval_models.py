@@ -30,6 +30,7 @@ def read_emb(path, model):
             data_line = line.split()
             embs.append([float(ele) for ele in data_line])
         embs = np.array(embs)
+        print(embs.shape)
         import pdb
         new_embs = np.zeros((int(np.max(embs[:, 0])), embs.shape[1] - 1))
         for i in range(len(embs)):
@@ -88,8 +89,6 @@ if __name__ == "__main__":
                 train_checkins = selected_checkins[train_indices]
                 test_checkins = selected_checkins[test_indices]
                 print(test_checkins)
-                import pdb
-                pdb.set_trace()
 
             max_test_checkins = np.max(test_checkins)
             if max_test_checkins > embs.shape[0]:
@@ -102,7 +101,7 @@ if __name__ == "__main__":
             embs_venue = embs[o2:o3]
             test_checkins[:, 2] -= (o2 + 1)
             test_checkins[:, 0] -= 1
-            print(o1, o2, o3, nt, nu, embs.shape)
+            print(o1, o2, o3, nt, nu, embs.shape, embs_venue.shape)
             print(np.max(selected_checkins))
             print("x-"*50)
             print("Len embs_venue: {}".format(len(embs_venue)))

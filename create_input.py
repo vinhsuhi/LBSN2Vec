@@ -188,7 +188,6 @@ if __name__ == "__main__":
         else:
             train_checkins = selected_checkins
         
-    print(train_checkins, np.min(train_checkins), np.max(train_checkins), np.min(friendship), np.max(friendship), np.min(test_checkins), np.max(test_checkins))
     if model.lower() == "deepwalk":
         save_deepwalk(friendship, train_checkins, args.dataset_name)
     elif model.lower() == "node2vec":
