@@ -111,22 +111,58 @@ if __name__ == "__main__":
         else:
             friendship, selected_checkins = read_input(args.dataset_name)
             friendship = friendship.astype(int)
-            selected_checkins = np.delete(train_checkins, 3, 1)
-            unique_users = np.unique(selected_checkins[:, 0])
-            unique_times = np.unique(selected_checkins[:, 1])
-            unique_locs = np.unique(selected_checkins[:, 2])
+            selected_checkins, o1, o2, o3, nt, nu = renumber_checkins(selected_checkins)
+            max_node = np.max(selected_checkins)
+            if args.POI:
+                n_trains = int(0.8 * len(selected_checkins))
+                sorted_time = np.argsort(selected_checkins[:, 1])
+                train_indices = sorted_time[:n_trains]
+                test_indices = sorted_time[n_trains:]
+                train_checkins = selected_checkins[train_indices]
+                test_checkins = selected_checkins[test_indices]
+                print(test_checkins)
+
+            train_checkins = np.delete(train_checkins, 3, 1)
+            unique_users = np.unique(train_checkins[:, 0])
+            unique_times = np.unique(train_checkins[:, 1])
+            unique_locs = np.unique(train_checkins[:, 2])
             user_id2idx = {unique_users[i]: i for i in range(len(unique_users))}
             time_id2idx = {unique_times[i]: i for i in range(len(unique_times))}
             loc_id2idx = {unique_locs[i]: i for i in range(len(unique_locs))}
-            for i in range(len(selected_checkins)):
-                selected_checkins[i, 0] = user_id2idx[selected_checkins[i, 0]]
-                selected_checkins[i, 1] = time_id2idx[selected_checkins[i, 1]]
-                selected_checkins[i, 2] = loc_id2idx[selected_checkins[i, 2]]
+            for i in range(len(train_checkins)):
+                train_checkins[i, 0] = user_id2idx[train_checkins[i, 0]]
+                train_checkins[i, 1] = time_id2idx[train_checkins[i, 1]]
+                train_checkins[i, 2] = loc_id2idx[train_checkins[i, 2]]
 
+            new_embs = np.zeros((max_node, embs.shape[1]))
+            for i in range(max_node):
+                if i < o1:
+                    try:
+                        index = user_id2idx[i + 1]
+                    except:
+                        index = 1
+                    new_embs[i] = embs[0][index]
+
+                elif i < o2:
+                    try:
+                        index = time_id2idx[i + 1]
+                    except:
+                        index = 1
+                    new_embs[i] = embs[1][index]
+                    
+                else:
+                    try:
+                        index = loc_id2idx[i + 1]
+                    except:
+                        index = 1
+                    new_embs[i] = embs[2][index]
+                    
+            embs = new_embs
             embs_user = embs[:o1]
             embs_time = embs[o1:o2]
             embs_venue = embs[o2:o3]
-            test_checkins[:, 2] -= o2
+            test_checkins[:, 2] -= (o2 + 1)
+            test_checkins[:, 0] -= 1
             location_prediction(test_checkins, embs, embs_venue, k=10)
     else:
         # train_checkins, test_checkins = read_input_POI(args.path)
