@@ -31,7 +31,6 @@ def read_emb(path, model):
             embs.append([float(ele) for ele in data_line])
         embs = np.array(embs)
         import pdb
-        pdb.set_trace()
         new_embs = np.zeros((int(np.max(embs[:, 0])), embs.shape[1] - 1))
         for i in range(len(embs)):
             new_embs[int(embs[i, 0]) - 1] = embs[i, 1:]
@@ -43,6 +42,7 @@ def read_emb(path, model):
         
         #embs = embs[np.argsort(embs[:, 0])][:, 1:]
         embs = new_embs
+        #embs = np.random.rand(*embs.shape)
     elif model == "dhne":
         embs = np.load(path, allow_pickle=True)
         if not args.POI:
@@ -64,7 +64,6 @@ def read_input(path):
     mat = loadmat('dataset/cleaned_{}.mat'.format(args.dataset_name))
     friendship_old = mat['friendship_old']
     selected_checkins = mat['selected_checkins']
-    friendship_old -= 1
     nodes = np.unique(friendship_old)
     print("Min: {}, Max: {}, Len: {}".format(np.min(nodes), np.max(nodes), len(nodes)))
     friendship_old = friendship_old[np.argsort(friendship_old[:, 0])]
@@ -89,6 +88,8 @@ if __name__ == "__main__":
                 train_checkins = selected_checkins[train_indices]
                 test_checkins = selected_checkins[test_indices]
                 print(test_checkins)
+                import pdb
+                pdb.set_trace()
 
             max_test_checkins = np.max(test_checkins)
             if max_test_checkins > embs.shape[0]:
