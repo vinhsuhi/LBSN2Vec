@@ -300,8 +300,7 @@ def location_prediction_Persona2(test_checkin, embs, poi_embs, k=10, user_person
         print(f"Trick Accuracy@{k}: {acc:.3f}")
         return acc
     except:
-        import pdb
-        pdb.set_trace()
+        print("lol")
     
 
 
