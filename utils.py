@@ -263,7 +263,7 @@ def renumber_checkins(checkins_matrix, maps_PtOri=None):
     _, n = np.unique(checkins_matrix[:,3], return_inverse=True)
     checkins_matrix[:,3] = n + offset3 + 1
     n_nodes_total = np.max(checkins_matrix)
-    n_users = checkins_matrix[:, 0].max()
+    n_users = offset1
 
 
     if min(checkins_matrix[:,0]) == 0:
@@ -272,8 +272,6 @@ def renumber_checkins(checkins_matrix, maps_PtOri=None):
         offset3 += 1
         n_users += 1
         n_nodes_total += 1
-    # print(f"""Number of users: {n_users}
-    #     Number of nodes total: {n_nodes_total}""")
     print("N_users: {}, N_total: {}".format(n_users, n_nodes_total))
     
     return checkins_matrix, offset1, offset2, offset3, n_nodes_total, n_users
