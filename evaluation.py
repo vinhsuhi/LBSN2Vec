@@ -210,6 +210,7 @@ def location_prediction(test_checkin, embs, poi_embs, k=10):
         print("MR: {:.4f}".format(mean_rank))
         print("MRR: {:.4f}".format(mrr))
         # return acc
+        return 1
     except Exception as err:
         print(err)
     
@@ -265,13 +266,9 @@ def location_prediction_Persona(test_checkin, embs, poi_embs, k=10, user_persona
         if target in top_k:
             hit += 1
 
-    try:
-        acc = hit / len(test_checkin)
-        print(f"Accuracy@{k}: {acc:.3f}")
-        return acc
-    except:
-        import pdb
-        pdb.set_trace()
+    acc = hit / len(test_checkin)
+    print(f"Accuracy@{k}: {acc:.3f}")
+    return acc
     
 
 

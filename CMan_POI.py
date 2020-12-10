@@ -383,6 +383,8 @@ if __name__ == "__main__":
             np.save("Model2_{}".format(args.dataset_name), embs)
     elif args.input_type == "persona_POI":
         np.save("Model3_{}".format(args.dataset_name), embs)
+    elif args.input_type == "persona_ori":
+        np.save("Model2_{}".format(args.dataset_name), embs)
     
     embs_user = embs[:offset1]
     embs_time = embs[offset1:offset2]
