@@ -97,7 +97,7 @@ if __name__ == "__main__":
     ###############################################################################################
 
     if args.test:
-        embs = np.load("Model1_{}".format(args.dataset_name))
+        embs = np.load("Model1_{}.npy".format(args.dataset_name))
 
         embs_user = embs[:offset1]
         embs_time = embs[offset1:offset2]
