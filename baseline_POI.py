@@ -117,7 +117,7 @@ if __name__ == "__main__":
     learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
     embs_file = "temp/processed/embs.txt"
     embs = read_embs(embs_file)
-    np.save("Model1_{}".format(args.dataset_name), embs)
+    np.save("Model1_{}.npy".format(args.dataset_name), embs)
     embs_user = embs[:offset1]
     embs_time = embs[offset1:offset2]
     embs_venue = embs[offset2:offset3]

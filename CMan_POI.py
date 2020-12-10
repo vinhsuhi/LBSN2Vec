@@ -354,13 +354,13 @@ if __name__ == "__main__":
     if args.test:
         if args.bias_randomwalk:
             if args.input_type == "persona_POI":
-                embs = np.load("Model4_{}".format(args.dataset_name))
+                embs = np.load("Model4_{}.npy".format(args.dataset_name))
             if args.input_type == "persona_ori":
-                embs = np.load("Model2_{}".format(args.dataset_name))
+                embs = np.load("Model2_{}.npy".format(args.dataset_name))
         elif args.input_type == "persona_POI":
-            embs = np.load("Model3_{}".format(args.dataset_name))
+            embs = np.load("Model3_{}.npy".format(args.dataset_name))
         elif args.input_type == "persona_ori":
-            embs = np.load("Model3_{}".format(args.dataset_name))
+            embs = np.load("Model3_{}.npy".format(args.dataset_name))
 
         embs_user = embs[:offset1]
         embs_time = embs[offset1:offset2]
