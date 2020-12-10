@@ -323,9 +323,6 @@ def load_data(args):
         checkins = train_checkins[inds_checkins]
         train_user_checkins[user_id] = checkins
         user_location[user_id] = set(np.unique(checkins[:, 2]).tolist())
-        if args.test:
-            break
-    
     # val_user_checkins = {}
     # for user_id in range(1, n_users+1): 
     #     inds_checkins = np.argwhere(val_checkins[:,0] == user_id).flatten()
