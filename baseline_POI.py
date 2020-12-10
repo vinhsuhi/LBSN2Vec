@@ -32,6 +32,7 @@ def parse_args():
     # often change parameters
     parser.add_argument('--dataset_name', type=str, default='NYC')
     parser.add_argument('--bias_randomwalk', action='store_true')
+    parser.add_argument('--test', action='store_true')
 
     args = parser.parse_args()
     return args
@@ -94,6 +95,19 @@ if __name__ == "__main__":
     n_users, n_nodes_total = count_nodes
     friendship_old, friendship_new = friendships
     ###############################################################################################
+
+    if args.test:
+        embs = np.load("Model1_{}".format(args.dataset_name))
+
+        embs_user = embs[:offset1]
+        embs_time = embs[offset1:offset2]
+        embs_venue = embs[offset2:offset3]
+
+        val_checkins[:, 2] -= (offset2 + 1) # checkins to check in range (0 -- num_venues)
+        val_checkins[:, 0] -= 1
+
+        location_prediction(val_checkins, embs, embs_venue, k=10)
+        exit()
 
     sentences = random_walk(friendship_old, n_users, args)
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old, selected_checkins)

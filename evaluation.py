@@ -157,7 +157,7 @@ def location_prediction(test_checkin, embs, poi_embs, k=10):
     user_time_with_poi = np.dot(user_time_emb, poi_embs.T) # nx2x(np)
     user_time_with_poi = np.sum(user_time_with_poi, axis=1) # nxnp
     # argptt = np.argpartition(user_time_with_poi, -k, axis=1)[:, -k:] # nx10
-    argptt = np.argsort(user_time_with_poi, axis=1)
+    argptt = np.argsort(-user_time_with_poi, axis=1)
     
     ranks = []
     hit10s = 0

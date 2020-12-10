@@ -353,18 +353,27 @@ if __name__ == "__main__":
     n_users, n_nodes_total = count_nodes
     friendship_old_ori, friendship_old_persona, friendship_new = friendships
     maps_PtOri, maps_OritP = maps
+    embs = None
     if args.test:
-        embs = np.random.rand(n_nodes_total, 100)
+        if args.bias_randomwalk:
+            if args.input_type == "persona_POI":
+                embs = np.load("Model4_{}".format(args.dataset_name))
+            if args.input_type == "persona_ori":
+                embs = np.load("Model2_{}".format(args.dataset_name))
+        elif args.input_type == "persona_POI":
+            embs = np.load("Model3_{}".format(args.dataset_name))
+        elif args.input_type == "persona_ori":
+            embs = np.load("Model3_{}".format(args.dataset_name))
+
         embs_user = embs[:offset1]
         embs_time = embs[offset1:offset2]
         embs_venue = embs[offset2:offset3]
 
         val_checkins[:, 2] -= (offset2 + 1) # checkins to check in range (0 -- num_venues)
         val_checkins[:, 0] -= 1
-        location_prediction_Persona(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
+
         location_prediction_Persona2(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
         exit()
-
 
     ###############################################################################################
     sentences = random_walk(friendship_old_persona, n_users, args, user_location, center_ori_maps)
