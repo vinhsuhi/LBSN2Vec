@@ -297,39 +297,33 @@ def location_prediction_Persona2(test_checkin, embs, poi_embs, k=10, user_person
         this_user_persona_emb = embs[this_user_persona]
         this_user_persona_ranking = this_user_persona_emb.dot(poi_embs.T).reshape(len(this_user_persona), -1)
         final_ranking = time_ranking + this_user_persona_ranking
-
         # argptt = np.argpartition(final_ranking, -k, axis=1)[:, -k:] # nx10
-        argptt = np.argsort(final_ranking, axis=1)
+        argptt = np.argsort(-final_ranking, axis=1)
         target = test_checkin[i, 2]
         rank = argptt.shape[1]
-        flag = 0
         for j in range(argptt.shape[1]):
-            for k in range(argptt.shape[0]):
-                if argptt[k, j] == target:
-                    rank = j 
-                    if rank < 10:
-                        hit10s += 1
-                        hit20s += 1
-                        hit30s += 1
-                        hit40s += 1
-                        hit50s += 1
-                    elif rank < 20:
-                        hit20s += 1
-                        hit30s += 1
-                        hit40s += 1
-                        hit50s += 1
-                    elif rank < 30:
-                        hit30s += 1
-                        hit40s += 1
-                        hit50s += 1
-                    elif rank < 40:
-                        hit40s += 1
-                        hit50s += 1
-                    elif rank < 50:
-                        hit50s += 1
-                    flag = 1
-                    break 
-            if flag:
+            if target in argptt[:, j]:
+                rank = j 
+                if rank < 10:
+                    hit10s += 1
+                    hit20s += 1
+                    hit30s += 1
+                    hit40s += 1
+                    hit50s += 1
+                elif rank < 20:
+                    hit20s += 1
+                    hit30s += 1
+                    hit40s += 1
+                    hit50s += 1
+                elif rank < 30:
+                    hit30s += 1
+                    hit40s += 1
+                    hit50s += 1
+                elif rank < 40:
+                    hit40s += 1
+                    hit50s += 1
+                elif rank < 50:
+                    hit50s += 1
                 break 
         ranks.append(rank + 1)
     try:
@@ -348,7 +342,6 @@ def location_prediction_Persona2(test_checkin, embs, poi_embs, k=10, user_person
         print("Hit50: {:.4f}".format(hit50s))
         print("MR: {:.4f}".format(mean_rank))
         print("MRR: {:.4f}".format(mrr))
-        # return acc
     except:
         print("lol")
     
