@@ -134,7 +134,7 @@ if __name__ == "__main__":
                 train_checkins[i, 1] = time_id2idx[train_checkins[i, 1]]
                 train_checkins[i, 2] = loc_id2idx[train_checkins[i, 2]]
 
-            new_embs = np.zeros((max_node, embs.shape[1]))
+            new_embs = np.zeros((max_node, embs[0].shape[1]))
             for i in range(max_node):
                 if i < o1:
                     try:

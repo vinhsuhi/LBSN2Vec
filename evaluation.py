@@ -196,6 +196,7 @@ def location_prediction(test_checkin, embs, poi_embs, k=10):
 
     try:
         mean_rank = np.mean(ranks)
+        print(ranks)
         mrr = np.mean([1/ele for ele in ranks])
         hit10s /= len(test_checkin)
         hit20s /= len(test_checkin)
@@ -215,22 +216,6 @@ def location_prediction(test_checkin, embs, poi_embs, k=10):
         print(err)
     
 
-    correct = 0
-    for user, timeslot, poi in tqdm(test_checkin):
-        user_emb = embs[user]
-        time_emb = embs[timeslot]
-        scores = np.sum(user_emb*poi_embs, axis=1) + np.sum(time_emb*poi_embs, axis=1)
-        pred_pois = np.argsort(-scores)[:k]
-        if poi in pred_pois:
-            correct += 1
-    try:
-        acc = correct/ len(test_checkin)
-    except:
-        import pdb
-        pdb.set_trace()
-    print(f"Accuracy@{k}: {acc:.3f}")
-
-
 
 def rank_matrix(matrix, k=10):
     arg_max_index = []
@@ -240,37 +225,6 @@ def rank_matrix(matrix, k=10):
         arg_max_index.append(column)
         matrix[:, column] -= 2
     return arg_max_index
-
-
-def location_prediction_Persona(test_checkin, embs, poi_embs, k=10, user_persona_dict=None, persona_user_dict=None):
-    """
-    test_checkin: np array shape Nx3, containing a user, time slot and a POI
-    """
-    embs = normalize_embedding(embs) # N x d
-    poi_embs = normalize_embedding(poi_embs) # Np x d
-    users = test_checkin[:, 0]
-    times = test_checkin[:, 1]
-    
-    hit = 0
-    for i, user in enumerate(users):
-        this_user_persona = user_persona_dict[user + 1]
-        this_user_persona = [ele - 1 for ele in this_user_persona]
-        this_user_time = times[i]
-        time_emb = embs[this_user_time].reshape(1, -1)
-        time_ranking = time_emb.dot(poi_embs.T).reshape(1, -1)
-        this_user_persona_emb = embs[this_user_persona]
-        this_user_persona_ranking = this_user_persona_emb.dot(poi_embs.T).reshape(len(this_user_persona), -1)
-        final_ranking = time_ranking + this_user_persona_ranking
-        top_k = rank_matrix(final_ranking, k)
-        target = test_checkin[i, 2]
-        if target in top_k:
-            hit += 1
-
-    acc = hit / len(test_checkin)
-    print(f"Accuracy@{k}: {acc:.3f}")
-    return acc
-    
-
 
 def location_prediction_Persona2(test_checkin, embs, poi_embs, k=10, user_persona_dict=None, persona_user_dict=None):
     """
@@ -325,9 +279,12 @@ def location_prediction_Persona2(test_checkin, embs, poi_embs, k=10, user_person
                 elif rank < 50:
                     hit50s += 1
                 break 
+        if rank == argptt.shape[1]:
+            print("LOL")
         ranks.append(rank + 1)
     try:
         # acc = hit / len(test_checkin)
+        print(ranks)
         hit10s /= len(test_checkin)
         hit20s /= len(test_checkin)
         hit30s /= len(test_checkin)
