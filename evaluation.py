@@ -171,22 +171,22 @@ def location_prediction(test_checkin, embs, poi_embs, k=10):
         for j in range(argptt.shape[1]):
             if test_checkin[i, 2] == argptt[i,j]:
                 rank = j 
-                if rank < 10:
+                if rank < 1:
                     hit10s += 1
                     hit20s += 1
                     hit30s += 1
                     hit40s += 1
                     hit50s += 1
-                elif rank < 20:
+                elif rank < 3:
                     hit20s += 1
                     hit30s += 1
                     hit40s += 1
                     hit50s += 1
-                elif rank < 30:
+                elif rank < 5:
                     hit30s += 1
                     hit40s += 1
                     hit50s += 1
-                elif rank < 40:
+                elif rank < 10:
                     hit40s += 1
                     hit50s += 1
                 elif rank < 50:
@@ -203,10 +203,10 @@ def location_prediction(test_checkin, embs, poi_embs, k=10):
         hit30s /= len(test_checkin)
         hit40s /= len(test_checkin)
         hit50s /= len(test_checkin)
-        print("Hit10: {:.4f}".format(hit10s))
-        print("Hit20: {:.4f}".format(hit20s))
-        print("Hit30: {:.4f}".format(hit30s))
-        print("Hit40: {:.4f}".format(hit40s))
+        print("Hit1: {:.4f}".format(hit10s))
+        print("Hit3: {:.4f}".format(hit20s))
+        print("Hit5: {:.4f}".format(hit30s))
+        print("Hit10: {:.4f}".format(hit40s))
         print("Hit50: {:.4f}".format(hit50s))
         print("MR: {:.4f}".format(mean_rank))
         print("MRR: {:.4f}".format(mrr))
@@ -258,22 +258,22 @@ def location_prediction_Persona2(test_checkin, embs, poi_embs, k=10, user_person
         for j in range(argptt.shape[1]):
             if target in argptt[:, j]:
                 rank = j 
-                if rank < 10:
+                if rank < 1:
                     hit10s += 1
                     hit20s += 1
                     hit30s += 1
                     hit40s += 1
                     hit50s += 1
-                elif rank < 20:
+                elif rank < 3:
                     hit20s += 1
                     hit30s += 1
                     hit40s += 1
                     hit50s += 1
-                elif rank < 30:
+                elif rank < 5:
                     hit30s += 1
                     hit40s += 1
                     hit50s += 1
-                elif rank < 40:
+                elif rank < 10:
                     hit40s += 1
                     hit50s += 1
                 elif rank < 50:
@@ -292,10 +292,10 @@ def location_prediction_Persona2(test_checkin, embs, poi_embs, k=10, user_person
         hit50s /= len(test_checkin)
         mean_rank = np.mean(ranks)
         mrr = np.mean([1/ele for ele in ranks])
-        print("Hit10: {:.4f}".format(hit10s))
-        print("Hit20: {:.4f}".format(hit20s))
-        print("Hit30: {:.4f}".format(hit30s))
-        print("Hit40: {:.4f}".format(hit40s))
+        print("Hit1: {:.4f}".format(hit10s))
+        print("Hit3: {:.4f}".format(hit20s))
+        print("Hit5: {:.4f}".format(hit30s))
+        print("Hit10: {:.4f}".format(hit40s))
         print("Hit50: {:.4f}".format(hit50s))
         print("MR: {:.4f}".format(mean_rank))
         print("MRR: {:.4f}".format(mrr))
