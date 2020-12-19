@@ -277,6 +277,10 @@ def load_data(args):
         friendship_old_persona, maps_PtOri, persona_POI, POI_maps, maps_OritP, center_ori_maps = load_ego(edgelist_path, persona_to_ori_path, edgelistPOI_path, location_map_path)
         persona_checkins, new_train_indices, new_test_indices = create_personaPOI_checkins(mat['selected_checkins'], maps_OritP, persona_POI, POI_maps, center_ori_maps, train_indices)
 
+    import pickle 
+    pickle.dump(maps_OritP, "ori_2p.pickle")
+    exit()
+
     persona_checkins, offset1, offset2, offset3, n_nodes_total, n_users = renumber_checkins(persona_checkins, maps_PtOri)
     
     
