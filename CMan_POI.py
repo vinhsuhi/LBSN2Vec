@@ -323,12 +323,6 @@ def load_data(args):
         checkins = train_checkins[inds_checkins]
         train_user_checkins[user_id] = checkins
         user_location[user_id] = set(np.unique(checkins[:, 2]).tolist())
-    # val_user_checkins = {}
-    # for user_id in range(1, n_users+1): 
-    #     inds_checkins = np.argwhere(val_checkins[:,0] == user_id).flatten()
-    #     checkins = val_checkins[inds_checkins]
-    #     val_user_checkins[user_id] = checkins
-    # everything here is from 1
 
     offsets = [offset1, offset2, offset3]
     checkins = [train_checkins, val_checkins, train_user_checkins, user_location]
@@ -399,6 +393,20 @@ if __name__ == "__main__":
     val_checkins[:, 2] -= (offset2 + 1) # checkins to check in range (0 -- num_venues)
     val_checkins[:, 0] -= 1
 
+    train_user_checkins
+
+    # embedding of POI_users, embedding of location, user--to--persona, checkins, friendship
+
+    train_checkins[:, 0] -= 1
+    val_checkins[:, 2] -= (offset2 + 1)
+    friendship_old_persona -= (offset2 + 1)
+
+    np.save("user_emb_USA.npy", embs_user)
+    np.save("loc_USA.npy", embs_venue)
+    np.save("train_checkins.npy", train_checkins)
+    np.save("friendship_old.npy", friendship_old_persona)
+
+    exit()
     # location_prediction(val_checkins, embs, embs_venue, k=10)
     # location_prediction_Persona(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
     location_prediction_Persona2(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
