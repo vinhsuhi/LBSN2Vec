@@ -6,7 +6,6 @@ from scipy.sparse import csr_matrix
 import networkx as nx
 from scipy.io import loadmat
 import random
-import pdb
 import math
 import os
 import multiprocessing
@@ -278,8 +277,8 @@ def load_data(args):
         persona_checkins, new_train_indices, new_test_indices = create_personaPOI_checkins(mat['selected_checkins'], maps_OritP, persona_POI, POI_maps, center_ori_maps, train_indices)
 
     import pickle 
-    pickle.dump(maps_OritP, "ori_2p.pickle")
-    exit()
+    pickle.dump(maps_OritP, open("ori_2p.pickle", 'wb'))
+    
 
     persona_checkins, offset1, offset2, offset3, n_nodes_total, n_users = renumber_checkins(persona_checkins, maps_PtOri)
     
@@ -292,6 +291,7 @@ def load_data(args):
     # # sorted_checkins = persona_checkins
     # train_checkins = sorted_checkins[:n_train]
     # val_checkins = sorted_checkins[n_train:]
+    
     train_checkins = persona_checkins[new_train_indices]
     val_checkins = persona_checkins[new_test_indices]
     new_val_checkins = []
@@ -401,16 +401,16 @@ if __name__ == "__main__":
 
     # embedding of POI_users, embedding of location, user--to--persona, checkins, friendship
 
-    train_checkins[:, 0] -= 1
     val_checkins[:, 2] -= (offset2 + 1)
-    friendship_old_persona -= (offset2 + 1)
+    friendship_old_persona -= 1
+    train_checkins[:, 0] -= 1
+    train_checkins[:, 2] -= (offset2 + 1)
 
     np.save("user_emb_USA.npy", embs_user)
     np.save("loc_USA.npy", embs_venue)
     np.save("train_checkins.npy", train_checkins)
     np.save("friendship_old.npy", friendship_old_persona)
 
-    exit()
     # location_prediction(val_checkins, embs, embs_venue, k=10)
     # location_prediction_Persona(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
     location_prediction_Persona2(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
