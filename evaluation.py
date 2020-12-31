@@ -196,7 +196,7 @@ def location_prediction(test_checkin, embs, poi_embs, k=10):
 
     try:
         mean_rank = np.mean(ranks)
-        print(ranks)
+        # print(ranks)
         mrr = np.mean([1/ele for ele in ranks])
         hit10s /= len(test_checkin)
         hit20s /= len(test_checkin)
