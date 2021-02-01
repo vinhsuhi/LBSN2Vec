@@ -182,3 +182,145 @@ done
 
 python -m openne --method node2vec --label-file data/blogCatalog/bc_labels.txt --input data/blogCatalog/bc_adjlist.txt --graph-format adjlist --output vec_all.txt --q 0.25 --p 0.25
 
+
+
+
+mode="persona_POI"
+
+for data in hongzhi SaoPaulo KualaLampur Jakarta Istanbul
+do
+    mkdir ${data}_ablation_study
+    for p in 0.8 0.2 0.4 0.6 1
+    do
+        for q in 0.6
+        do
+        for dim in 256
+        do
+        for wl in 80
+        do 
+        for nw in 10
+        do 
+        for mr in 0.7 
+        do 
+        python -u CMan.py --input_type ${mode} --dim_emb ${dim} \
+        --dataset_name ${data} --p_n2v ${p} --q_n2v ${q} \
+        --workers 14 --learning_rate 0.0005 --K_neg 10 --mobility_ratio ${mr}  \
+        --bias_randomwalk --num_walks ${nw} --walk_length ${wl} > ${data}_ablation_study/pn2v${p}
+        done
+        done
+        done
+        done
+        done
+    done
+    for p in 0.8
+    do
+        for q in 0.6 0.2 0.4 0.8 1
+        do
+        for dim in 256
+        do
+        for wl in 80
+        do 
+        for nw in 10
+        do 
+        for mr in 0.7 
+        do 
+        python -u CMan.py --input_type ${mode} --dim_emb ${dim} \
+        --dataset_name ${data} --p_n2v ${p} --q_n2v ${q} \
+        --workers 14 --learning_rate 0.0005 --K_neg 10 --mobility_ratio ${mr}  \
+        --bias_randomwalk --num_walks ${nw} --walk_length ${wl} > ${data}_ablation_study/qn2v${q}
+        done
+        done
+        done
+        done
+        done
+    done
+    for p in 0.8
+    do
+        for q in 0.6
+        do
+        for dim in 256 32 64 128 512
+        do
+        for wl in 80
+        do 
+        for nw in 10
+        do 
+        for mr in 0.7 
+        do 
+        python -u CMan.py --input_type ${mode} --dim_emb ${dim} \
+        --dataset_name ${data} --p_n2v ${p} --q_n2v ${q} \
+        --workers 14 --learning_rate 0.0005 --K_neg 10 --mobility_ratio ${mr}  \
+        --bias_randomwalk --num_walks ${nw} --walk_length ${wl} > ${data}_ablation_study/dim${dim}
+        done
+        done
+        done
+        done
+        done
+    done
+    for p in 0.8
+    do
+        for q in 0.6 
+        do
+        for dim in 256
+        do
+        for wl in 80 20 50 80 100 10
+        do 
+        for nw in 10
+        do 
+        for mr in 0.7 
+        do 
+        python -u CMan.py --input_type ${mode} --dim_emb ${dim} \
+        --dataset_name ${data} --p_n2v ${p} --q_n2v ${q} \
+        --workers 14 --learning_rate 0.0005 --K_neg 10 --mobility_ratio ${mr}  \
+        --bias_randomwalk --num_walks ${nw} --walk_length ${wl} > ${data}_ablation_study/wl${wl}
+        done
+        done
+        done
+        done
+        done
+    done
+    for p in 0.8
+    do
+        for q in 0.6 
+        do
+        for dim in 256
+        do
+        for wl in 80 
+        do 
+        for nw in 10 2 5 7 15 20 
+        do 
+        for mr in 0.7 
+        do 
+        python -u CMan.py --input_type ${mode} --dim_emb ${dim} \
+        --dataset_name ${data} --p_n2v ${p} --q_n2v ${q} \
+        --workers 14 --learning_rate 0.0005 --K_neg 10 --mobility_ratio ${mr}  \
+        --bias_randomwalk --num_walks ${nw} --walk_length ${wl} > ${data}_ablation_study/nw${wl}
+        done
+        done
+        done
+        done
+        done
+    done
+    for p in 0.8
+    do
+        for q in 0.6 
+        do
+        for dim in 256
+        do
+        for wl in 80 
+        do 
+        for nw in 10 
+        do 
+        for mr in 0.7 0.1 0.3 0.5 0.9
+        do 
+        python -u CMan.py --input_type ${mode} --dim_emb ${dim} \
+        --dataset_name ${data} --p_n2v ${p} --q_n2v ${q} \
+        --workers 14 --learning_rate 0.0005 --K_neg 10 --mobility_ratio ${mr}  \
+        --bias_randomwalk --num_walks ${nw} --walk_length ${wl} > ${data}_ablation_study/${mr}
+        done
+        done
+        done
+        done
+        done
+    done
+done 
+

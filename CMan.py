@@ -321,10 +321,7 @@ if __name__ == "__main__":
 
     for data in NYC hongzhi TKY
     do 
-        for alpha in 0 0.000001 0.00001 0.0001 0.001 0.01 0.1
-        do 
-            python -u CMan.py --input_type persona_POI --dataset_name ${data} --bias_randomwalk --alpha ${alpha} > output/data${data}_alpha${alpha}
-        done 
+        python -u CMan.py --input_type persona_POI --dataset_name ${data} --bias_randomwalk
     done
 
 

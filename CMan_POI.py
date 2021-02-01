@@ -6,7 +6,6 @@ from scipy.sparse import csr_matrix
 import networkx as nx
 from scipy.io import loadmat
 import random
-import pdb
 import math
 import os
 import multiprocessing
@@ -277,21 +276,8 @@ def load_data(args):
         friendship_old_persona, maps_PtOri, persona_POI, POI_maps, maps_OritP, center_ori_maps = load_ego(edgelist_path, persona_to_ori_path, edgelistPOI_path, location_map_path)
         persona_checkins, new_train_indices, new_test_indices = create_personaPOI_checkins(mat['selected_checkins'], maps_OritP, persona_POI, POI_maps, center_ori_maps, train_indices)
 
-    import pickle 
-    pickle.dump(maps_OritP, "ori_2p.pickle")
-    exit()
-
     persona_checkins, offset1, offset2, offset3, n_nodes_total, n_users = renumber_checkins(persona_checkins, maps_PtOri)
     
-    
-    ############## Train Test split for POI prediction ##################
-    # n_data = persona_checkins.shape[0]
-    # n_train = int(n_data * 0.8)
-    
-    # sorted_checkins = persona_checkins[np.argsort(persona_checkins[:,1])]
-    # # sorted_checkins = persona_checkins
-    # train_checkins = sorted_checkins[:n_train]
-    # val_checkins = sorted_checkins[n_train:]
     train_checkins = persona_checkins[new_train_indices]
     val_checkins = persona_checkins[new_test_indices]
     new_val_checkins = []
@@ -399,37 +385,9 @@ if __name__ == "__main__":
 
     train_user_checkins
 
-    # embedding of POI_users, embedding of location, user--to--persona, checkins, friendship
 
-    train_checkins[:, 0] -= 1
-    val_checkins[:, 2] -= (offset2 + 1)
-    friendship_old_persona -= (offset2 + 1)
-
-    np.save("user_emb_USA.npy", embs_user)
-    np.save("loc_USA.npy", embs_venue)
-    np.save("train_checkins.npy", train_checkins)
-    np.save("friendship_old.npy", friendship_old_persona)
-
-    exit()
-    # location_prediction(val_checkins, embs, embs_venue, k=10)
-    # location_prediction_Persona(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
+    friendship_old_persona -= 1
     location_prediction_Persona2(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
-
-    # print("Current ACC")
-    # friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10, maps_OritP=maps_OritP, maps_PtOri=maps_PtOri)
-
-    # center = list(center_ori_maps.keys())
-    # center_id2dix = {cen: i + 1 for i, cen in enumerate(center)}
-    # center_embs = embs_user[np.array(center) - 1]
-
-    # friendship_old_center = friendship_to_center_friendship(friendship_old_ori, center_ori_maps, center_id2dix)
-    # friendship_new_center = friendship_to_center_friendship(friendship_new, center_ori_maps, center_id2dix)
-
-    # print("Center ACC")
-    # friendship_pred_ori(center_embs, friendship_old_center, friendship_new_center)
-    
-
-
 
     """
     scripts:
