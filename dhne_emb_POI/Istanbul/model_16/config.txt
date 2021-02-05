@@ -1,0 +1,11 @@
+data_path ../LBSN2Vec/dhne_graph_POI/Istanbul
+save_path ../LBSN2Vec/dhne_emb_POI/Istanbul
+embedding_size 16 16 16
+prefix_path model
+hidden_size 64
+epochs_to_train 10
+batch_size 256
+learning_rate 0.01
+alpha 1
+num_neg_samples 5
+dim_feature 12818 22882 10336
