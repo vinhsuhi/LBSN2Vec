@@ -334,7 +334,12 @@ if __name__ == "__main__":
     def load_maps(path):
         maps_PtOri = json.load(open(path, "r"))
         maps_PtOri = {int(k) + 1 : int(v) + 1 for k,v in maps_PtOri.items()}
-        maps_OritP = {v:k for k,v in maps_PtOri.items()}
+        maps_OritP = dict()
+        for k, v in maps_PtOri.items():
+            if v not in maps_OritP:
+                maps_OritP[v] = set([k])
+            else:
+                maps_OritP[v].add(k)
         return maps_PtOri, maps_OritP
 
     embs_user = load_emb(args.emb_path)
