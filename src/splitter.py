@@ -547,19 +547,19 @@ class SplitterTrainer(object):
         """
         # self.base_model_fit()
         self.create_split()
-        self.setup_model()
-        self.model.train()
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
-        self.optimizer.zero_grad()
-        print("\nLearning the joint model.\n")
-        random.shuffle(self.persona_walker.paths)
-        self.walk_steps = trange(len(self.persona_walker.paths), desc="Loss")
-        for step in self.walk_steps:
-            self.reset_average_loss(step)
-            walk = self.persona_walker.paths[step]
-            self.process_walk(walk)
-            loss_score = self.optimize()
-            self.update_average_loss(loss_score)
+        # self.setup_model()
+        # self.model.train()
+        # self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
+        # self.optimizer.zero_grad()
+        # print("\nLearning the joint model.\n")
+        # random.shuffle(self.persona_walker.paths)
+        # self.walk_steps = trange(len(self.persona_walker.paths), desc="Loss")
+        # for step in self.walk_steps:
+        #     self.reset_average_loss(step)
+        #     walk = self.persona_walker.paths[step]
+        #     self.process_walk(walk)
+        #     loss_score = self.optimize()
+        #     self.update_average_loss(loss_score)
 
     def save_embedding(self):
         """
