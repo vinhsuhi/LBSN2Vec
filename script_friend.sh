@@ -6,8 +6,11 @@
 mode="persona_ori"
 
 for data in Jakarta
-do 
-    python -u CMan.py --input_type ${mode} --dataset_name ${data}  
+do
+    start=`date +%s.%N`
+    python -u CMan.py --input_type ${mode} --dataset_name ${data}
+    end=`date +%s`
+    runtime=$((end-start))
 done
 
 
@@ -19,8 +22,11 @@ do
 for Neg in 5 10
 do 
     for data in NYC hongzhi TKY Jakarta KualaLampur SaoPaulo Istanbul
-    do 
+    do
+        start=`date +%s.%N`
         python -u CMan.py --input_type ${mode} --dataset_name ${data} --K_neg ${Neg} > output/model2_${data}_friend_lr${lr}_N${Neg}
+        end=`date +%s`
+        runtime=$((end-start))
     done
 done 
 done 
@@ -32,8 +38,11 @@ done
 mode="persona_POI"
 
 for data in NYC
-do 
-    python -u CMan.py --input_type ${mode} --dataset_name ${data}  
+do
+    start=`date +%s.%N`
+    python -u CMan.py --input_type ${mode} --dataset_name ${data}
+    end=`date +%s`
+    runtime=$((end-start))
 done
 
 
@@ -44,8 +53,11 @@ do
 for Neg in 5 10
 do 
     for data in NYC hongzhi TKY Jakarta KualaLampur SaoPaulo Istanbul
-    do 
+    do
+        start=`date +%s.%N`
         python -u CMan.py --input_type ${mode} --dataset_name ${data}  > output/model3_${data}_friend_lr${lr}_N${Neg}
+        end=`date +%s`
+        runtime=$((end-start))
     done
 done 
 done 
@@ -56,15 +68,21 @@ done
 mode="persona_POI"
 
 for data in NYC
-do 
+do
+    start=`date +%s.%N`
     python -u CMan.py --input_type ${mode} --dataset_name ${data} --bias_randomwalk --alpha 0.1
+    end=`date +%s`
+    runtime=$((end-start))
 done
 
 mode="persona_POI"
 
 for data in NYC
-do 
+do
+        start=`date +%s.%N`
         python -u CMan.py --input_type ${mode} --dataset_name ${data} --bias_randomwalk --q_n2v 0.8 --p_n2v 0.8 --test
+        end=`date +%s`
+        runtime=$((end-start))
 done
 
 
@@ -83,7 +101,10 @@ for dim in 256 300
 do 
 for data in NYC hongzhi TKY Jakarta KualaLampur SaoPaulo Istanbul
 do
+        start=`date +%s.%N`
         python -u CMan.py --input_type ${mode} --dataset_name ${data} --bias_randomwalk --q_n2v ${q} --p_n2v ${p} --K_neg ${Neg} --dim_emb ${dim} > output/model4_${data}_friend_p${p}_q${q}_lr${lr}_N${Neg}_dim${dim}
+        end=`date +%s`
+        runtime=$((end-start))
 done
 done 
 done
