@@ -316,7 +316,7 @@ if __name__ == "__main__":
     start = time.time()
     friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10, maps_OritP=maps_OritP, maps_PtOri=maps_PtOri)
     end = time.time()
-    print("===================time train ===== ", end - start)
+    print("===================time test ===== ", end - start)
 
     """
     scripts:
