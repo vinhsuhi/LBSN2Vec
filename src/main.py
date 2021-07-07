@@ -36,10 +36,10 @@ def main():
     import time
     start = time.time()
     trainer = SplitterTrainer(graph,graph_friend,listPOI,mat,location_Dict, args)
+    trainer.fit()
     end = time.time()
     print("===================time split ===== ",end - start)
 
-    # trainer.fit()
     # trainer.save_embedding()
     # trainer.save_persona_graph_mapping()
 
