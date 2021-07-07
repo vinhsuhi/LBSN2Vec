@@ -299,20 +299,24 @@ if __name__ == "__main__":
     sentences = random_walk(friendship_old_persona, n_users, args, user_location, center_ori_maps)
     # --------------------------------------------- #
 
-
-
+    import time
+    start = time.time()
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old_persona, persona_checkins)
     embs_ini = initialize_emb(args, n_nodes_total)
     save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins)
 
     learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
+    end = time.time()
+    print("===================time train ===== ",end - start)
     embs_file = "temp/processed/embs.txt"
     embs = read_embs(embs_file)
     embs_user = embs[:offset1]
 
     print("Current ACC")
+    start = time.time()
     friendship_pred_persona(embs_user, friendship_old_ori, friendship_new, k=10, maps_OritP=maps_OritP, maps_PtOri=maps_PtOri)
-
+    end = time.time()
+    print("===================time train ===== ", end - start)
 
     """
     scripts:
