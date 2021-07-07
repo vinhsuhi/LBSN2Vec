@@ -460,13 +460,13 @@ class SplitterTrainer(object):
         nx.write_edgelist(persona_graph_continue, 'Suhi_output/edgelist_{}_{}'.format(self.args.lbsn,self.phase))
 
         print("DONE!, I'm in spliter.py, line 147")
-        exit()
+        # exit()
         # import pdb
         # pdb.set_trace()
-        self.persona_walker = DeepWalker(self.egonet_splitter.persona_graph, self.args)
-        print("\nDoing persona random walks.\n")
-        self.persona_walker.create_features()
-        self.create_noises()
+        # self.persona_walker = DeepWalker(self.egonet_splitter.persona_graph, self.args)
+        # print("\nDoing persona random walks.\n")
+        # self.persona_walker.create_features()
+        # self.create_noises()
 
     def setup_model(self):
         """

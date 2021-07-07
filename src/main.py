@@ -33,10 +33,15 @@ def main():
             location_Dict[a] = b
     # print(listPOI)
     # exit()
+    import time
+    start = time.time()
     trainer = SplitterTrainer(graph,graph_friend,listPOI,mat,location_Dict, args)
-    trainer.fit()
-    trainer.save_embedding()
-    trainer.save_persona_graph_mapping()
+    end = time.time()
+    print("===================time split ===== ",end - start)
+
+    # trainer.fit()
+    # trainer.save_embedding()
+    # trainer.save_persona_graph_mapping()
 
 if __name__ == "__main__":
     main()
