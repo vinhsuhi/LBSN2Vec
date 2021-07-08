@@ -284,7 +284,7 @@ def location_prediction_Persona2(test_checkin, embs, poi_embs, k=10, user_person
         ranks.append(rank + 1)
     try:
         # acc = hit / len(test_checkin)
-        print(ranks)
+        # print(ranks)
         hit10s /= len(test_checkin)
         hit20s /= len(test_checkin)
         hit30s /= len(test_checkin)
