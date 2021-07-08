@@ -357,12 +357,17 @@ if __name__ == "__main__":
         exit()
 
     ###############################################################################################
+    import time
+
+    start_time = time.time()
     sentences = random_walk(friendship_old_persona, n_users, args, user_location, center_ori_maps)
     neg_user_samples, neg_checkins_samples = sample_neg(friendship_old_persona, persona_checkins)
     embs_ini = initialize_emb(args, n_nodes_total)
     save_info(args, sentences, embs_ini, neg_user_samples, neg_checkins_samples, train_user_checkins)
 
     learn.apiFunction("temp/processed/", args.learning_rate, args.K_neg, args.win_size, args.num_epochs, args.workers, args.mobility_ratio)
+    end_time = time.time()
+    print("===================time train ===== ",end_time - start_time)
     embs_file = "temp/processed/embs.txt"
     embs = read_embs(embs_file)
     
@@ -383,12 +388,15 @@ if __name__ == "__main__":
     val_checkins[:, 2] -= (offset2 + 1) # checkins to check in range (0 -- num_venues)
     val_checkins[:, 0] -= 1
 
-    train_user_checkins
+    # train_user_checkins
 
 
     friendship_old_persona -= 1
-    location_prediction_Persona2(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
+    start_time = time.time()
 
+    location_prediction_Persona2(val_checkins, embs, embs_venue, k=10, user_persona_dict=maps_OritP)
+    end_time = time.time()
+    print("===================time test ===== ", end_time - start_time)
     """
     scripts:
 
